@@ -6,7 +6,7 @@
 #include <sys/socket.h>    //socket
 #include <arpa/inet.h> //inet_addr
 #include <stdlib.h>
-//#include "/home/opc/Kombain/test/include/modbus/modbus.h"
+#include "/home/opc/Kombain/test/include/modbus/modbus.h"
 //#include "network.h"
 #include "signals.h"
 #include "virtmb.h"

@@ -1,7 +1,7 @@
 #ifndef _SIGNALS_H
 #define _SIGNALS_H
 
-#define MAX 100
+//#define MAX 100
 #define STR_LEN_TXT 100
 #define MAX_Signals 512
 
