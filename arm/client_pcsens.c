@@ -334,12 +334,12 @@ speedtest_start(); //time start
        for (z=0; z < MAX_Signals; z++) {
 
             if ( sDeSerial_by_num (z) == 0){
-                //print_by_name(Signal_Array[z].Name);
+//                print_by_name(Signal_Array[z].Name);
                 virt_mb_filldev(Signal_Array[z].Name, Signal_Array[z].MB_Id, Signal_Array[z].MB_Reg_Num); //init device list
              } else break;
         }
      virt_mb_devlist(); //show virtdev list
-  printf("==>SPEEDTEST Time: %ld ms\n", speedtest_stop());     
+  printf(" ==>   SPEEDTEST Time: [ %ld ] ms. \n\r", speedtest_stop());     
 
 
 

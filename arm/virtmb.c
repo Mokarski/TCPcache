@@ -3,7 +3,7 @@
 #include <stdio.h>
 
 #define VirtDev 30      //numbers of virtual modbus devices
-#define VirtDevRegs 50  //number of virtual mb registers
+#define VirtDevRegs 10  //number of virtual mb registers
 
 //   for cache read all devices registers //
 struct Mb_Device {
@@ -27,16 +27,20 @@ int virt_mb_filldev( char *sName, int mb_id, int mb_reg){ //fill unic dev to vir
 	for (i=0; i< VirtDev; i++){
 		if ( Device_Array[i].MB_Id == mb_id ) {
 			uniq_test=0;
+			
+			Device_Array[i].MB_reg_counter[mb_reg] = 1; //mark for this DEV_ID register as used
+			
 			break;
 		} else uniq_test++; //increment checked position
 	}
 	
 	if ( uniq_test > 0 ){ // if device is unique
 		for (i=0; i< VirtDev; i++){
-			if ( strlen (Device_Array[i].Name) < 2){
-		        strcpy(Device_Array[i].Name,sName); //fill the name
+			
+			if ( strlen (Device_Array[i].Name) < 2){			
+		                strcpy(Device_Array[i].Name,sName); //fill the name
 				Device_Array[i].MB_Id = mb_id;
-				Device_Array[i].MB_Registers[mb_reg] = 1; //mark register as used
+				
 				break; // device copied to array DONE
 			}
 		}
@@ -66,20 +70,24 @@ void virt_mb_devlist (void) //print all virt devices
 {
 register int t;
 
- for (t=0; t<30; ++t) {
+ for (t=0; t < VirtDev; ++t) {
     if(Device_Array[t].Name[0])
        {
-		int tmp=0; //counter of found used registers
-         printf("Virt_Device Name: %s\n", Device_Array[t].Name);
-         printf("Virt_MB ID: %i\n", Device_Array[t].MB_Id);
+	 int tmp=0; //counter of found used registers
+         printf("[Virt_Device Name: %s] ", Device_Array[t].Name);
+         printf("[Virt_MB ID: %i] \n\r", Device_Array[t].MB_Id);
            int z=0;
-		   //calculate used registers
-		   for(z=0; z < VirtDevRegs; z++) { // numbers of virtual registers in struct Device_Array
-                if ( Device_Array[t].MB_reg_counter[z] > 0 ) printf ("Used registers[%i] : [ %i ] \n",z, Device_Array[t].MB_Registers[z]);
-               }
+	   //calculate used registers
+	   for(z=0; z < VirtDevRegs; z++) { // numbers of virtual registers in struct Device_Array
+	        //printf ("Used registers[%i] : [ %i ] \n\r",z, Device_Array[t].MB_Registers[z]);
+                if ( Device_Array[t].MB_reg_counter[z] > 0 ) {
+                     printf ("Mark as Used registers[%i] : [ %i ] \n\r",z, Device_Array[t].MB_reg_counter[z]);
+                    // tmp++;
+                    }
+           }
 		   
-            for(z=0; z<tmp; z++) { // numbers of virtual registers in struct Device_Array
-                printf ("USED Virt Register[%i] Value: [ %i ]\n",z, Device_Array[t].MB_Registers[z]);
+            for(z=0; z < VirtDevRegs ; z++) { // numbers of virtual registers in struct Device_Array
+                printf ("USED Virt Register[%i] Value: [ %i ] \n\r",z, Device_Array[t].MB_Registers[z]);
                }
 			   
 			
