@@ -274,6 +274,7 @@ int tcpsignal_write(char *message_in, int iVal){
         if( recv(sock , server_reply , 10000 , 0) < 0)
         {
             puts("recv from CacheServer failed");
+            printf("Server reply: [ %s ] \n\r",server_reply);
             return 1;
             //break;
         }

@@ -104,7 +104,7 @@ for (c=0; c < VirtDev; c++){ // cycle for divices
           
            if ( strstr ( Signal_Array[x].Val_Type,"int") !=NULL ){ // if value int
                 Signal_Array[x].Value[1] = Device_Array[c].MB_Registers[ Signal_Array[x].MB_Reg_Num ];
-                printf("INT SIGNAL [Name: %s] [Value:%i] \n\r",Signal_Array[x].Name, Signal_Array[x].Value[1]);
+            //    printf("INT SIGNAL [Name: %s] [Value:%i] \n\r",Signal_Array[x].Name, Signal_Array[x].Value[1]); //DEBUG
            }
            
            if ( strstr ( Signal_Array[x].Val_Type,"bit") !=NULL ){ // if value bit
@@ -115,7 +115,7 @@ for (c=0; c < VirtDev; c++){ // cycle for divices
               reg = Device_Array[c].MB_Registers[ Signal_Array[x].MB_Reg_Num ];
               
               Signal_Array[x].Value[1] = CheckBit (reg,Signal_Array[x].Bit_Pos); //register and bit position
-              printf("BIT SIGNAL [Name: %s] [Value:%i] \n\r",Signal_Array[x].Name, Signal_Array[x].Value[1]);              
+          //      printf("BIT SIGNAL [Name: %s] [Value:%i] \n\r",Signal_Array[x].Name, Signal_Array[x].Value[1]);     //DEBUG  
            }
          }
       }
@@ -175,18 +175,17 @@ speedtest_start(); //time start
      
      //=========  SEND all 485 signals to TCPCache =======
 
-
-
-
-
      int x=0;
+     socket_init();     
+     
      for (x=0; x < MAX_Signals; x++){
       if ( strlen (Signal_Array[x].Name) > 1 ){ //write if Name not empty
-          socket_init();
-          tcpsignal_write(Signal_Array[x].Name,Signal_Array[x].Value[1]);
-          socket_close();
+//          socket_init();
+            tcpsignal_write(Signal_Array[x].Name,Signal_Array[x].Value[1]);
+//          socket_close();
          } else break; // signals list is end
      }
+     socket_close();
      
 
       

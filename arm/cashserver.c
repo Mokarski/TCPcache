@@ -239,7 +239,7 @@ int n=0;
     int sock = *(int*)arg->nSock;
 	//
 	int read_size;
-    char *mesOk, *mesNo, *mesErr, *messHello, client_message[10000], signalsBuffer[10000];
+    char *mesOk, *mesNo, *mesErr, *mesBad, *messHello, client_message[10000], signalsBuffer[10000];
 	//char header404[2000];
 	// указатели вхождения метки в массиве посылки + общий указатель разделителя сигналов;
     char *iStr1, *iStr2, *iStr, *iCmd1, *iCmd2, *iCmdEnd; 
@@ -257,9 +257,10 @@ int n=0;
 	int posEndFrame=0;
 	int cntFrame=0;
 	char *pSB = signalsBuffer;
-	mesErr="-1";
+	mesErr="Err!\n";
 	mesOk = "Ok!";
 	mesNo = "Ooh!\n";
+	mesBad= "Bad cmd!\n";
 	char a[4096];
 	char dig[128];	
     //write(sock , messHello , strlen(messHello));
@@ -355,6 +356,11 @@ int n=0;
 			
 			//arg->hello = "~core";
 			write(sock, mesErr, strlen(mesErr));
+			
+			memset(client_message, 0, mess_length);
+			close(*arg->nSock);
+			free((int*)arg->nSock);
+			pthread_exit(0);		
 			}
 
 			if (found > 0) {
@@ -364,11 +370,12 @@ int n=0;
 			strcat (result,mesOk); //add Ok to end
 			write(sock, result, strlen(result)); //send packet to client
 			}
+			/*
 			memset(client_message, 0, mess_length);
 			close(*arg->nSock);
 			free((int*)arg->nSock);
 			pthread_exit(0);		
-		    
+		        */
 		}
 		
 		if( iCmd2 != NULL ){ // cmd write_signal
@@ -408,6 +415,11 @@ int n=0;
 			
 			//arg->hello = "~core";
 			write(sock, mesErr, strlen(mesErr));
+			
+			memset(client_message, 0, mess_length);
+			close(*arg->nSock);
+			free((int*)arg->nSock);
+			pthread_exit(0);		
 			}
 
 			if (found > 0) {
@@ -416,11 +428,12 @@ int n=0;
 			//arg->hello = "~core";
 			write(sock, mesOk, strlen(mesOk));
 			}
+			/*
 			memset(client_message, 0, mess_length);
 			close(*arg->nSock);
 			free((int*)arg->nSock);
 			pthread_exit(0);		
-		    
+		       */
 		}
 		
 		
@@ -429,6 +442,7 @@ int n=0;
 		if( (iCmd1 == NULL) && (iCmd2 == NULL)  ){
 			printf("\nUnformatted Client Message\n");
 			//arg->msg = "~~~";
+			write(sock, mesBad, strlen(mesBad));
 			memset(client_message, 0, mess_length);
 			close(*arg->nSock);
 			free((int*)arg->nSock);
