@@ -1,10 +1,10 @@
 //Virtual Modbus devices
 #include <string.h>
 #include <stdio.h>
-
-#define VirtDev 30      //numbers of virtual modbus devices
-#define VirtDevRegs 10  //number of virtual mb registers
-
+#include "virtmb.h"
+//#define VirtDev 30      //numbers of virtual modbus devices
+//#define VirtDevRegs 10  //number of virtual mb registers
+/*
 //   for cache read all devices registers //
 struct Mb_Device {
  char Name[100];
@@ -19,7 +19,7 @@ struct Mb_Device {
    
 struct Mb_Device Device_Array [VirtDev]; //number of virtual devices
 
-
+*/
 int virt_mb_filldev( char *sName, int mb_id, int mb_reg){ //fill unic dev to virt
 	int i=0;
 	int uniq_test=0;
@@ -65,6 +65,23 @@ int z=0;
 return result;
 }
   
+int virt_mb_registers (int ID){
+	 int tmp=0; //counter of found used registers
+         int z=0;
+	   //calculate used registers
+	  // printf("ID in reg calculate [%i]",ID);
+	   for(z=0; z < VirtDevRegs; z++) { // numbers of virtual registers in struct Device_Array
+	        //printf ("Used registers[%i] : [ %i ] \n\r",z, Device_Array[t].MB_Registers[z]);
+                if ( Device_Array[ID].MB_reg_counter[z] > 0 ) {
+                    //printf ("DEV_ID[%i]  Mark as Used registers num[%i] : Value [ %i ] ",ID,z, Device_Array[ID].MB_reg_counter[z]);
+                    tmp++;
+                    //printf ("[Registers counter %i] \n\r ",tmp);
+                    }
+           }
+
+return tmp;
+}
+
 
 void virt_mb_devlist (void) //print all virt devices
 {
