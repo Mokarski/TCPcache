@@ -222,16 +222,19 @@ void* connection_handler(void *args)
 	Discrete_Signals_t *arg = (Discrete_Signals_t*) args;
 	
 int n=0;
+//DEBUG CODE
+/*
   for (n=0; n < MAX_Signals; n++)
       {
-        printf("THREAD Found Signal Name:[ %s ] IN Signal_Array\n\n", arg->SA_ptr[n].Name);
+        printf("THREAD Found Signal Name:[ %s ] IN Signal_Array\n\n", arg->SA_ptr[n].Name); //DEBUG
         if (strstr(arg->SA_ptr[n].Name ,"." ) != NULL ) //if found "." in field Name
             {
-               printf("THREAD Found Signal Name:[ %s ] IN Signal_Array\n\n", arg->SA_ptr[n].Name);
+               printf("THREAD Found Signal Name:[ %s ] IN Signal_Array\n\n", arg->SA_ptr[n].Name); 
                     
             }
         }
                                                    
+*/
     //Get the socket descriptor
     int sock = *(int*)arg->nSock;
 	//
@@ -277,7 +280,7 @@ int n=0;
 	//
 //		if( (iCmd1 != NULL) && (iCmdEnd != NULL) ){ // cmd read_signal
 		if( iCmd1 != NULL ){ // cmd read_signal
-		    printf("recived >CMD read_signal< \n\r");
+		    printf("[recived >CMD READ] read_signal< \n\r");
 			size_t xx=0;
 			size_t cnt=0;
 			istr =strtok(client_message,":");
@@ -304,7 +307,7 @@ int n=0;
 				        strcpy(packed_txt_string,""); //erase buffer
 				        sSerial_by_num(cnt); //serialize to packet by number of signals				        
 				        strcat (result,packed_txt_string);
-				        printf ("[ %s ]\n\r",packed_txt_string);
+				        //printf ("[ %s ]\n\r",packed_txt_string); //DEBUG
 				        
 					//strcat (result,arg->SA_ptr[cnt].Name);
 					//strcat (result," value:");
@@ -355,7 +358,7 @@ int n=0;
 			}
 
 			if (found > 0) {
-			printf("Signal  found [%i]! \n\r",found);
+			printf("Signals  found [%i]! \n\r",found);
 			
 			//arg->hello = "~core";
 			strcat (result,mesOk); //add Ok to end
@@ -372,30 +375,30 @@ int n=0;
 		    char digit[5];
 		    char sname [55];
 		    int val;
-		    printf("recived >CMD write_signal< \n\r");
+		    printf("[recived >CMD WRITE] write_signal< \n\r");
 			size_t xx=0;
 			size_t cnt=0;
 			istr =strtok(client_message,":");
 			istr = strtok (NULL,":");			
-			printf ("EXPLODE NAME: [ %s ]\n\r",istr);
+			//printf ("EXPLODE NAME: [ %s ]\n\r",istr);
 			strcpy (sname,istr);
 			
 			istr = strtok (NULL,":");						
-			printf ("EXPLODE digital: [ %s ]\n\r",istr);
+			//printf ("EXPLODE digital: [ %s ]\n\r",istr);
 			strcpy(digit,istr);
-			printf("Before convertation: [%s]\n\r", digit);
+			//printf("Before convertation: [%s]\n\r", digit);
 			int found=0;         
-			printf("looking for Signal: [%s] \n\r",sname);
+			//printf("looking for Signal: [%s] \n\r",sname);
 			val =  atoi(digit);
-			printf("Value AtoI to write: [%i] \n\r",val);
+			//printf("Value AtoI to write: [%i] \n\r",val);
 			for(cnt=0; cnt<MAX_Signals; cnt++)
 			{
 
 				if( strstr(arg->SA_ptr[cnt].Name,sname) != NULL )
 				{				
-				printf("SignalName:[%s]",arg->SA_ptr[cnt].Name);
+				//printf("SignalName:[%s]",arg->SA_ptr[cnt].Name);
 				arg->SA_ptr[cnt].Value[0] =val;
-				printf(" AtoI writed value [%i]\n\r",arg->SA_ptr[cnt].Value[0]);
+				//printf(" AtoI writed value [%i]\n\r",arg->SA_ptr[cnt].Value[0]);
 				xx++;
 				found++;
 				}

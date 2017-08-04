@@ -70,7 +70,7 @@ void virt_mb_devlist (void) //print all virt devices
 {
 register int t;
 
- for (t=0; t < VirtDev; ++t) {
+ for (t=0; t < VirtDev; t++) {
     if(Device_Array[t].Name[0])
        {
 	 int tmp=0; //counter of found used registers
@@ -94,6 +94,7 @@ register int t;
                            
         }
  }
+ 
  printf("\n\n");
 }
                              

@@ -90,7 +90,8 @@ char *istr3;
 
        //explode signal to name field and val field
           strcpy(line,Signal_Array[n].Name); //from filed Name to buf
-          printf ("[#%i] line:[%s]\n\r",n,line);
+//          printf ("[#%i] line:[%s]\n\r",n,line); //DEBUG
+          
           //strcpy(line,packed_txt_string); //from filed Name to buf
           
           istr1 = strtok (line,sep1); //extract Name field
@@ -117,7 +118,7 @@ char *istr3;
           printf ("DeSerializer: Null strtok3\n\r");
           return 1;
           }
-          printf ("[#%i] MB_ID:[%s]\n\r",n, istr1);
+          //printf ("[#%i] MB_ID:[%s]\n\r",n, istr1); //DEBUG
           Signal_Array[n].MB_Id = atoi (istr1);                                                                                                              
 
 
