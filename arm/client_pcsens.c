@@ -35,17 +35,18 @@ int virt_mb_ReadtoCache(int dIndex,  int reg_count){ //read from real devices to
         modbus_get_response_timeout(ctx, &old_response_timeout);
         
         /* Define a new and too short timeout! */
-        response_timeout.tv_sec = 1;
+        /* response_timeout.tv_sec = 1;
         response_timeout.tv_usec = 80;
         byte_timeout.tv_sec = 1;
         byte_timeout.tv_usec = 300;
         modbus_set_byte_timeout (ctx, &byte_timeout);
         modbus_set_response_timeout(ctx, &response_timeout);
+        */
         //modbus_set_byte_timeout(ctx, struct timeval *timeout);
         //modbus_rtu_set_rts_delay(ctx,40);
       
 	int ID;
-	ID = dIndex;
+	ID = Device_Array[dIndex].MB_Id;
 	printf ("ID from virtdev list %i \n\r",ID);
        modbus_set_slave(ctx, ID);
        connected = modbus_connect(ctx);
@@ -85,6 +86,44 @@ int virt_mb_ReadtoCache(int dIndex,  int reg_count){ //read from real devices to
 return tab_reg[0];
 }
 
+
+int CheckBit(uint sigReg, int iBit ) {
+int result;
+ if ( ( sigReg & ( 1 << iBit)) !=0) 
+     {result=1;}
+                else result=0;
+return result;
+}
+
+int virtdev_to_signals(void){ //from virtual devices to signals parser
+int c,x;
+for (c=0; c < VirtDev; c++){ // cycle for divices 
+     
+     for (x=0; x < MAX_Signals; x++){ //cycle for signals
+       if ( Signal_Array[x].MB_Id == Device_Array[c].MB_Id ){ // if founded modbus id = virtual modbus ID
+          
+           if ( strstr ( Signal_Array[x].Val_Type,"int") !=NULL ){ // if value int
+                Signal_Array[x].Value[1] = Device_Array[c].MB_Registers[ Signal_Array[x].MB_Reg_Num ];
+                printf("INT SIGNAL [Name: %s] [Value:%i] \n\r",Signal_Array[x].Name, Signal_Array[x].Value[1]);
+           }
+           
+           if ( strstr ( Signal_Array[x].Val_Type,"bit") !=NULL ){ // if value bit
+              //get register from virt
+              //check bit_pos and state of bit
+              //return result to Signal.Value
+              int reg;
+              reg = Device_Array[c].MB_Registers[ Signal_Array[x].MB_Reg_Num ];
+              
+              Signal_Array[x].Value[1] = CheckBit (reg,Signal_Array[x].Bit_Pos); //register and bit position
+              printf("BIT SIGNAL [Name: %s] [Value:%i] \n\r",Signal_Array[x].Name, Signal_Array[x].Value[1]);              
+           }
+         }
+      }
+    }
+
+return 0;
+}
+
 int main(int argc , char *argv[])
 {
 
@@ -95,14 +134,6 @@ int main(int argc , char *argv[])
 while (1){
 
 speedtest_start(); //time start
-//  write all 485 signals
-
-int c=0;
-int total_dev_regs=0;
-
-    socket_init();
-    tcpsignal_write("485",3);
-    socket_close();
 
 //======================== read all 485 signals from server create signals and virtual devices ===================
     socket_init();
@@ -124,21 +155,40 @@ int total_dev_regs=0;
      //virt_mb_devlist(); //show virtdev list
      
      // MODBUS CODES
-     
+     int c=0;
+     int total_dev_regs=0;
      for (c=0; c < VirtDev; c++)
         {
           if  (Device_Array[c].MB_Id > 0 ){ //if mb device ID  > 0
           
                total_dev_regs = virt_mb_registers( c ); // get total registers count for virtual devices list
                printf ( "[MB_ID %i Regs %i] \n\r",Device_Array[c].MB_Id , total_dev_regs  );
-	       virt_mb_ReadtoCache ( Device_Array[c].MB_Id , total_dev_regs); //
+	       virt_mb_ReadtoCache ( c , total_dev_regs); //
 	       
               }
         else break; //if MB_Id = 0  BREAK all
        }
-      virt_mb_devlist(); //show virtdev list
-      
+//      virt_mb_devlist(); //show virtdev list
+      virtdev_to_signals();
      // END MB
+     
+     
+     //=========  SEND all 485 signals to TCPCache =======
+
+
+
+
+
+     int x=0;
+     for (x=0; x < MAX_Signals; x++){
+      if ( strlen (Signal_Array[x].Name) > 1 ){ //write if Name not empty
+          socket_init();
+          tcpsignal_write(Signal_Array[x].Name,Signal_Array[x].Value[1]);
+          socket_close();
+         } else break; // signals list is end
+     }
+     
+
       
       
   printf(" ==>   SPEEDTEST Time: [ %ld ] ms. \n\r", speedtest_stop());     
