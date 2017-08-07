@@ -246,6 +246,7 @@ return 0;
 }
 
 int tcpsignal_write(char *message_in, int iVal){
+        speedtest_start();
         char message[10000];
 	char server_reply[10000] = "";
 	char *pSR = server_reply;
@@ -262,7 +263,8 @@ int tcpsignal_write(char *message_in, int iVal){
         ItoA(iVal,cVal);
         strcat (message,":");    
         strcat (message,cVal);
-        printf("MESSAGE WRITE [%s]\n\r",message);
+//        puts("Send write ");
+        //printf("MESSAGE WRITE [%s]\n\r",message); //DEBUG
         if( send(sock , message , strlen(message) , 0) < 0)
         {
             puts("Send write request failed");
@@ -278,18 +280,75 @@ int tcpsignal_write(char *message_in, int iVal){
             return 1;
             //break;
         }
-         printf("Server reply: [ %s ] \n\r",server_reply);
+         //printf("Server reply: [ %s ] \n\r",server_reply);
         
 //       puts("Server reply :");
 //	if( strstr(pSR,pMok) != NULL)
 
 	if( strstr(server_reply,"Ok!") == NULL)	
 	{
-	  printf("Server reply error? no OK! \n\r");
+	  printf("Server reply error? - no OK! \n\r");
+	  printf("-> reply: [ %s ] \n\r",server_reply);
 	  return 1;
 	  //break;
 	}
-	memset(server_reply, 0, sizeof(server_reply) / sizeof(server_reply[0]));
+	//memset(server_reply, 0, sizeof(server_reply) / sizeof(server_reply[0]));
     //}
+     printf(" ++++++++++++++++++++++++==>   SPEEDTEST Function Time: [ %i ] ms. \n\r", speedtest_stop());
+     
+return 0;
+}
+
+int tcpsignal_packet_write(char *message_in ){
+        speedtest_start();
+        char message2[10000];
+	char server_reply[10000] = "";
+	char *pSR = server_reply;
+	char *pMok = "Ok!";
+	char *pHello;
+	char cVal[5];
+	pHello = "~core";
+        int sended_signals=0;
+
+    //while(1)
+    //{
+        strcpy (message2,"signal_write:");    
+        strcat (message2,message_in);
+//        ItoA(iVal,cVal);
+//        strcat (message2,":");    
+//        strcat (message,cVal);
+//        puts("Send write ");
+        printf("MESSAGE WRITE [%s]\n\r",message2); //DEBUG
+        if( send(sock , message2 , strlen(message2) , 0) < 0)
+        {
+            puts("Send write request failed");
+            return 1;
+            //break;
+        }
+        
+        //Receive a reply from the server
+        if( recv(sock , server_reply , 10000 , 0) < 0)
+        {
+            puts("recv from CacheServer failed");
+            printf("Server reply: [ %s ] \n\r",server_reply);
+            return 1;
+            //break;
+        }
+         //printf("Server reply: [ %s ] \n\r",server_reply);
+        
+//       puts("Server reply :");
+//	if( strstr(pSR,pMok) != NULL)
+
+	if( strstr(server_reply,"Ok!") == NULL)	
+	{
+	  printf("Server reply error? - no OK! \n\r");
+	  printf("-> reply: [ %s ] \n\r",server_reply);
+	  return 1;
+	  //break;
+	}
+	//memset(server_reply, 0, sizeof(server_reply) / sizeof(server_reply[0]));
+    //}
+     printf(" ++++++++++++++++++++++++==>   SPEEDTEST Function Time: [ %i ] ms. \n\r", speedtest_stop());
+     
 return 0;
 }

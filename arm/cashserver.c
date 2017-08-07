@@ -15,7 +15,7 @@
 #include<time.h> // for time_t
 
 #include "signals.h"
-
+#include "speedtest.h"
 
 #define ERROR_CREATE_THREAD -11
 #define ERROR_JOIN_THREAD   -12
@@ -281,6 +281,7 @@ int n=0;
 	//
 //		if( (iCmd1 != NULL) && (iCmdEnd != NULL) ){ // cmd read_signal
 		if( iCmd1 != NULL ){ // cmd read_signal
+		speedtest_start();
 		    printf("[recived >CMD READ] read_signal< \n\r");
 			size_t xx=0;
 			size_t cnt=0;
@@ -376,9 +377,12 @@ int n=0;
 			free((int*)arg->nSock);
 			pthread_exit(0);		
 		        */
+		         printf(" ++++++++++++++++++++++++==>   SPEEDTEST TCPCache READ_REQ Time: [ %ld ] ms. \n\r", speedtest_stop());
+		         
 		}
 		
 		if( iCmd2 != NULL ){ // cmd write_signal
+		    speedtest_start();
 		    char digit[5];
 		    char sname [55];
 		    int val;
@@ -434,6 +438,8 @@ int n=0;
 			free((int*)arg->nSock);
 			pthread_exit(0);		
 		       */
+		        printf(" ++++++++++++++++++++++++==>   SPEEDTEST TCPCache WRITE_REQ Time: [ %ld ] ms. \n\r", speedtest_stop());
+		        
 		}
 		
 		
@@ -462,6 +468,8 @@ int n=0;
     }
 	close(*arg->nSock);         
     //Free the socket pointer
+//     printf(" ++++++++++++++++++++++++==>   SPEEDTEST  TCPCache write from client Time: [ %ld ] ms. \n\r", speedtest_stop());
+     
     free((int*)arg->nSock);
      
     return 0;

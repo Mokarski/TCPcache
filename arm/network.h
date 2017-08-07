@@ -11,7 +11,7 @@
 #ifndef _NETWORK_H
 #define _NETWORK_H
 
-char signal_parser_buf[90000];
+char signal_parser_buf[20000];
 //struct sockaddr_in server;
 char duffer[10000];
 char message[10000];
@@ -41,5 +41,5 @@ int socket_close();
 int tcpsignal_parser( char* tcp_buffer );
 int tcpsignal_read(char *message_in);
 int tcpsignal_write(char *message_in, int iVal);
-
+int tcpsignal_packet_write(char *message_in);
 #endif

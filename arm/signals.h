@@ -3,13 +3,13 @@
 
 //#define MAX 100
 #define STR_LEN_TXT 100
-#define MAX_Signals 512
+#define MAX_Signals 355
 
 char packed_txt_string[40000];
 
 struct Signal {
 
- char Name[500];         // Name signal
+ char Name[300];         // Name signal
 
 //if modbus signals type
     int  MB_Id;          // Modbus device ID

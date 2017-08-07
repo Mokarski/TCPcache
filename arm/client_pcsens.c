@@ -75,7 +75,7 @@ int virt_mb_ReadtoCache(int dIndex,  int reg_count){ //read from real devices to
         
 
 
-     usleep(80 * 1000); //delay for Mod bus restore functional     
+     usleep(5 * 1000); //delay for Mod bus restore functional     
 
      modbus_flush(ctx);
     
@@ -137,12 +137,15 @@ speedtest_start(); //time start
 
 //======================== read all 485 signals from server create signals and virtual devices ===================
     socket_init();
-    if ( tcpsignal_read("485") == 0 ){ // if we get response from server
+    if ( tcpsignal_read("485.kb.") == 0 ){ // if we get response from server
         tcpsignal_parser(signal_parser_buf);
     }
-    socket_close();
+//    socket_close();
     
-
+  printf("=================== ==>   SPEEDTEST Time load signals: [ %ld ] ms. \n\r", speedtest_stop());     
+  
+  
+ speedtest_start(); //time start
     int z=0;
 
        for (z=0; z < MAX_Signals; z++) {
@@ -153,7 +156,10 @@ speedtest_start(); //time start
              } else break;
         }
      //virt_mb_devlist(); //show virtdev list
-     
+
+  printf(" ==>   SPEEDTEST Deserial signals signals: [ %ld ] ms. \n\r", speedtest_stop());     
+  
+speedtest_start(); //time start     
      // MODBUS CODES
      int c=0;
      int total_dev_regs=0;
@@ -163,7 +169,7 @@ speedtest_start(); //time start
           
                total_dev_regs = virt_mb_registers( c ); // get total registers count for virtual devices list
                printf ( "[MB_ID %i Regs %i] \n\r",Device_Array[c].MB_Id , total_dev_regs  );
-	       virt_mb_ReadtoCache ( c , total_dev_regs); //
+	       virt_mb_ReadtoCache ( c , total_dev_regs); // read from real devices to virtual
 	       
               }
         else break; //if MB_Id = 0  BREAK all
@@ -173,24 +179,35 @@ speedtest_start(); //time start
      // END MB
      
      
+  printf(" ==>   SPEEDTEST Get MB_ID and REGS from signals: [ %ld ] ms. \n\r", speedtest_stop());          
+
+
+
      //=========  SEND all 485 signals to TCPCache =======
 
+speedtest_start(); //time start     
      int x=0;
-     socket_init();     
-     
+//     socket_init();     
+
+     strcpy(message,""); //erase buffer
+     strcpy(message,""); //erase buffer     
      for (x=0; x < MAX_Signals; x++){
       if ( strlen (Signal_Array[x].Name) > 1 ){ //write if Name not empty
 //          socket_init();
-            tcpsignal_write(Signal_Array[x].Name,Signal_Array[x].Value[1]);
+            strcpy(packed_txt_string,""); //erase buffer
+            sSerial_by_num(x);
+            strcat(message, packed_txt_string);
 //          socket_close();
          } else break; // signals list is end
      }
+     tcpsignal_packet_write(message);
+//     printf("to Send:[%s]",message);
      socket_close();
      
 
       
       
-  printf(" ==>   SPEEDTEST Time: [ %ld ] ms. \n\r", speedtest_stop());     
+  printf(" ++++++++++++++++++++++++==>   SPEEDTEST Send to TCPCache Time: [ %ld ] ms. \n\r", speedtest_stop());     
 
 
 
