@@ -248,6 +248,183 @@ char Value[3];
 }
                 
 
+
+int sDeSerial_by_num_short (int n){
+char sep1[10]=":";
+char sep2[10]=";";
+char line[503]; //buffer for parsing
+char *istr1;
+char *istr2;
+char *istr3;
+
+       //explode signal to name field and val field
+          strcpy(line,Signal_Array[n].Name); //from filed Name to buf
+//          printf ("[#%i] line:[%s]\n\r",n,line); //DEBUG
+          
+          //strcpy(line,packed_txt_string); //from filed Name to buf
+          
+          istr1 = strtok (line,sep1); //extract Name field
+
+          if (istr1 == NULL)  {
+          printf ("DeSerializer: Null strtok1\n\r");
+          return 1;
+          }
+                    
+          strcpy (Signal_Array[n].Name,istr1); //put "Name" to filed Name
+          
+          
+          
+          istr1 = strtok (NULL,sep1);
+          if (istr1 == NULL)  {
+          printf ("DeSerializer: Null strtok2\n\r");
+          return 1;
+          }
+          strcpy (Signal_Array[n].Val_Type,istr1);
+                                                
+                                                                  
+          istr1 = strtok (NULL,sep1);
+          if (istr1 == NULL)  {
+          printf ("DeSerializer: Null strtok3\n\r");
+          return 1;
+          }
+          //printf ("[#%i] MB_ID:[%s]\n\r",n, istr1); //DEBUG
+          Signal_Array[n].MB_Id = atoi (istr1);                                                                                                              
+
+
+          istr1 = strtok (NULL,sep1);
+          if (istr1 == NULL)  {
+          printf ("DeSerializer: Null strtok4\n\r");
+          return 1;
+          }
+          Signal_Array[n].MB_Reg_Num = atoi (istr1);                                                                                                              
+
+
+          istr1 = strtok (NULL,sep1);
+          if (istr1 == NULL)  {
+          printf ("DeSerializer: Null strtok5\n\r");
+          return 1;
+          }
+          Signal_Array[n].Bit_Pos = atoi (istr1);                                                                                                              
+        
+        
+          istr1 = strtok (NULL,sep1);
+          if (istr1 == NULL)  {
+          printf ("DeSerializer: Null strtok6\n\r");
+          return 1;
+          }
+          Signal_Array[n].Value[1] = atoi (istr1);                                                                                                              
+
+
+          istr1 = strtok (NULL,sep1);
+          if (istr1 == NULL)  {
+          printf ("DeSerializer: Null strtok7\n\r");
+          return 1;
+          }
+          Signal_Array[n].TCP_Type = atoi (istr1);                                                                                                                                                                                                                                              
+
+          istr1 = strtok (NULL,sep1);
+          if (istr1 == NULL)  {
+          printf ("DeSerializer: Null strtok8\n\r");
+          return 1;
+          }
+          strcat(Signal_Array[n].TCP_Addr, istr1);                                                                                                              
+
+          istr1 = strtok (NULL,sep1);
+          if (istr1 == NULL)  {
+          printf ("DeSerializer: Null strtok9\n\r");
+          return 1;
+          }
+          Signal_Array[n].Prio = atoi (istr1);                                                                                                              
+
+          istr1 = strtok (NULL,sep1);
+          if (istr1 == NULL)  {
+          printf ("DeSerializer: Null strtok10\n\r");
+          return 1;
+          }
+          Signal_Array[n].Off = atoi (istr1);  //state On/Off                                                                                                             
+          
+          /*
+          istr1 = strtok (NULL,sep1); // ?????????
+          if (istr1 == NULL)  {
+          printf ("DeSerializer: Null strtok11\n\r");
+          return 1;
+          }
+          Signal_Array[n].ExState = atoi (istr1);                                                                                                              
+          */
+return 0;
+}
+
+
+int sSerial_by_num_short(int n){
+//int n=0;
+int result=0;
+char Value[3];
+//int signals_counter=0;
+
+             if (strlen(Signal_Array[n].Name) > 4 ) //if name signal more then 4 symbols
+                 {
+                 
+                 strcat(packed_txt_string,Signal_Array[n].Name);
+                 strcat(packed_txt_string,":");
+                 
+                 itoa(Signal_Array[n].Value[1],Value);
+                 strcat(packed_txt_string,Value);
+                 
+                 //strcat(packed_txt_string,":");
+                 
+                 /*
+                 strcat(packed_txt_string,Signal_Array[n].Val_Type);
+                 strcat(packed_txt_string,":");                 
+                 
+                 itoa(Signal_Array[n].MB_Id,Value);
+                 strcat(packed_txt_string,Value);
+                 strcat(packed_txt_string,":");
+                 
+                 itoa(Signal_Array[n].MB_Reg_Num,Value);
+                 strcat(packed_txt_string,Value);
+                 strcat(packed_txt_string,":");
+                 
+                 itoa(Signal_Array[n].Bit_Pos,Value);
+                 strcat(packed_txt_string,Value);
+                 strcat(packed_txt_string,":");
+                 
+                 
+                 itoa(Signal_Array[n].Value[1],Value);
+                 strcat(packed_txt_string,Value);
+                 strcat(packed_txt_string,":");
+                 
+
+                 itoa(Signal_Array[n].TCP_Type,Value);
+                 strcat(packed_txt_string,Value);
+                 strcat(packed_txt_string,":");
+                 
+                 strcat(packed_txt_string,Signal_Array[n].TCP_Addr);
+                 strcat(packed_txt_string,":");
+                 
+
+                 itoa(Signal_Array[n].Prio,Value);
+                 strcat(packed_txt_string,Value);
+                 strcat(packed_txt_string,":");
+                 
+                 itoa(Signal_Array[n].Off,Value);
+                 strcat(packed_txt_string,Value);
+                 strcat(packed_txt_string,":");
+                 
+                 itoa(Signal_Array[n].ExState,Value);
+                 strcat(packed_txt_string,Value);
+                 //strcat(packed_txt_string,":");
+                 */
+                 strcat(packed_txt_string,";");                 
+                               
+                 result++;                                            
+//                 signasl_counter = result;
+                 }
+      
+ return result; //if zerro then not found signals else return value
+}
+                
+
+
 //  update Signal value and execution state
 int signal_update_ex (char sName[100],int sVal, int Execution_State){ //function to update parameters in signals array
 int n=0;

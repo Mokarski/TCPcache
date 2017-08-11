@@ -30,6 +30,7 @@
 typedef struct Discrete_Signals { // store one  signal state
     char Input_Signal[100];        //searched signal name
     char Reaction_Signal[100];     //reaction signal name
+//    char Buf_Signal[100];          //buffer for parser
     int adc_val;                   //control this state on ADC
     int result;                    // returned value
     int Delay;                     //for delay action in ms
@@ -217,6 +218,7 @@ void ItoA(int n, char s[]) {
  * */
 void* connection_handler(void *args)
 {
+
 // from struct
 //	someArgs_t *arg = (someArgs_t*) args;
 	Discrete_Signals_t *arg = (Discrete_Signals_t*) args;
@@ -383,36 +385,96 @@ int n=0;
 		
 		if( iCmd2 != NULL ){ // cmd write_signal
 		    speedtest_start();
-		    char digit[5];
-		    char sname [55];
+		    char digit[5]; //buffer Value of signal as CHAR
+		    char sname [100]; //buffer for temp store signal NAME
+		    char buf_signals[MAX_Signals][300]; //array of MAX_signal elements AND 300 characters each
+		    
 		    int val;
 		    printf("[recived >CMD WRITE] write_signal< \n\r");
 			size_t xx=0;
 			size_t cnt=0;
-			istr =strtok(client_message,":");
-			istr = strtok (NULL,":");			
+			int sn=1;
+			istr =strtok(client_message,";");
+			strcpy (buf_signals[0],istr);
+			//istr = strtok (NULL,";");			
 			//printf ("EXPLODE NAME: [ %s ]\n\r",istr);
-			strcpy (sname,istr);
+			while ( istr != NULL ){
+			        /*if (istr == NULL) // defend from sigfault
+			        {
+			         printf("End write list\n\r");
+			         return ;
+			        }*/
+				istr =strtok(NULL,";");
+				/*
+				if ( istr != NULL ) // defend from sigfault
+			        {
+			         strcpy (buf_signals[sn],istr);
+				 printf ("[#%i] NAME: [%s] \n\r",sn,buf_signals[sn]);
+			         }
+			         */
+			         if (istr == NULL) // defend from sigfault
+			        {
+			         printf("End write list\n\r");
+			         // return ;
+			         break;
+			        } else {
+			    		strcpy (buf_signals[sn],istr);
+					printf ("[#%i] NAME: [%s] \n\r",sn,buf_signals[sn]);
+			               }
+				
+				sn++;
+			}
 			
-			istr = strtok (NULL,":");						
-			//printf ("EXPLODE digital: [ %s ]\n\r",istr);
-			strcpy(digit,istr);
-			//printf("Before convertation: [%s]\n\r", digit);
-			int found=0;         
-			//printf("looking for Signal: [%s] \n\r",sname);
-			val =  atoi(digit);
-			//printf("Value AtoI to write: [%i] \n\r",val);
-			for(cnt=0; cnt<MAX_Signals; cnt++)
-			{
 
-				if( strstr(arg->SA_ptr[cnt].Name,sname) != NULL )
-				{				
-				//printf("SignalName:[%s]",arg->SA_ptr[cnt].Name);
-				arg->SA_ptr[cnt].Value[0] =val;
-				//printf(" AtoI writed value [%i]\n\r",arg->SA_ptr[cnt].Value[0]);
-				xx++;
-				found++;
-				}
+			int found=0;         
+			for(cnt=0; cnt < MAX_Signals; cnt++) //cycle for signals
+			{ 
+			    if ( strlen ( arg->SA_ptr[cnt].Name ) < 2 ) {
+			        // printf("[#%i] Search 1cycle  done \n\r", cnt);
+			         break; // break if signal Name field is empty
+			        }
+			        
+			    int pr=0;
+			  
+			    for (pr = 0; pr < MAX_Signals; pr++){ //cycle for recived signals from client
+			          if (strlen ( buf_signals[pr] ) < 2 ) {
+			              //printf("[#%i] Search 2cycle done \n\r", pr);
+			                break;
+			              }
+			              //printf ("Searched [%s] [%s]\n\r",arg->SA_ptr[cnt].Name, buf_signals[pr]);
+			              
+
+			         istr =strtok(buf_signals[pr],":");	 // first element NAME        
+			         if (istr != NULL){				         
+			                 strcpy(sname,istr);
+				         printf ("EXPLODE1 digital: [ %s ]\n\r",istr);
+				       }
+				
+				  if (istr != NULL){
+				         istr = strtok (NULL,":");	 // second element
+				         printf ("EXPLODE2 digital: [ %s ]\n\r",istr);
+				     }					
+			        
+				if( strstr(arg->SA_ptr[cnt].Name, sname) != NULL )
+				  {				
+				    
+				     
+				     
+				     
+				     if (istr != NULL){
+				         strcpy(digit,istr);
+				         val =  atoi(digit);
+				         printf("Value AtoI to write: [%i] \n\r",val);
+				         arg->SA_ptr[cnt].Value[0] = val;
+				         
+				         }
+				     
+				     //printf ("EXPLODE digital: [ %s ]\n\r",istr);
+				     //printf(" AtoI writed value [%i]\n\r",arg->SA_ptr[cnt].Value[0]);
+				     xx++;
+				     found++;
+				  }
+			     }
 			}
 			if (found == 0) {
 			printf("Signal not found \n\r");

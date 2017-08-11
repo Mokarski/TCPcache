@@ -49,6 +49,7 @@ void print_by_name (char *sName);
 int  signals_txt(void);
 int  signal_read(char sName[100]);
 int sSerial_by_num (int);
+int sSerial_by_num_short (int);
 int sDeSerial_by_num (int);
 int  signal_update_ex (char sName[100],int sVal, int Execution_State); 
 void block_all_signals(void);

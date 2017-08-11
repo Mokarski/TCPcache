@@ -195,7 +195,7 @@ speedtest_start(); //time start
       if ( strlen (Signal_Array[x].Name) > 1 ){ //write if Name not empty
 //          socket_init();
             strcpy(packed_txt_string,""); //erase buffer
-            sSerial_by_num(x);
+            sSerial_by_num_short(x);
             strcat(message, packed_txt_string);
 //          socket_close();
          } else break; // signals list is end
