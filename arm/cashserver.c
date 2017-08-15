@@ -390,12 +390,12 @@ int n=0;
 		    char buf_signals[MAX_Signals][300]; //array of MAX_signal elements AND 300 characters each
 		    
 		    int val;
-		    printf("[recived >CMD WRITE] write_signal< \n\r");
+		    printf("[recived >CMD WRITE] write_signal \n\r");
 			size_t xx=0;
 			size_t cnt=0;
-			int sn=1;
-			istr =strtok(client_message,";");
-			strcpy (buf_signals[0],istr);
+			int sn=1; //number of signals
+			            //istr =strtok(client_message,";");
+			            //strcpy (buf_signals[0],istr);
 			//istr = strtok (NULL,";");			
 			//printf ("EXPLODE NAME: [ %s ]\n\r",istr);
 			while ( istr != NULL ){
@@ -419,69 +419,84 @@ int n=0;
 			         break;
 			        } else {
 			    		strcpy (buf_signals[sn],istr);
-					printf ("[#%i] NAME: [%s] \n\r",sn,buf_signals[sn]);
+					//printf ("[#%i] NAME: [%s] \n\r",sn,buf_signals[sn]);
 			               }
 				
 				sn++;
 			}
 			
-
+			printf("Start Write list parser\n\r");
 			int found=0;         
 			for(cnt=0; cnt < MAX_Signals; cnt++) //cycle for signals
 			{ 
-			    if ( strlen ( arg->SA_ptr[cnt].Name ) < 2 ) {
-			        // printf("[#%i] Search 1cycle  done \n\r", cnt);
-			         break; // break if signal Name field is empty
+			    //    printf("[#%i] Search 1cycle  done \n\r", cnt);
+			    //    printf ("Cyrrent SA: [%s] \n\r",arg->SA_ptr[cnt].Name);
+			    /*  if ( strlen ( arg->SA_ptr[cnt].Name ) < 2 ) {
+			          // printf("[#%i] Search 1cycle  done \n\r", cnt);
+			             break; // break if signal Name field is empty
 			        }
-			        
-			    int pr=0;
-			  
-			    for (pr = 0; pr < MAX_Signals; pr++){ //cycle for recived signals from client
-			          if (strlen ( buf_signals[pr] ) < 2 ) {
-			              //printf("[#%i] Search 2cycle done \n\r", pr);
+			    */    
+			      int pr=0;
+			    if ( strlen ( arg->SA_ptr[cnt].Name ) > 2 ) {  // test if signal name not empty
+			             printf ("Cyrrent SA: [%s] \n\r",arg->SA_ptr[cnt].Name);
+			         for (pr = 0; pr < sn; pr++){ //cycle for recived signals from client. number of recived signals = sn
+			    //      printf("[#%i] Search 2cycle done \n\r", pr);
+			    /*       if (strlen ( buf_signals[pr] ) < 2 ) {
+			                //printf("[#%i] Search 2cycle done \n\r", pr);
 			                break;
 			              }
-			              //printf ("Searched [%s] [%s]\n\r",arg->SA_ptr[cnt].Name, buf_signals[pr]);
+			    */
+			        //      printf ("1Searched [%s] [%s]\n\r",arg->SA_ptr[cnt].Name, buf_signals[pr]);
 			              
-
-			         istr =strtok(buf_signals[pr],":");	 // first element NAME        
-			         if (istr != NULL){				         
+			                printf("[Total clientsignals#%i][#%i]Cyrrent client signal: [%s]\n\r",sn,pr,buf_signals[pr]);
+			        //START EXPLODE Name:Val
+				 if ( buf_signals[pr] != NULL )  istr =strtok(buf_signals[pr],":");	 // first element NAME        
+			         
+			          if (istr != NULL){				         
 			                 strcpy(sname,istr);
-				         printf ("EXPLODE1 digital: [ %s ]\n\r",istr);
+				        printf ("EXPLODE1 Client Name: [ %s ] \n\r",sname);
 				       }
-				
+				 //printf ("2 Input signal Name:{%s}\n\r", sname);
 				  if (istr != NULL){
-				         istr = strtok (NULL,":");	 // second element
-				         printf ("EXPLODE2 digital: [ %s ]\n\r",istr);
-				     }					
-			        
-				if( strstr(arg->SA_ptr[cnt].Name, sname) != NULL )
-				  {				
-				    
+				         istr = strtok (NULL,":");	 // second element Value
+				         printf ("EXPLODE2 Client Value: [ %s ]\n\r",istr);
+				         if (istr != NULL) strcpy(digit,istr);				         
+				     } else {
+				             printf ("Value is empty! \n\r");
+				             //break; //if not set any Value -> Break the cycle
+				             }					
 				     
-				     
-				     
-				     if (istr != NULL){
-				         strcpy(digit,istr);
-				         val =  atoi(digit);
-				         printf("Value AtoI to write: [%i] \n\r",val);
-				         arg->SA_ptr[cnt].Value[0] = val;
-				         
-				         }
+				     //if (istr == NULL) break;
+			          //printf ("3 Input signal Name:{%s}\n\r", sname);
+			          
+				  if( strstr(arg->SA_ptr[cnt].Name, sname ) != NULL )
+				     {				
+					printf ("Founded: Search [%s]   Have [%s] \n\r",arg->SA_ptr[cnt].Name, sname );
+				         if (istr != NULL){				        
+				              if (digit != NULL) val =  atoi(digit);
+				              printf("Value AtoI to write: [%i] \n\r",val);
+				              arg->SA_ptr[cnt].Value[0] = val;
+				              arg->SA_ptr[cnt].ExState = 1; //Flag value is changed
+				             }
 				     
 				     //printf ("EXPLODE digital: [ %s ]\n\r",istr);
 				     //printf(" AtoI writed value [%i]\n\r",arg->SA_ptr[cnt].Value[0]);
+				     break; //if found signal break the cyrrent cycle
 				     xx++;
 				     found++;
-				  }
-			     }
+				     
+				   }
+			      }
+			      
+			      pr++; // increment index of cycle for start next step exclude previus step!!!
+			    }
 			}
+			
 			if (found == 0) {
-			printf("Signal not found \n\r");
+			printf("Signal not found!!! \n\r");
 			
 			//arg->hello = "~core";
-			write(sock, mesErr, strlen(mesErr));
-			
+			write(sock, mesErr, strlen(mesErr));			
 			memset(client_message, 0, mess_length);
 			close(*arg->nSock);
 			free((int*)arg->nSock);
