@@ -284,11 +284,11 @@ int n=0;
 //		if( (iCmd1 != NULL) && (iCmdEnd != NULL) ){ // cmd read_signal
 		if( iCmd1 != NULL ){ // cmd read_signal
 		speedtest_start();
-		    printf("[recived >CMD READ] read_signal< \n\r");
+		    printf("[recived >CMD READ] read_signal \n\r");
 			size_t xx=0;
 			size_t cnt=0;
 			istr =strtok(client_message,":");
-			istr = strtok (NULL,":");
+			istr = strtok (NULL,":"); //mask or signal name
 			
 			// Выделение последующих частей
 			/*
@@ -307,7 +307,9 @@ int n=0;
 			for(cnt=0; cnt <  MAX_Signals; cnt++)
 			{
 				if( strstr(arg->SA_ptr[cnt].Name, istr))
-				{       
+				{      printf ("[%i] Signal Name: [%s]\t",cnt,arg->SA_ptr[cnt].Name); //debug
+				       printf (" ExState:    [%i] \n\r",arg->SA_ptr[cnt].ExState); //debug
+				        arg->SA_ptr[cnt].ExState=0; // Flag ExState turn off 
 				        strcpy(packed_txt_string,""); //erase buffer
 				        sSerial_by_num(cnt); //serialize to packet by number of signals				        
 				        strcat (result,packed_txt_string);
@@ -439,7 +441,9 @@ int n=0;
 			              
 			                //printf("[Total clientsignals#%i][#%i]Cyrrent client signal: [%s]\n\r",sn,pr,buf_signals[pr]);
 			                if ( strstr( buf_signals[pr], arg->SA_ptr[cnt].Name ) != NULL ) {
+			                    
 			                    printf ("StrStr: [%s] [%s]\n\r",buf_signals[pr],arg->SA_ptr[cnt].Name);
+			                    found++;
 			                    istr =strtok(buf_signals[pr],":");	 // first element NAME        
 			                    if (istr != NULL){				         
 			                        istr = strtok (NULL,":");	 // second element Value
