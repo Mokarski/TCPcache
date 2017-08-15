@@ -126,7 +126,7 @@ int main(int argc , char *argv[])
     puts("bind done");
      
     //Listen
-    listen(socket_desc , 3);
+    listen(socket_desc , 6); // queue of clients = 6
      
     //Accept and incoming connection
     puts("Waiting for incoming connections...");
@@ -135,7 +135,7 @@ int main(int argc , char *argv[])
     while( (client_sock = accept(socket_desc, (struct sockaddr *)&client, (socklen_t*)&c)) )
     {
         puts("Connection accepted");
-         
+        printf("(MAIN While) CLient socket ID[#%i] \n\r",client_sock); 
         pthread_t sniffer_thread;
         new_sock = malloc(1);
         *new_sock = client_sock;
@@ -239,6 +239,7 @@ int n=0;
 */
     //Get the socket descriptor
     int sock = *(int*)arg->nSock;
+    printf("Socket ID[#%i]\n\r",sock);
 	//
 	int read_size;
     char *mesOk, *mesNo, *mesErr, *mesBad, *messHello, client_message[10000], signalsBuffer[10000];
@@ -307,8 +308,9 @@ int n=0;
 			for(cnt=0; cnt <  MAX_Signals; cnt++)
 			{
 				if( strstr(arg->SA_ptr[cnt].Name, istr))
-				{      printf ("[%i] Signal Name: [%s]\t",cnt,arg->SA_ptr[cnt].Name); //debug
-				       printf (" ExState:    [%i] \n\r",arg->SA_ptr[cnt].ExState); //debug
+				{
+				 //      printf ("[%i] Signal Name: [%s]\t",cnt,arg->SA_ptr[cnt].Name); //debug
+				 //      printf (" ExState:    [%i] \n\r",arg->SA_ptr[cnt].ExState); //debug
 				        arg->SA_ptr[cnt].ExState=0; // Flag ExState turn off 
 				        strcpy(packed_txt_string,""); //erase buffer
 				        sSerial_by_num(cnt); //serialize to packet by number of signals				        
@@ -369,7 +371,7 @@ int n=0;
 			}
 
 			if (found > 0) {
-			printf("Signals  found [%i]! \n\r",found);
+			printf("Signals READ  found [%i]! \n\r",found);
 			
 			//arg->hello = "~core";
 			strcat (result,mesOk); //add Ok to end
@@ -427,7 +429,7 @@ int n=0;
 				sn++;
 			}
 			
-			printf("Start Write list parser\n\r");
+			//printf("Start Write list parser\n\r");
 			int found=0;         
 			for(cnt=0; cnt < MAX_Signals; cnt++) //cycle for signals
 			{ 
@@ -442,16 +444,16 @@ int n=0;
 			                //printf("[Total clientsignals#%i][#%i]Cyrrent client signal: [%s]\n\r",sn,pr,buf_signals[pr]);
 			                if ( strstr( buf_signals[pr], arg->SA_ptr[cnt].Name ) != NULL ) {
 			                    
-			                    printf ("StrStr: [%s] [%s]\n\r",buf_signals[pr],arg->SA_ptr[cnt].Name);
+			                    //printf ("StrStr: [%s] [%s]\n\r",buf_signals[pr],arg->SA_ptr[cnt].Name);
 			                    found++;
 			                    istr =strtok(buf_signals[pr],":");	 // first element NAME        
 			                    if (istr != NULL){				         
 			                        istr = strtok (NULL,":");	 // second element Value
-				                printf ("Client Value: [ %s ]\n\r",istr);
+				            //    printf ("Client Value: [ %s ]\n\r",istr);
 				                if (istr != NULL) strcpy(digit,istr);
 				                
 				                if (digit != NULL) val =  atoi(digit);
-				                   printf("Value AtoI to write: [%i] \n\r",val);
+				            //       printf("Value AtoI to write: [%i] \n\r",val);
 				                   arg->SA_ptr[cnt].Value[0] = val;
 				                   arg->SA_ptr[cnt].ExState = 1; //Flag value is changed
 				             }
@@ -515,7 +517,7 @@ int n=0;
 			}
 
 			if (found > 0) {
-			printf("Founded signals [%i]\n\r",found);
+			printf("Founded WRITE signals [%i]\n\r",found);
 			
 			//arg->hello = "~core";
 			write(sock, mesOk, strlen(mesOk));
@@ -533,7 +535,7 @@ int n=0;
 		
 		/****************************** ERROR CMD SECTION ********************************************/
 		
-		if( (iCmd1 == NULL) && (iCmd2 == NULL)  ){
+		if(  (iCmd1 == NULL) && (iCmd2 == NULL)  ){
 			printf("\nUnformatted Client Message\n");
 			//arg->msg = "~~~";
 			write(sock, mesBad, strlen(mesBad));
