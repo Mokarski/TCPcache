@@ -53,29 +53,6 @@ Discrete_Signals_t args[MAX_Signals]; // Create array of Tasks to control signal
 
 
 
-/*
-struct signal {
-	char Name[100];	//Name signal
-	char SrcString[100]; // For parsing!
-	int Value[2];	//value 2 int
-	int Off;	//Signal not used if OFF = 1;
-	int Ex_HW;	//Execution Hardware mark PcProc =1; Panel 43=2; Panel 10=3; soft_class
-	int Ex_SF;	//Execution Software mark ModBusMaster_RTU =1 Modbus_Master_TCP=2 CoreSignal=100
-};
-struct signal Signals[MAX_SIZE];
-struct signal *ptr_Signal;
-
-// ********************* Упаковка аргументов в структуру для передачи из функции потока
-typedef struct someArgs_tag {
-    int id;
-    char *msg;
-	char *hello;
-    int out;
-	int *nSock;
-	struct signal *pSignal;	
-} someArgs_t;
-*/
-
 void *connection_handler(void *);
  
  
@@ -124,6 +101,7 @@ int main(int argc , char *argv[])
         return FAIL_ERROR;
     }
     puts("bind done");
+	printf("Server Listen SOcket #ID[%i] \n\r",socket_desc);
      
     //Listen
     listen(socket_desc , 6); // queue of clients = 6
@@ -145,11 +123,12 @@ int main(int argc , char *argv[])
 		args[0].nSock = new_sock;
 		//args.pSignal = Signals;
 		args[0].SA_ptr = Signal_Array;
-        if( pthread_create( &sniffer_thread, NULL,  connection_handler, (void*) &args[0]) < 0)
+        if( pthread_create ( &sniffer_thread, NULL,  connection_handler, (void*) &args[0]) < 0)
         {
             perror("SERVER: Could not create thread");
             return (ERROR_CREATE_THREAD);
         }
+        
         puts("\nSERVER: Handler assigned"); 
         //Now join the thread , so that we dont terminate before the thread
         int status = pthread_join(sniffer_thread, (void**)&status_addr);
@@ -168,6 +147,11 @@ int main(int argc , char *argv[])
         perror("accept failed");
         return 1;
     }
+	
+	close(socket_desc);
+	close(client_sock);
+	close(c);
+	
     return SUCCESS;
 }
 /*
@@ -239,7 +223,7 @@ int n=0;
 */
     //Get the socket descriptor
     int sock = *(int*)arg->nSock;
-    printf("Socket ID[#%i]\n\r",sock);
+    printf("THREAD Socket ID[#%i]\n\r",sock);
 	//
 	int read_size;
     char *mesOk, *mesNo, *mesErr, *mesBad, *messHello, client_message[10000], signalsBuffer[10000];
@@ -268,6 +252,8 @@ int n=0;
 	char dig[128];	
     //write(sock , messHello , strlen(messHello));
     //Receive a message from client
+	
+	
     while( (read_size = recv(sock , client_message , 10000 , 0) ) > 0 )
     {
 		int mess_length = sizeof(client_message) / sizeof(client_message[0]);
@@ -282,259 +268,12 @@ int n=0;
 		iCmd2 = strstr (pCM,cmd_write_signal); // check for input cmd "signal_write"
 		iCmdEnd = strstr (pCM,cmd_end); // check for input cmd end ";"
 	//
-//		if( (iCmd1 != NULL) && (iCmdEnd != NULL) ){ // cmd read_signal
-		if( iCmd1 != NULL ){ // cmd read_signal
-		speedtest_start();
-		    printf("[recived >CMD READ] read_signal \n\r");
-			size_t xx=0;
-			size_t cnt=0;
-			istr =strtok(client_message,":");
-			istr = strtok (NULL,":"); //mask or signal name
-			
-			// Выделение последующих частей
-			/*
-			while (istr != NULL)
-			     {
-			                // Вывод очередной выделенной части
-			                   printf ("EXPLODE: [ %s ]\n\r",istr);
-			                // Выделение очередной части строки
-			                istr = strtok (NULL,":");
-			     }
-			     */
-			printf ("NAME: [ %s ]\n\r",istr);
-			int found=0;  
-			char result[30000];  //buffer for response
-			strcpy (result,""); //erase buffer
-			for(cnt=0; cnt <  MAX_Signals; cnt++)
-			{
-				if( strstr(arg->SA_ptr[cnt].Name, istr))
-				{
-				 //      printf ("[%i] Signal Name: [%s]\t",cnt,arg->SA_ptr[cnt].Name); //debug
-				 //      printf (" ExState:    [%i] \n\r",arg->SA_ptr[cnt].ExState); //debug
-				        arg->SA_ptr[cnt].ExState=0; // Flag ExState turn off 
-				        strcpy(packed_txt_string,""); //erase buffer
-				        sSerial_by_num(cnt); //serialize to packet by number of signals				        
-				        strcat (result,packed_txt_string);
-				        //printf ("[ %s ]\n\r",packed_txt_string); //DEBUG
-				        
-					//strcat (result,arg->SA_ptr[cnt].Name);
-					//strcat (result," value:");
-					/*
-					printf ("[%i] Signal Name: [%s]\t",cnt,arg->SA_ptr[cnt].Name);
-					printf (" mb_id:      [%i] \t ",arg->SA_ptr[cnt].MB_Id);
-					printf (" mb_reg_num: [%i] \t ",arg->SA_ptr[cnt].MB_Reg_Num);
-					printf (" bit_pos:    [%i] \t ",arg->SA_ptr[cnt].Bit_Pos);
-					printf (" Value0:     [%i] \t ",arg->SA_ptr[cnt].Value[0]);
-					printf (" Value1:     [%i] ",arg->SA_ptr[cnt].Value[1]);
-					printf (" Off:        [%i] ",arg->SA_ptr[cnt].Off);
-					printf (" ExState:    [%i] \n\r",arg->SA_ptr[cnt].ExState);
-					
-					ItoA (arg->SA_ptr[cnt].Value[0],dig);
-					strcat (result,dig);
-					*/
-					/*
-					strcat(result,":");
-					ItoA (arg->SA_ptr[cnt].MB_Id,dig);
-					strcat (result,dig);
-					
-					strcat(result,":");
-					ItoA (arg->SA_ptr[cnt].MB_Reg_Num, dig);
-					strcat (result,dig);
-					
-					strcat(result,":");
-					ItoA(arg->SA_ptr[cnt].Bit_Pos, dig);
-					strcat (result,dig);
-					
-					strcat(result,":");
-					strcat(result,arg->SA_ptr[cnt].Off  );
-					
-					strcat(result,":");
-					strcat(result,arg->SA_ptr[cnt].ExState  );
-					*/
-					
-					//strcat (result,"; ");
-					xx++;
-					found++;
-				}
-			}
-			
-			if (found == 0) {
-			printf("Signal not found \n\r");
-			
-			//arg->hello = "~core";
-			write(sock, mesErr, strlen(mesErr));
-			
-			memset(client_message, 0, mess_length);
-			close(*arg->nSock);
-			free((int*)arg->nSock);
-			pthread_exit(0);		
-			}
 
-			if (found > 0) {
-			printf("Signals READ  found [%i]! \n\r",found);
-			
-			//arg->hello = "~core";
-			strcat (result,mesOk); //add Ok to end
-			write(sock, result, strlen(result)); //send packet to client
-			}
-			/*
-			memset(client_message, 0, mess_length);
-			close(*arg->nSock);
-			free((int*)arg->nSock);
-			pthread_exit(0);		
-		        */
-		         printf(" ++++++++++++++++++++++++==>   SPEEDTEST TCPCache READ_REQ Time: [ %ld ] ms. \n\r", speedtest_stop());
-		         
-		}
-		
-		if( iCmd2 != NULL ){ // cmd write_signal
-		    speedtest_start();
-		    char digit[5]; //buffer Value of signal as CHAR
-		    char sname [100]; //buffer for temp store signal NAME
-		    char buf_signals[MAX_Signals][300]; //array of MAX_signal elements AND 300 characters each
-		    
-		    int val;
-		    printf("[recived >CMD WRITE] write_signal \n\r");
-			size_t xx=0;
-			size_t cnt=0;
-			int sn=1; //number of signals
-			            //istr =strtok(client_message,";");
-			            //strcpy (buf_signals[0],istr);
-			//istr = strtok (NULL,";");			
-			//printf ("EXPLODE NAME: [ %s ]\n\r",istr);
-			while ( istr != NULL ){
-			        /*if (istr == NULL) // defend from sigfault
-			        {
-			         printf("End write list\n\r");
-			         return ;
-			        }*/
-				istr =strtok(NULL,";");
-				/*
-				if ( istr != NULL ) // defend from sigfault
-			        {
-			         strcpy (buf_signals[sn],istr);
-				 printf ("[#%i] NAME: [%s] \n\r",sn,buf_signals[sn]);
-			         }
-			         */
-			         if (istr == NULL) // defend from sigfault
-			        {
-			         printf("End write list\n\r");
-			         // return ;
-			         break;
-			        } else {
-			    		strcpy (buf_signals[sn],istr);
-					//printf ("[#%i] NAME: [%s] \n\r",sn,buf_signals[sn]);
-			               }
-				
-				sn++;
-			}
-			
-			//printf("Start Write list parser\n\r");
-			int found=0;         
-			for(cnt=0; cnt < MAX_Signals; cnt++) //cycle for signals
-			{ 
-			
-			    int pr=0;
-			    if ( strlen ( arg->SA_ptr[cnt].Name ) > 2 ) {  // test if signal name not empty
-			             //printf ("Cyrrent SA: [%s] \n\r",arg->SA_ptr[cnt].Name);
-			             
-			         for (pr = 0; pr < sn; pr++){ //cycle for recived signals from client. number of recived signals = sn
-			
-			              
-			                //printf("[Total clientsignals#%i][#%i]Cyrrent client signal: [%s]\n\r",sn,pr,buf_signals[pr]);
-			                if ( strstr( buf_signals[pr], arg->SA_ptr[cnt].Name ) != NULL ) {
-			                    
-			                    //printf ("StrStr: [%s] [%s]\n\r",buf_signals[pr],arg->SA_ptr[cnt].Name);
-			                    found++;
-			                    istr =strtok(buf_signals[pr],":");	 // first element NAME        
-			                    if (istr != NULL){				         
-			                        istr = strtok (NULL,":");	 // second element Value
-				            //    printf ("Client Value: [ %s ]\n\r",istr);
-				                if (istr != NULL) strcpy(digit,istr);
-				                
-				                if (digit != NULL) val =  atoi(digit);
-				            //       printf("Value AtoI to write: [%i] \n\r",val);
-				                   arg->SA_ptr[cnt].Value[0] = val;
-				                   arg->SA_ptr[cnt].ExState = 1; //Flag value is changed
-				             }
-			                   }
-			                /*
-			                //START EXPLODE Name:Val
-				        if ( buf_signals[pr] != NULL )  istr =strtok(buf_signals[pr],":");	 // first element NAME        
-			         
-			                if (istr != NULL){				         
-			                    strcpy(sname,istr);
-				            printf ("EXPLODE1 Client Name: [ %s ] \n\r",sname);
-				           }
-				           
-				        //printf ("2 Input signal Name:{%s}\n\r", sname);
-				        
-				         if (istr != NULL){
-				         istr = strtok (NULL,":");	 // second element Value
-				         printf ("EXPLODE2 Client Value: [ %s ]\n\r",istr);
-				         if (istr != NULL) strcpy(digit,istr);				         
-				         } else {
-				             printf ("Value is empty! \n\r");
-				             //break; //if not set any Value -> Break the cycle
-				             }					
-				     
-				         //if (istr == NULL) break;
-			                 //printf ("3 Input signal Name:{%s}\n\r", sname);
-			          
-				          if( strstr(arg->SA_ptr[cnt].Name, sname ) != NULL )
-				             {	
-				             			
-					       printf ("Founded: Search [%s]   Have [%s] \n\r",arg->SA_ptr[cnt].Name, sname );
-				               if (istr != NULL){				        
-				                   if (digit != NULL) val =  atoi(digit);
-				                   printf("Value AtoI to write: [%i] \n\r",val);
-				                   arg->SA_ptr[cnt].Value[0] = val;
-				                   arg->SA_ptr[cnt].ExState = 1; //Flag value is changed
-				                  }
-				     
-				             //printf ("EXPLODE digital: [ %s ]\n\r",istr);
-				             //printf(" AtoI writed value [%i]\n\r",arg->SA_ptr[cnt].Value[0]);
-				             break; //if found signal break the cyrrent cycle
-				             xx++;
-				             found++;				     
-				          }
-				          */
-			          }
-			      
-			      pr++; // increment start index position of cycle for start next step exclude previus step!!!
-			    }
-			}
-			
-			if (found == 0) {
-			printf("Signal not found!!! \n\r");
-			
-			//arg->hello = "~core";
-			write(sock, mesErr, strlen(mesErr));			
-			memset(client_message, 0, mess_length);
-			close(*arg->nSock);
-			free((int*)arg->nSock);
-			pthread_exit(0);		
-			}
-
-			if (found > 0) {
-			printf("Founded WRITE signals [%i]\n\r",found);
-			
-			//arg->hello = "~core";
-			write(sock, mesOk, strlen(mesOk));
-			}
-			/*
-			memset(client_message, 0, mess_length);
-			close(*arg->nSock);
-			free((int*)arg->nSock);
-			pthread_exit(0);		
-		       */
-		        printf(" ++++++++++++++++++++++++==>   SPEEDTEST TCPCache WRITE_REQ Time: [ %ld ] ms. \n\r", speedtest_stop());
-		        
-		}
+	
 		
 		
 		/****************************** ERROR CMD SECTION ********************************************/
-		
+		/*
 		if(  (iCmd1 == NULL) && (iCmd2 == NULL)  ){
 			printf("\nUnformatted Client Message\n");
 			//arg->msg = "~~~";
@@ -544,7 +283,7 @@ int n=0;
 			free((int*)arg->nSock);
 			pthread_exit(0);			
 		}		
-		
+		*/
     }
      
     if(read_size == 0)
@@ -556,11 +295,12 @@ int n=0;
     {
         perror("SERVER: Recv failed");
     }
-	close(*arg->nSock);         
+	//close(*arg->nSock);         
+	//close (sock);
     //Free the socket pointer
-//     printf(" ++++++++++++++++++++++++==>   SPEEDTEST  TCPCache write from client Time: [ %ld ] ms. \n\r", speedtest_stop());
+    //printf(" ++++++++++++++++++++++++==>   SPEEDTEST  TCPCache write from client Time: [ %ld ] ms. \n\r", speedtest_stop());
      
     free((int*)arg->nSock);
-     
+    //free (sock);
     return 0;
 }
