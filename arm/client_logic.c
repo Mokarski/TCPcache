@@ -21,7 +21,7 @@ int main(int argc , char *argv[])
 //INIT SIGNALS     
     printf("MAX_Signals [%i] \n",MAX_Signals);
     init_signals_list(); // erase signal lsit 
-socket_init();
+if (socket_init() !=0) return; //return 0 if all OK else return 1
 while (1){
 
 	    speedtest_start(); //time start

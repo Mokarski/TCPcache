@@ -283,6 +283,7 @@ int n=0;
 		    printf("[recived >CMD READ] read_signal \n\r");
 			size_t xx=0;
 			size_t cnt=0;
+			printf ("SERVER: recive from client: [%s]\n\r",client_message);
 			istr =strtok(client_message,":");
 			istr = strtok (NULL,":"); //mask or signal name
 			
@@ -336,6 +337,7 @@ int n=0;
 			//mesOk = "Ok!";
 			strcat (result,mesOk); //add Ok to end
 			write(sock, result, strlen(result)); //send packet to client
+			memset(client_message, 0, mess_length);
 			}
 			/*
 			memset(client_message, 0, mess_length);
@@ -443,6 +445,7 @@ int n=0;
 			//mesOk = "Ok!";
 			//arg->hello = "~core";
 			write(sock, mesOk, strlen(mesOk));
+			memset(client_message, 0, mess_length);
 			}
 			/*
 			memset(client_message, 0, mess_length);

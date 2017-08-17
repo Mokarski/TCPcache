@@ -199,7 +199,7 @@ speedtest_start(); //time start
             strcpy(packed_txt_string,""); //erase buffer
             sSerial_by_num_short(x);
             strcat(message, packed_txt_string);
-            printf("message part:[%s] \n\r",message);
+            //printf("message part:[%s] \n\r",message);
 //          socket_close();
          } else break; // signals list is end
      }
