@@ -70,6 +70,7 @@ int main(int argc, char *argv[])
 void *connection_handler(void *socket_desc)
 {
 	int sock = *(int*)socket_desc;
+	
 	printf ("Socket ID[#%i]\n\r",sock);
 	char *message, client_message[2000], server_message[2000];
 	int read_size;
