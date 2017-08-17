@@ -9,7 +9,7 @@ char packed_txt_string[40000];
 
 struct Signal {
 
- char Name[300];         // Name signal
+ char Name[330];         // Name signal
 
 //if modbus signals type
     int  MB_Id;          // Modbus device ID

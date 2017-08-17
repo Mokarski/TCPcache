@@ -253,10 +253,10 @@ int n=0;
 	int posEndFrame=0;
 	int cntFrame=0;
 	char *pSB = signalsBuffer;
-	mesErr="Err!\n";
+	
 	mesOk = "Ok!";
-	mesNo = "Ooh!\n";
-	mesBad= "Bad cmd!\n";
+	mesNo = "Ooh!";
+	mesBad= "Bad cmd!";
 	char a[4096];
 	char dig[128];	
     //write(sock , messHello , strlen(messHello));
@@ -276,8 +276,9 @@ int n=0;
 		iCmd1 = strstr (pCM,cmd_read_signal); // check for input cmd "signal_read"
 		iCmd2 = strstr (pCM,cmd_write_signal); // check for input cmd "signal_write"
 		iCmdEnd = strstr (pCM,cmd_end); // check for input cmd end ";"
-	//********************************* COMMAND SELECTION AND EXECUTION ******************************/
-if( iCmd1 != NULL ){ // cmd read_signal
+		
+	   //********************************* COMMAND SELECTION AND EXECUTION ******************************/
+       if( iCmd1 != NULL ){ // cmd read_signal
 		speedtest_start();
 		    printf("[recived >CMD READ] read_signal \n\r");
 			size_t xx=0;
@@ -317,9 +318,10 @@ if( iCmd1 != NULL ){ // cmd read_signal
 			}
 			
 			if (found == 0) {
-			printf("Signal not found \n\r");
+			printf("CMD_READ: Signal not found/ Close socket \n\r");
 			
 			//arg->hello = "~core";
+			//mesErr = "Err! NotFound \n\r";
 			write(sock, mesErr, strlen(mesErr));
 			
 			memset(client_message, 0, mess_length);
@@ -331,7 +333,7 @@ if( iCmd1 != NULL ){ // cmd read_signal
 			if (found > 0) {
 			printf("Signals READ  found [%i]! \n\r",found);
 			
-			//arg->hello = "~core";
+			//mesOk = "Ok!";
 			strcat (result,mesOk); //add Ok to end
 			write(sock, result, strlen(result)); //send packet to client
 			}
@@ -425,9 +427,10 @@ if( iCmd1 != NULL ){ // cmd read_signal
 			
 			
 			if (found == 0) {
-			printf("Signal not found!!! \n\r");
+			printf("CMD_WRITE: Signal not found / Close socket! \n\r");
 			
 			//arg->hello = "~core";
+			//mesErr = "Err! WriteSignals Not FOund ";
 			write(sock, mesErr, strlen(mesErr));			
 			memset(client_message, 0, mess_length);
 			close(*arg->nSock);
@@ -437,7 +440,7 @@ if( iCmd1 != NULL ){ // cmd read_signal
 
 			if (found > 0) {
 			printf("Founded WRITE signals [%i]\n\r",found);
-			
+			//mesOk = "Ok!";
 			//arg->hello = "~core";
 			write(sock, mesOk, strlen(mesOk));
 			}

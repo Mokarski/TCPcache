@@ -130,14 +130,15 @@ int main(int argc , char *argv[])
 //INIT SIGNALS     
     printf("MAX_Signals [%i] \n",MAX_Signals);
     init_signals_list(); // erase signal lsit 
+    socket_init();    
     
 while (1){
 
 speedtest_start(); //time start
 
 //======================== read all 485 signals from server create signals and virtual devices ===================
-    socket_init();
-    if ( tcpsignal_read("485.kb.") == 0 ){ // if we get response from server
+
+    if ( tcpsignal_read(".") == 0 ){ // if we get response from server
         tcpsignal_parser(signal_parser_buf);
     }
 //    socket_close();
@@ -189,30 +190,30 @@ speedtest_start(); //time start
      int x=0;
 //     socket_init();     
 
-     strcpy(message,""); //erase buffer
+     
      strcpy(message,""); //erase buffer     
+     printf("Packed_txt_string:[%s] \n\r",packed_txt_string);
      for (x=0; x < MAX_Signals; x++){
       if ( strlen (Signal_Array[x].Name) > 1 ){ //write if Name not empty
 //          socket_init();
             strcpy(packed_txt_string,""); //erase buffer
             sSerial_by_num_short(x);
             strcat(message, packed_txt_string);
+            printf("message part:[%s] \n\r",message);
 //          socket_close();
          } else break; // signals list is end
      }
+     
      tcpsignal_packet_write(message);
-//     printf("to Send:[%s]",message);
-     socket_close();
+     printf("Send to TCPCache:[%s] \n\r",message);
+    
      
 
       
       
   printf(" ++++++++++++++++++++++++==>   SPEEDTEST Send to TCPCache Time: [ %ld ] ms. \n\r", speedtest_stop());     
-
-
-
 }
-
+ socket_close();
 
 return 0;
 }

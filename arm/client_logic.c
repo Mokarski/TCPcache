@@ -21,13 +21,13 @@ int main(int argc , char *argv[])
 //INIT SIGNALS     
     printf("MAX_Signals [%i] \n",MAX_Signals);
     init_signals_list(); // erase signal lsit 
-    
+socket_init();
 while (1){
 
 	    speedtest_start(); //time start
 
 	    //======================== read all 485 signals from server create signals and virtual devices ===================
-	    socket_init();
+
 	    if ( tcpsignal_read(".") == 0 ){ // if we get response from server, get all signals list
                  tcpsignal_parser(signal_parser_buf);
                  printf("Recived Buffer[%s] \n\r",signal_parser_buf);
@@ -56,9 +56,9 @@ while (1){
 
 
 		  printf(" ==>   SPEEDTEST Deserial signals signals: [ %ld ] ms. \n\r", speedtest_stop());     
-		  socket_close();
-       }
 
+       }
+ socket_close();
 
 
 return 0;
