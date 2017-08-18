@@ -130,7 +130,10 @@ int main(int argc , char *argv[])
 //INIT SIGNALS     
     printf("MAX_Signals [%i] \n",MAX_Signals);
     init_signals_list(); // erase signal lsit 
-    socket_init();    
+    if( socket_init() != 0) {
+    printf ("NO Connection to server\n\r");
+    return;    
+    }
     
 while (1){
 
@@ -138,7 +141,7 @@ speedtest_start(); //time start
 
 //======================== read all 485 signals from server create signals and virtual devices ===================
 
-    if ( tcpsignal_read(".") == 0 ){ // if we get response from server
+    if ( tcpsignal_read("485.kb.") == 0 ){ // if we get response from server
         tcpsignal_parser(signal_parser_buf);
     }
 //    socket_close();

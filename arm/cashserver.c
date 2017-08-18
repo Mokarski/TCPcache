@@ -104,7 +104,7 @@ int main(int argc , char *argv[])
 	printf("Server Listen SOcket #ID[%i] \n\r",socket_desc);
      
     //Listen
-    listen(socket_desc , 6); // queue of clients = 6
+    listen(socket_desc , 25); // queue of clients = 6
      
     //Accept and incoming connection
     puts("Waiting for incoming connections...");
@@ -231,7 +231,8 @@ int n=0;
                                                    
 */
     //Get the socket descriptor
-    int sock = *(int*)arg->nSock;
+    int sock = *(int*)arg->nSock; //get id
+    free((int*)arg->nSock); // release memblock
     printf("THREAD Socket ID[#%i]\n\r",sock);
 	//
 	int read_size;
@@ -257,6 +258,7 @@ int n=0;
 	mesOk = "Ok!";
 	mesNo = "Ooh!";
 	mesBad= "Bad cmd!";
+	mesErr = "Err!";
 	char a[4096];
 	char dig[128];	
     //write(sock , messHello , strlen(messHello));
@@ -281,6 +283,7 @@ int n=0;
        if( iCmd1 != NULL ){ // cmd read_signal
 		speedtest_start();
 		    printf("[recived >CMD READ] read_signal \n\r");
+		    printf("THREAD Socket ID[#%i]\n\r",sock);
 			size_t xx=0;
 			size_t cnt=0;
 			printf ("SERVER: recive from client: [%s]\n\r",client_message);
@@ -326,9 +329,9 @@ int n=0;
 			write(sock, mesErr, strlen(mesErr));
 			
 			memset(client_message, 0, mess_length);
-			close(*arg->nSock);
-			free((int*)arg->nSock);
-			pthread_exit(0);		
+			//close(*arg->nSock);
+			//free((int*)arg->nSock);
+			//pthread_exit(0);		
 			}
 
 			if (found > 0) {
@@ -357,6 +360,7 @@ int n=0;
 		    
 		    int val;
 		    printf("[recived >CMD WRITE] write_signal \n\r");
+		        printf("THREAD Socket ID[#%i]\n\r",sock);
 			size_t xx=0;
 			size_t cnt=0;
 			int sn=1; //number of signals
@@ -406,7 +410,7 @@ int n=0;
 			                //printf("[Total clientsignals#%i][#%i]Cyrrent client signal: [%s]\n\r",sn,pr,buf_signals[pr]);
 			                if ( strstr( buf_signals[pr], arg->SA_ptr[cnt].Name ) != NULL ) {
 			                    
-			                    //printf ("StrStr: [%s] [%s]\n\r",buf_signals[pr],arg->SA_ptr[cnt].Name);
+			                    printf ("StrStr: [%s] [%s]\n\r",buf_signals[pr],arg->SA_ptr[cnt].Name);
 			                    found++;
 			                    istr =strtok(buf_signals[pr],":");	 // first element NAME        
 			                    if (istr != NULL){				         
@@ -434,10 +438,11 @@ int n=0;
 			//arg->hello = "~core";
 			//mesErr = "Err! WriteSignals Not FOund ";
 			write(sock, mesErr, strlen(mesErr));			
-			memset(client_message, 0, mess_length);
-			close(*arg->nSock);
-			free((int*)arg->nSock);
-			pthread_exit(0);		
+			//memset(client_message, 0, mess_length); //erase the buffer
+			strcpy(client_message,""); //erase the buffer
+			//close(*arg->nSock);
+			//free((int*)arg->nSock);
+			//pthread_exit(0);		
 			}
 
 			if (found > 0) {
@@ -462,13 +467,13 @@ int n=0;
 		/****************************** ERROR CMD SECTION ********************************************/
 		
 		if(  (iCmd1 == NULL) && (iCmd2 == NULL)  ){
-			printf("\nUnformatted Client Message\n");
+			printf("\nUnformatted Client Message!!!! \n\r");
 			//arg->msg = "~~~";
 			write(sock, mesBad, strlen(mesBad));
 			memset(client_message, 0, mess_length);
-			close(*arg->nSock);
-			free((int*)arg->nSock);
-			pthread_exit(0);			
+			//close(*arg->nSock);
+			//free((int*)arg->nSock);
+			//pthread_exit(0);			
 		}		
 		
     }
@@ -482,12 +487,12 @@ int n=0;
     {
         perror("SERVER: Recv failed");
     }
-	//close(*arg->nSock);         
+	close(*arg->nSock);         
 	//close (sock);
     //Free the socket pointer
     //printf(" ++++++++++++++++++++++++==>   SPEEDTEST  TCPCache write from client Time: [ %ld ] ms. \n\r", speedtest_stop());
      
-    free((int*)arg->nSock);
+    //free((int*)arg->nSock);
     //free (sock);
     return 0;
 }

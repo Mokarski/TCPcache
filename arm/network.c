@@ -342,10 +342,18 @@ int tcpsignal_packet_write(char *message_in ){
 	if( strstr(server_reply,"Ok!") == NULL)	
 	{
 	  printf("Server reply error? - no OK! \n\r");
-	  printf("-> reply: [ %s ] \n\r",server_reply);
+	  printf("->Server reply: [ %s ] \n\r",server_reply);
 	  return 1;
 	  //break;
 	}
+	/*
+	if( strstr(server_reply,"Err!") == NULL)	
+	{
+	  printf("Server reply Err! \n\r");
+	  printf("->Server reply: [ %s ] \n\r",server_reply);
+	  return 1;
+	}
+	*/
 	//memset(server_reply, 0, sizeof(server_reply) / sizeof(server_reply[0]));
     //}
      printf(" ++++++++++++++++++++++++==>   SPEEDTEST Function Time: [ %i ] ms. \n\r", speedtest_stop());

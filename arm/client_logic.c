@@ -10,7 +10,7 @@
 #include "signals.h"
 #include "speedtest.h"
 #include <errno.h>
-
+#include <unistd.h>
 
 
 
@@ -21,7 +21,10 @@ int main(int argc , char *argv[])
 //INIT SIGNALS     
     printf("MAX_Signals [%i] \n",MAX_Signals);
     init_signals_list(); // erase signal lsit 
-if (socket_init() !=0) return; //return 0 if all OK else return 1
+if (socket_init() !=0){
+     printf ("No Connection to server\n\r");
+     return; //return 0 if all OK else return 1
+     }
 while (1){
 
 	    speedtest_start(); //time start
@@ -45,10 +48,9 @@ while (1){
 
 	            if ( sDeSerial_by_num (z) == 0){
             
-    		        printf ("Name:[%s] Val:[%i]",Signal_Array[z].Name,Signal_Array[z].Value[1]); //debug
+    		        printf ("Name:[%s] Val:[%i] \n\r",Signal_Array[z].Name,Signal_Array[z].Value[1]); //debug
 	                //print_by_name(Signal_Array[z].Name);
-	                if (Signal_Array[z].Value[1] > 0)
-                        printf ("Name:[%s] Val:[%i]",Signal_Array[z].Name,Signal_Array[z].Value[1]);
+	                //if (Signal_Array[z].Value[1] > 0)    printf ("Name:[%s] Val:[%i]",Signal_Array[z].Name,Signal_Array[z].Value[1]);
                 
 	                } else break;
     		   }
@@ -56,7 +58,8 @@ while (1){
 
 
 		  printf(" ==>   SPEEDTEST Deserial signals signals: [ %ld ] ms. \n\r", speedtest_stop());     
-
+        usleep(1000*60);
+        printf("uSleep.. \n\r");     
        }
  socket_close();
 
