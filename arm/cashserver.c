@@ -340,6 +340,7 @@ int n=0;
 			//mesOk = "Ok!";
 			strcat (result,mesOk); //add Ok to end
 			write(sock, result, strlen(result)); //send packet to client
+			strcpy (client_message,"");
 			memset(client_message, 0, mess_length);
 			}
 			/*

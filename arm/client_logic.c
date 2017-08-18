@@ -43,15 +43,19 @@ while (1){
   
 	       speedtest_start(); //time start
 	       int z=0;
-
+		int row=0;
 	       for (z=0; z < MAX_Signals; z++) {
 
 	            if ( sDeSerial_by_num (z) == 0){
             
-    		        printf ("Name:[%s] Val:[%i] \n\r",Signal_Array[z].Name,Signal_Array[z].Value[1]); //debug
+    		        //printf ("Name:[%s] Val:[%i] \n\r",Signal_Array[z].Name,Signal_Array[z].Value[1]); //debug
 	                //print_by_name(Signal_Array[z].Name);
-	                //if (Signal_Array[z].Value[1] > 0)    printf ("Name:[%s] Val:[%i]",Signal_Array[z].Name,Signal_Array[z].Value[1]);
-                
+	                if (Signal_Array[z].Value[1] > 0)    printf (" Name:[%s] Val:[%i] ",Signal_Array[z].Name,Signal_Array[z].Value[1]);
+	                    if ( row > 3 ){
+	                        row=0;
+	                         printf (" \n\r "); //show string delimiter
+	                       }
+			    row++;
 	                } else break;
     		   }
     		   
