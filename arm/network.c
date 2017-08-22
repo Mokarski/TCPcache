@@ -167,8 +167,12 @@ int signal_counter=0;
 
         // Выделение первой части строки
            istr = strtok (tcp_buffer,sep);
-           strcpy (Signal_Array[signal_counter].Name,istr); //copy 1 signal string to Signal_Array field Name
-           //sDeSerial_by_num (signal_counter);
+           if ( istr == NULL ) {
+              printf ("tcpsignal_parser: istr1 NULL \n\r");
+              return 1;
+              //sDeSerial_by_num (signal_counter);
+              }
+            strcpy (Signal_Array[signal_counter].Name,istr); //copy 1 signal string to Signal_Array field Name
              
         // Выделение последующих частей
                  while ( istr != NULL )
@@ -180,6 +184,7 @@ int signal_counter=0;
                                printf ("[#%i] End list \n\r",signal_counter);
                                return 1;
                              }
+                             
                         strcpy (Signal_Array[signal_counter].Name,istr); //copy 1 signal string to Signal_Array field Name
                           
                         

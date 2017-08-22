@@ -79,18 +79,100 @@ char Value[3];
  return result; //if zerro then not found signals else return value
 }
                                                                                     
+
+int unpack_signal (char *str, int n){
+    char sep[3]=":";
+    char *istr;
+    //printf("Unpack Signal: [%s]\n\r",str);
+
+istr = strtok (str, sep);
+if (istr != NULL){
+   //printf ("1 - %s ",istr);
+   int c =1;
+    while ( istr != NULL ){
+           switch (c) {
+           case 1:
+                  //printf ("%i - %s ",c,istr);
+                  strcpy ( Signal_Array[n].Name,istr );
+           break;
+
+           case 2:
+                 //printf ("%i - %s ",c,istr);
+                 strcpy ( Signal_Array[n].Val_Type,istr );
+           break;
+
+           case 3:
+                 //printf ("%i - %s ",c,istr);
+                  Signal_Array[n].MB_Id = atoi ( istr );
+           break;
+
+           case 4:
+                 //printf ("%i - %s ",c,istr);
+                 Signal_Array[n].MB_Reg_Num = atoi ( istr );
+           break;
+
+           case 5:
+                 //printf ("%i - %s ",c,istr);
+                 Signal_Array[n].Bit_Pos = atoi ( istr );
+           break;
+
+           case 6:
+                 //printf ("%i - %s ",c,istr);
+                 Signal_Array[n].Value[1] = atoi ( istr );
+           break;
+
+           case 7:
+                 //printf ("%i - %s ",c,istr);
+           break;
+
+           case 8:
+                 //printf ("%i - %s ",c,istr);
+           break;
+
+           case 9:
+                 //printf ("%i - %s ",c,istr);
+           break;
+
+           case 10:
+                 //printf ("%i - %s ",c,istr);
+           break;
+
+           case 11:
+                 //printf ("%i - %s \n\r",c,istr);
+           break;
+
+           default:
+           printf("error index %i\n\r",c);
+           }
+
+           c++;
+           istr = strtok (NULL, sep);
+           //printf ("%i - %s ",c,istr);
+          }
+}
+return 0;
+}
+
+
                 
 int sDeSerial_by_num (int n){
 char sep1[10]=":";
-char sep2[10]=";";
+//char sep2[10]=";";
 char line[503]; //buffer for parsing
 char *istr1;
-char *istr2;
-char *istr3;
+//char *istr2;
+//char *istr3;
+           if (strlen (Signal_Array[n].Name) < 4){
+            printf("SignalName very shot <4 symbols \n\r");
+            return 1;
+           }
 
-       //explode signal to name field and val field
-          strcpy(line,Signal_Array[n].Name); //from filed Name to buf
-//          printf ("[#%i] line:[%s]\n\r",n,line); //DEBUG
+           //erase buffer
+           line[0]=0;
+           
+          //explode signal to name field and val field
+          strcpy(line,Signal_Array[n].Name); //from filed Name content all signals info to buf
+          printf ("[#%i]==> buffer line:[%s]\n\r",n,line); //DEBUG
           
           //strcpy(line,packed_txt_string); //from filed Name to buf
           
@@ -101,6 +183,7 @@ char *istr3;
           return 1;
           }
                     
+          printf("\n\rDS:> Signal Name:{%s} ",istr1);
           strcpy (Signal_Array[n].Name,istr1); //put "Name" to filed Name
           
           
@@ -111,6 +194,7 @@ char *istr3;
           return 1;
           }
           strcpy (Signal_Array[n].Val_Type,istr1);
+          printf("Value Type:{%s} ",istr1);
                                                 
                                                                   
           istr1 = strtok (NULL,sep1);
@@ -120,7 +204,7 @@ char *istr3;
           }
           //printf ("[#%i] MB_ID:[%s]\n\r",n, istr1); //DEBUG
           Signal_Array[n].MB_Id = atoi (istr1);                                                                                                              
-
+          printf( " MB_Id:{%s} ",istr1);
 
           istr1 = strtok (NULL,sep1);
           if (istr1 == NULL)  {
@@ -128,7 +212,7 @@ char *istr3;
           return 1;
           }
           Signal_Array[n].MB_Reg_Num = atoi (istr1);                                                                                                              
-
+          printf(" RegNum:{%s} ",istr1);
 
           istr1 = strtok (NULL,sep1);
           if (istr1 == NULL)  {
@@ -136,21 +220,25 @@ char *istr3;
           return 1;
           }
           Signal_Array[n].Bit_Pos = atoi (istr1);                                                                                                              
-        
+          printf(" BitPos:{%s} ",istr1);
         
           istr1 = strtok (NULL,sep1);
           if (istr1 == NULL)  {
           printf ("DeSerializer: Null strtok6\n\r");
           return 1;
           }
-          Signal_Array[n].Value[1] = atoi (istr1);                                                                                                              
-
+          int val=0;
+          val = atoi (istr1);              
+          // 48                                                                                                
+          Signal_Array[n].Value[1] = val;
+          printf(" Value1:[ str %s | int %i ] ",istr1, val);
 
           istr1 = strtok (NULL,sep1);
           if (istr1 == NULL)  {
           printf ("DeSerializer: Null strtok7\n\r");
           return 1;
           }
+          
           Signal_Array[n].TCP_Type = atoi (istr1);                                                                                                                                                                                                                                              
 
           istr1 = strtok (NULL,sep1);

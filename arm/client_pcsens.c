@@ -142,7 +142,8 @@ speedtest_start(); //time start
 //======================== read all 485 signals from server create signals and virtual devices ===================
 
     if ( tcpsignal_read("485.kb.") == 0 ){ // if we get response from server
-        tcpsignal_parser(signal_parser_buf);
+        tcpsignal_parser(signal_parser_buf); //explode by ";"
+        strcpy (signal_parser_buf,""); //erase buffer for next iteration
     }
 //    socket_close();
     

@@ -339,7 +339,8 @@ int n=0;
 			
 			//mesOk = "Ok!";
 			strcat (result,mesOk); //add Ok to end
-			write(sock, result, strlen(result)); //send packet to client
+			printf ("BUF to SEND:[%s] \n \n \r",result);
+			write(sock, result, strlen(result)); //send packet to client			
 			strcpy (client_message,"");
 			memset(client_message, 0, mess_length);
 			}
@@ -413,7 +414,7 @@ int n=0;
 			                    
 			                    printf ("StrStr: [%s] [%s]\n\r",buf_signals[pr],arg->SA_ptr[cnt].Name);
 			                    found++;
-			                    istr =strtok(buf_signals[pr],":");	 // first element NAME        
+			                    istr = strtok(buf_signals[pr],":");	 // first element NAME        
 			                    if (istr != NULL){				         
 			                        istr = strtok (NULL,":");	 // second element Value
 				            //    printf ("Client Value: [ %s ]\n\r",istr);
