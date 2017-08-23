@@ -115,7 +115,7 @@ while (1){
 	    //======================== read all 485 signals from server create signals and virtual devices ===================
             //strcpy (signal_parser_buf,""); 		//erase buffer
 	    if ( tcpsignal_read(".") == 0 ){ 		// if we get response from server, get all signals list
-	         //printf("Recived Buffer ==== [%s] \n\r",signal_parser_buf); //-48
+	         printf("Recived Buffer ==== [%s] \n\r",signal_parser_buf); //-48
                  tcpsignal_parser(signal_parser_buf);   	// explode signals by delimiter ";"
                  strcpy(signal_parser_buf,""); 			//erase buffer before next iteration
                  //printf("Recived Buffer[%s] \n\r",signal_parser_buf);

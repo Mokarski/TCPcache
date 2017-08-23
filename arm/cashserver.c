@@ -314,8 +314,8 @@ int n=0;
 				if( strstr(arg->SA_ptr[cnt].Name, istr))
 				{
 				 //      printf ("[%i] Signal Name: [%s]\t",cnt,arg->SA_ptr[cnt].Name); //debug
-				 //      printf (" ExState:    [%i] \n\r",arg->SA_ptr[cnt].ExState); //debug
-				        arg->SA_ptr[cnt].ExState=0; // Flag ExState turn off 
+				       printf (" READ: Signal Name: [%s]  Value: {%i} ExState: [%i] \n\r",arg->SA_ptr[cnt].Name,arg->SA_ptr[cnt].Value[1],arg->SA_ptr[cnt].ExState); //debug
+				        //arg->SA_ptr[cnt].ExState=0; // Flag ExState turn off 
 				        strcpy(packed_txt_string,""); //erase buffer
 				        sSerial_by_num(cnt); //serialize to packet by number of signals				        
 				        strcat (result,packed_txt_string);
@@ -428,9 +428,11 @@ int n=0;
 				                
 				                if (digit != NULL) val =  atoi(digit);
 				            //       printf("Value AtoI to write: [%i] \n\r",val);
-				                   arg->SA_ptr[cnt].Value[0] = val;
-				                   if (val > 0) printf ("NAME:{%s} Value:[%i] \n\r",arg->SA_ptr[cnt].Name,val);
-				                   arg->SA_ptr[cnt].ExState = 1; //Flag value is changed
+				                arg->SA_ptr[cnt].Value[0] = val;
+				            //    arg->SA_ptr[cnt].ExState = 0; //Flag value is changed
+				                   
+				                   if (val > 0) printf ("WRITE: NAME:{%s} Value:[%i] {ExState = %i} \n\r",arg->SA_ptr[cnt].Name,val, arg->SA_ptr[cnt].ExState);
+				                  
 				             }
 			                   }
 			            

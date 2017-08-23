@@ -279,7 +279,7 @@ int result=0;
 char Value[3];
 //int signals_counter=0;
 
-             if (strlen(Signal_Array[n].Name) > 4 ) //if name signal more then 4 symbols
+             if (strlen(Signal_Array[n].Name) > 2 ) //if name signal more then 4 symbols
                  {
                  
                  strcat(packed_txt_string,Signal_Array[n].Name);
@@ -449,7 +449,7 @@ int result=0;
 char Value[3];
 //int signals_counter=0;
 
-             if (strlen(Signal_Array[n].Name) > 4 ) //if name signal more then 4 symbols
+             if (strlen(Signal_Array[n].Name) > 3 ) //if name signal more then 4 symbols
                  {
                  
                  strcat(packed_txt_string,Signal_Array[n].Name);
