@@ -265,6 +265,7 @@ int n=0;
     //Receive a message from client
 	
 	
+    int found=0;  
     while( (read_size = recv(sock , client_message , 10000 , 0) ) > 0 )
     {
 		int mess_length = sizeof(client_message) / sizeof(client_message[0]);
@@ -282,13 +283,16 @@ int n=0;
 	   //********************************* COMMAND SELECTION AND EXECUTION ******************************/
        if( iCmd1 != NULL ){ // cmd read_signal
 		speedtest_start();
+		    found=0;  
 		    printf("[recived >CMD READ] read_signal \n\r");
 		    printf("THREAD Socket ID[#%i]\n\r",sock);
 			size_t xx=0;
 			size_t cnt=0;
 			printf ("SERVER: recive from client: [%s]\n\r",client_message);
 			istr =strtok(client_message,":");
-			istr = strtok (NULL,":"); //mask or signal name
+			if (istr != NULL){
+			    istr = strtok (NULL,":"); //mask or signal name
+			   }
 			
 			// Выделение последующих частей
 			/*
@@ -301,7 +305,8 @@ int n=0;
 			     }
 			     */
 			printf ("NAME: [ %s ]\n\r",istr);
-			int found=0;  
+
+
 			char result[30000];  //buffer for response
 			strcpy (result,""); //erase buffer
 			for(cnt=0; cnt <  MAX_Signals; cnt++)
@@ -339,7 +344,7 @@ int n=0;
 			
 			//mesOk = "Ok!";
 			strcat (result,mesOk); //add Ok to end
-			printf ("BUF to SEND:[%s] \n \n \r",result);
+			//printf ("BUF to SEND:[%s] \n \n \r",result); //debug
 			write(sock, result, strlen(result)); //send packet to client			
 			strcpy (client_message,"");
 			memset(client_message, 0, mess_length);
@@ -356,6 +361,7 @@ int n=0;
 		
 		if( iCmd2 != NULL ){ // cmd write_signal
 		    speedtest_start();
+		    found=0;  
 		    char digit[5]; //buffer Value of signal as CHAR
 		    char sname [100]; //buffer for temp store signal NAME
 		    char buf_signals[MAX_Signals][300]; //array of MAX_signal elements AND 300 characters each
@@ -397,8 +403,8 @@ int n=0;
 				sn++;
 			}
 			
-			//printf("Start Write list parser\n\r");
-			int found=0;         
+			//printf("Start Write list parser\n\r");		
+			         
 			for(cnt=0; cnt < MAX_Signals; cnt++) //cycle for signals
 			{ 
 			
@@ -412,7 +418,7 @@ int n=0;
 			                //printf("[Total clientsignals#%i][#%i]Cyrrent client signal: [%s]\n\r",sn,pr,buf_signals[pr]);
 			                if ( strstr( buf_signals[pr], arg->SA_ptr[cnt].Name ) != NULL ) {
 			                    
-			                    printf ("StrStr: [%s] [%s]\n\r",buf_signals[pr],arg->SA_ptr[cnt].Name);
+			                    //printf ("StrStr: [%s] [%s]\n\r",buf_signals[pr],arg->SA_ptr[cnt].Name); //debug
 			                    found++;
 			                    istr = strtok(buf_signals[pr],":");	 // first element NAME        
 			                    if (istr != NULL){				         
@@ -423,6 +429,7 @@ int n=0;
 				                if (digit != NULL) val =  atoi(digit);
 				            //       printf("Value AtoI to write: [%i] \n\r",val);
 				                   arg->SA_ptr[cnt].Value[0] = val;
+				                   if (val > 0) printf ("NAME:{%s} Value:[%i] \n\r",arg->SA_ptr[cnt].Name,val);
 				                   arg->SA_ptr[cnt].ExState = 1; //Flag value is changed
 				             }
 			                   }
@@ -435,7 +442,7 @@ int n=0;
 			
 			
 			if (found == 0) {
-			printf("CMD_WRITE: Signal not found / Close socket! \n\r");
+			printf("CMD_WRITE: Signal not found! [%i] \n\r",found);
 			
 			//arg->hello = "~core";
 			//mesErr = "Err! WriteSignals Not FOund ";
@@ -480,17 +487,20 @@ int n=0;
 		
     }
      
-    if(read_size == 0)
-    {
-        puts("SERVER: Client disconnected");
+    if(read_size == 0)    
+    {   
+        printf("ERROR^: \n\r  THREAD Socket ID[#%i]\n\r",sock);
+        printf ("SERVER RECIVED MESSAGE: {%s} \n\r",client_message);
+        puts("SERVER: Client disconnected / Read_ Size = 0");
         fflush(stdout);
+        //close(*arg->nSock);
     }
     else if(read_size == -1)
     {
         perror("SERVER: Recv failed");
     }
-	close(*arg->nSock);         
-	//close (sock);
+	//close(*arg->nSock);         
+	close (sock);
     //Free the socket pointer
     //printf(" ++++++++++++++++++++++++==>   SPEEDTEST  TCPCache write from client Time: [ %ld ] ms. \n\r", speedtest_stop());
      

@@ -45,8 +45,8 @@ int socket_init()
 {
 
 //    struct sockaddr_in server;
-    char duffer[10000];
-    char message[10000];
+//    char duffer[10000];
+//    char message[10000];
 	char server_reply[10000] = "";
 	char *pSR = server_reply;
 	char *pMok = "Ok!\n";
@@ -159,6 +159,7 @@ for ( signal_counter = 0; signal_counter < MAX_Signals; signal_counter++ ){
 return 0;
 }
 
+
 int tcpsignal_parser( char* tcp_buffer ){ //extract from tcp buffer signal and put to Name field
 char sep[10]=";";
 char *istr;
@@ -198,7 +199,7 @@ return 0;
 }
 
 int tcpsignal_read(char *message_in){
-        char message[10000];
+        char msg[10000];
 	char server_reply[20000] = "";
 	char *pSR = server_reply;
 	char *pMok = "Ok!";
@@ -213,10 +214,11 @@ int tcpsignal_read(char *message_in){
 
     //while(1)
     //{
-        strcpy (message, "signal_read:");
-        strcat (message,message_in);
+        strcpy (msg,"");
+        strcpy (msg, "signal_read:");
+        strcat (msg,message_in);
         printf("-Read from Server Signal_Array [%s] \n\r",message);
-        if( send(sock , message , strlen(message) , 0) < 0)
+        if( send(sock , msg , strlen(msg) , 0) < 0)
         {
             puts("Send request to CacheServer failed");
             return 1;

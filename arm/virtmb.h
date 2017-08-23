@@ -19,10 +19,12 @@ struct Mb_Device {
 struct Mb_Device Device_Array [VirtDev]; //number of virtual devices
        
        
-
+int bit_mask (int val, int bit_pos, int mb_R);
 int virt_mb_registers (int ID);
 int virt_mb_filldev( char *sName, int mb_id, int mb_reg);
+
 int virt_mb_devread(int ID, int reg_num);
+int virt_mb_devwrite(int ID, int reg_num, int val);
 void virt_mb_devlist (void);
 
 #endif

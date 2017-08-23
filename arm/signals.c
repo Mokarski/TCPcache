@@ -162,8 +162,8 @@ char line[503]; //buffer for parsing
 char *istr1;
 //char *istr2;
 //char *istr3;
-           if (strlen (Signal_Array[n].Name) < 4){
-            printf("SignalName very shot <4 symbols \n\r");
+           if (strlen (Signal_Array[n].Name) < 2){
+            printf("SignalName very shot <2 symbols \n\r");
             return 1;
            }
 

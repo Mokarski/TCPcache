@@ -13,7 +13,7 @@
 
 char signal_parser_buf[20000];
 //struct sockaddr_in server;
-char duffer[10000];
+//char duffer[10000];
 char message[10000];
 char server_reply[10000];
 //char *pSR = server_reply;

@@ -108,6 +108,7 @@ if (socket_init() !=0){
      
 //******************* WORK CYCLE *******************
 while (1){
+	    printf("THIS IS LoGiC \n\r");
 
 	    speedtest_start(); //time start
 
@@ -135,6 +136,10 @@ while (1){
                     //printf("\n\r ***Deserial: > Num{%i} State{%i} \n\r",z,test);
 	            //printf(" |Unpacked Signal : Name{%s} Val0[%i]  Val1[%i]| \n\r",Signal_Array[z].Name, Signal_Array[z].Value[0] , Signal_Array[z].Value[1]); //48                    
 	            
+	            if (Signal_Array[z].Value[1] > 0)   {
+	                    printf (" Name:[%s] Val:[%i] \n\r",Signal_Array[z].Name,Signal_Array[z].Value[1]);
+	                    
+	                    }
                     
 	            if ( test == 0) { //---
             
@@ -176,7 +181,7 @@ while (1){
 
 		  printf(" ==>   SPEEDTEST Deserial signals signals: [ %ld ] ms. \n\r", speedtest_stop());     
     
-        printf("uSleep.. \n\r");     
+        printf("end iteration.. \n\r");     
        }
 
 //*************CLOSE SOCKET***************

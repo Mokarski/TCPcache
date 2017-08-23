@@ -87,6 +87,81 @@ return tab_reg[0];
 }
 
 
+int virt_mb_CachetoDev(int dIndex,  int reg_count){ //read from VIRTUAL devices to REAL devices 
+     int connected;
+     modbus_t *ctx;
+     uint16_t tab_reg[VirtDevRegs];
+     int rc;
+     int i;
+     int fl;
+                      
+       ctx = modbus_new_rtu("/dev/ttySP0", 115200, 'N', 8, 1);
+                           
+       if (ctx == NULL) {
+           fprintf(stderr, "Unable to create the libmodbus context\n");
+           return -1;
+        }
+        struct timeval old_response_timeout;
+        struct timeval response_timeout;
+        struct timeval byte_timeout;
+        
+        /* Save original timeout */
+        modbus_get_response_timeout(ctx, &old_response_timeout);
+        
+        /* Define a new and too short timeout! */
+        /* response_timeout.tv_sec = 1;
+        response_timeout.tv_usec = 80;
+        byte_timeout.tv_sec = 1;
+        byte_timeout.tv_usec = 300;
+        modbus_set_byte_timeout (ctx, &byte_timeout);
+        modbus_set_response_timeout(ctx, &response_timeout);
+        */
+        //modbus_set_byte_timeout(ctx, struct timeval *timeout);
+        //modbus_rtu_set_rts_delay(ctx,40);
+      
+	int ID;
+	ID = Device_Array[dIndex].MB_Id;
+	printf ("ID from virtdev list %i \n\r",ID);
+       modbus_set_slave(ctx, ID);
+       connected = modbus_connect(ctx);
+                                                                
+       if(connected == -1)
+       printf("Connection failed %i\n",ID);
+       if(connected == 0)
+       printf("connected %i\n",ID);
+       int cn=0;
+	   
+       rc = modbus_write_registers(ctx, 0, reg_count, tab_reg);
+                                                                                               
+          if (rc == -1) {
+              printf("[MB_ID #%i]  Connection failed !\n",ID);
+              fprintf(stderr, "MB_READ: %s\n", modbus_strerror(errno));
+              return -1;
+            } 
+            
+             
+    //strcpy(Device_Array[dIndex].Name,Name);
+    //Device_Array[dIndex].MB_Id=ID;                                 //Modbus device ID
+     int cx=0;
+     for (cx=0; cx < reg_count; cx++){
+        Device_Array[dIndex].MB_Registers[cx]=tab_reg[cx];     //Mb register number
+       }
+        
+
+
+     usleep(5 * 1000); //delay for Mod bus restore functional     
+
+     modbus_flush(ctx);
+    
+     modbus_close(ctx);
+     modbus_free(ctx); //close COM ?
+
+     
+return tab_reg[0];
+}
+
+
+
 int CheckBit(uint sigReg, int iBit ) {
 int result;
  if ( ( sigReg & ( 1 << iBit)) !=0) 
@@ -136,24 +211,26 @@ int main(int argc , char *argv[])
     }
     
 while (1){
+	printf ("***THIS iS PcSense***\n\r");
+	speedtest_start(); //time start
 
-speedtest_start(); //time start
+	//======================== read all 485 signals from server create signals and virtual devices ===================
 
-//======================== read all 485 signals from server create signals and virtual devices ===================
+	if ( tcpsignal_read("485.kb.k") == 0 ){ // if we get response from server
+	    printf("--- LOADED SIGNALS FROM SERVER: \n\r {%s} \n\r",signal_parser_buf);
+            tcpsignal_parser(signal_parser_buf); //explode by ";"
 
-    if ( tcpsignal_read("485.kb.") == 0 ){ // if we get response from server
-        tcpsignal_parser(signal_parser_buf); //explode by ";"
-        strcpy (signal_parser_buf,""); //erase buffer for next iteration
-    }
+            strcpy (signal_parser_buf,""); //erase buffer for next iteration
+	    }
 //    socket_close();
     
-  printf("=================== ==>   SPEEDTEST Time load signals: [ %ld ] ms. \n\r", speedtest_stop());     
+	printf("=================== ==>   SPEEDTEST Time load signals: [ %ld ] ms. \n\r", speedtest_stop());     
   
   
- speedtest_start(); //time start
-    int z=0;
+	 speedtest_start(); //time start
+         int z=0;
 
-       for (z=0; z < MAX_Signals; z++) {
+         for (z=0; z < MAX_Signals; z++) {
 
             if ( sDeSerial_by_num (z) == 0){
 //                print_by_name(Signal_Array[z].Name);
@@ -162,9 +239,9 @@ speedtest_start(); //time start
         }
      //virt_mb_devlist(); //show virtdev list
 
-  printf(" ==>   SPEEDTEST Deserial signals signals: [ %ld ] ms. \n\r", speedtest_stop());     
+        printf(" ==>   SPEEDTEST Deserial signals signals: [ %ld ] ms. \n\r", speedtest_stop());     
   
-speedtest_start(); //time start     
+	speedtest_start(); //time start     
      // MODBUS CODES
      int c=0;
      int total_dev_regs=0;
@@ -179,7 +256,7 @@ speedtest_start(); //time start
               }
         else break; //if MB_Id = 0  BREAK all
        }
-//      virt_mb_devlist(); //show virtdev list
+      virt_mb_devlist(); //show virtdev list
       virtdev_to_signals();
      // END MB
      

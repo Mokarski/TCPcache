@@ -20,11 +20,62 @@ struct Mb_Device {
 struct Mb_Device Device_Array [VirtDev]; //number of virtual devices
 
 */
+
+int bit_mask (int val, int bit_pos, int mb_R) { //val = 1 or 0; bit_pos = position to set; mb_R = previus readed register state
+
+//register 16 bit
+int  tabreg[1];
+
+ if ( val == 0 ) //if set to "0"
+       {
+         if (bit == 0)    tab_reg[0]=0xfffe & mb_R;
+         if (bit == 1)    tab_reg[0]=0xfffd & mb_R;
+         if (bit == 2)    tab_reg[0]=0xfffb & mb_R ;
+         if (bit == 3)    tab_reg[0]=0xfff7 & mb_R ;
+         if (bit == 4)    tab_reg[0]=0xffef & mb_R ;
+         if (bit == 5)    tab_reg[0]=0xffdf & mb_R ;
+         if (bit == 6)    tab_reg[0]=0xffbf & mb_R ;
+         if (bit == 7)    tab_reg[0]=0xff7f & mb_R ;
+         if (bit == 8)    tab_reg[0]=0xfeff & mb_R ;
+         if (bit == 9)    tab_reg[0]=0xfdff & mb_R ;
+         if (bit == 10)    tab_reg[0]=0xfbff & mb_R ;
+         if (bit == 11)    tab_reg[0]=0xf7ff & mb_R ;
+         if (bit == 12)    tab_reg[0]=0xefff & mb_R ;
+         if (bit == 13)    tab_reg[0]=0xdfff & mb_R ;
+         if (bit == 14)    tab_reg[0]=0xbfff & mb_R ;
+         if (bit == 15)    tab_reg[0]=0x7fff & mb_R ;
+
+         printf(">>Mb_write ZERRRO <<\n");
+       }
+
+       if (val) // if set to "1"
+       {
+         if (bit == 0)    tab_reg[0]=0x1 | mb_R;
+         if (bit == 1)    tab_reg[0]=0x2 | mb_R;
+         if (bit == 2)    tab_reg[0]=0x4 | mb_R ;
+         if (bit == 3)    tab_reg[0]=0x8 | mb_R ;
+         if (bit == 4)    tab_reg[0]=0x10| mb_R ;
+         if (bit == 5)    tab_reg[0]=0x20 | mb_R ;
+         if (bit == 6)    tab_reg[0]=0x40 | mb_R ;
+         if (bit == 7)    tab_reg[0]=0x80 | mb_R ;
+         if (bit == 8)    tab_reg[0]=0x100 | mb_R ;
+         if (bit == 9)    tab_reg[0]=0x200 | mb_R ;
+         if (bit == 10)    tab_reg[0]=0x400 | mb_R ;
+         if (bit == 11)    tab_reg[0]=0x800 | mb_R ;
+         if (bit == 12)    tab_reg[0]=0x1000 | mb_R ;
+         if (bit == 13)    tab_reg[0]=0x2000 | mb_R ;
+         if (bit == 14)    tab_reg[0]=0x4000 | mb_R ;
+         if (bit == 15)    tab_reg[0]=0x8000 | mb_R ;
+        }
+return tab_reg[0];
+}
+
+
 int virt_mb_filldev( char *sName, int mb_id, int mb_reg){ //fill unic dev to virt
 	int i=0;
 	int uniq_test=0;
 	//int reg_counter[VirtDevRegs]; //temporary array for count number of regs
-	for (i=0; i< VirtDev; i++){
+	for (i=0; i < VirtDev; i++){
 		if ( Device_Array[i].MB_Id == mb_id ) {
 			uniq_test=0;
 			
@@ -64,18 +115,35 @@ int z=0;
 
 return result;
 }
+ 
+//WRITE one virtual device register
+int virt_mb_devwrite(int ID, int reg_num, int val){
+int result;
+int z=0;
+  for (z=0; z < VirtDev; z++)
+  {
+     if( Device_Array[z].MB_Id == ID ) {   //search Modbus device by ID
+        Device_Array[z].MB_Registers[reg_num]=val;
+        result++;
+
+      }
+  }
+
+
+return result;
+}
   
-int virt_mb_registers (int ID){
-	 int tmp=0; //counter of found used registers
+int virt_mb_registers (int ID){ //search and count used registers
+	 int tmp=1; //counter of found used registers
          int z=0;
 	   //calculate used registers
 	  // printf("ID in reg calculate [%i]",ID);
 	   for(z=0; z < VirtDevRegs; z++) { // numbers of virtual registers in struct Device_Array
 	        //printf ("Used registers[%i] : [ %i ] \n\r",z, Device_Array[t].MB_Registers[z]);
                 if ( Device_Array[ID].MB_reg_counter[z] > 0 ) {
-                    //printf ("DEV_ID[%i]  Mark as Used registers num[%i] : Value [ %i ] ",ID,z, Device_Array[ID].MB_reg_counter[z]);
-                    tmp++;
-                    //printf ("[Registers counter %i] \n\r ",tmp);
+                    printf ("\n\r Count registers:  DEV_ID[%i]  Mark as Used registers num[%i] : Value [ %i ] ",ID,z, Device_Array[ID].MB_reg_counter[z]);
+                    tmp++;  //May be bug? count from 2
+                    printf ("[Registers counter %i] \n\r ",tmp);
                     }
            }
 
