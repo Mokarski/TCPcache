@@ -45,8 +45,8 @@ typedef struct Discrete_Signals { // store one  signal state
     int *nSock;
 } Discrete_Signals_t;
                         
-Discrete_Signals_t args[MAX_Signals]; // Create array of Tasks to control signals by threads
-                         
+//Discrete_Signals_t args; // Create array of Tasks to control signals by threads
+  Discrete_Signals_t args; // init for pthread can read and write global Signal_Array                         
                          
 
 
@@ -64,7 +64,8 @@ int main(int argc , char *argv[])
     int socket_desc , client_sock , c , *new_sock;
     struct sockaddr_in server , client;
 	//someArgs_t args;
-	//Discrete_Signals_t args;
+
+	args.SA_ptr = Signal_Array;
 	int status,status_addr;
 	char sepDotComma [10] = ";";
 	char sepComma [10] = ",";
@@ -111,27 +112,32 @@ int main(int argc , char *argv[])
     c = sizeof(struct sockaddr_in);
 	
     while( (client_sock = accept(socket_desc, (struct sockaddr *)&client, (socklen_t*)&c)) )
-    {
+    {   printf("\n\r ***TCPSERVER: \n\r");
         puts("Connection accepted");
         printf("(MAIN While) CLient socket ID[#%i] \n\r",client_sock); 
 		
 		
-        pthread_t sniffer_thread;
-		 pthread_attr_t threadAttr;      // Set up detached thread attributes
+         pthread_t sniffer_thread;
+	 pthread_attr_t threadAttr;      // Set up detached thread attributes
          pthread_attr_init(&threadAttr);
          pthread_attr_setdetachstate(&threadAttr, PTHREAD_CREATE_DETACHED);
-
+         
+		/*
+		for (s=0; s < MAX_Signals; s++){
+		    printf ("",	Signal_Array[s].Name, Signal_Array[s].Value[1] );
+		}
+		*/
 		
         new_sock = malloc(1);
         *new_sock = client_sock;
 		
 		// структура аргументов для записи сокета и результата обработки
 		
-		args[0].nSock = new_sock;
+		args.nSock = new_sock;
 		//args.pSignal = Signals;
-		args[0].SA_ptr = Signal_Array;
+		args.SA_ptr = Signal_Array;
 		//if( pthread_create( &sniffer_thread, NULL,  connection_handler, (void*) &args[0]) < 0)
-        if( pthread_create( &sniffer_thread, &threadAttr,  connection_handler, (void*) &args[0]) < 0)
+        if( pthread_create( &sniffer_thread, &threadAttr,  connection_handler, (void*) &args) < 0)
         {
             perror("SERVER: Could not create thread");
             return (ERROR_CREATE_THREAD);
@@ -428,7 +434,7 @@ int n=0;
 				                
 				                if (digit != NULL) val =  atoi(digit);
 				            //       printf("Value AtoI to write: [%i] \n\r",val);
-				                arg->SA_ptr[cnt].Value[0] = val;
+				                arg->SA_ptr[cnt].Value[1] = val;
 				            //    arg->SA_ptr[cnt].ExState = 0; //Flag value is changed
 				                   
 				                   if (val > 0) printf ("WRITE: NAME:{%s} Value:[%i] {ExState = %i} \n\r",arg->SA_ptr[cnt].Name,val, arg->SA_ptr[cnt].ExState);

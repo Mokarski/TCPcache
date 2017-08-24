@@ -21,10 +21,10 @@ struct Mb_Device Device_Array [VirtDev]; //number of virtual devices
 
 */
 
-int bit_mask (int val, int bit_pos, int mb_R) { //val = 1 or 0; bit_pos = position to set; mb_R = previus readed register state
+int bit_mask (int bit, int bit_pos, int mb_R) { //bit val = 1 or 0; bit_pos = position to set; mb_R = previus readed register state
 
 //register 16 bit
-int  tabreg[1];
+int  tab_reg[1];
 
  if ( val == 0 ) //if set to "0"
        {
