@@ -247,6 +247,9 @@ int tcpsignal_read(char *message_in){
 	  return 2;
 	  //break;
 	}
+	if ( strstr (pSR,"Ok!") != NULL ){
+	    printf("SERVER reply: Ok!\n\r");
+	   }
 	memset(server_reply, 0, sizeof(server_reply) / sizeof(server_reply[0]));
     //}
 return 0;
@@ -353,6 +356,11 @@ int tcpsignal_packet_write(char *message_in ){
 	  return 1;
 	  //break;
 	}
+	
+	if( strstr(server_reply,"Ok!") != NULL)		
+	  {
+	    printf("SERVER reply: Ok!\n\r");
+	  }
 	/*
 	if( strstr(server_reply,"Err!") == NULL)	
 	{

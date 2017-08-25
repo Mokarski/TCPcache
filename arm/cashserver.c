@@ -320,7 +320,7 @@ int n=0;
 				if( strstr(arg->SA_ptr[cnt].Name, istr))
 				{
 				 //      printf ("[%i] Signal Name: [%s]\t",cnt,arg->SA_ptr[cnt].Name); //debug
-				       printf (" READ: Signal Name: [%s]  Value: {%i} ExState: [%i] \n\r",arg->SA_ptr[cnt].Name,arg->SA_ptr[cnt].Value[1],arg->SA_ptr[cnt].ExState); //debug
+				       //printf (" READ: Signal Name: [%s]  Value: {%i} ExState: [%i] \n\r",arg->SA_ptr[cnt].Name,arg->SA_ptr[cnt].Value[1],arg->SA_ptr[cnt].ExState); //debug
 				        //arg->SA_ptr[cnt].ExState=0; // Flag ExState turn off 
 				        strcpy(packed_txt_string,""); //erase buffer
 				        sSerial_by_num(cnt); //serialize to packet by number of signals				        
@@ -371,17 +371,29 @@ int n=0;
 		    char digit[5]; //buffer Value of signal as CHAR
 		    char sname [100]; //buffer for temp store signal NAME
 		    char buf_signals[MAX_Signals][300]; //array of MAX_signal elements AND 300 characters each
-		    
+		    int t=0;		        
 		    int val;
+		    
+		    /*
+		          for (t=0; t < MAX_Signals; t++){
+		               strcpy(buf_signals[t],""); //clear buffer
+		              }
+		    */        
 		    printf("[recived >CMD WRITE] write_signal \n\r");
 		        printf("THREAD Socket ID[#%i]\n\r",sock);
 			size_t xx=0;
-			size_t cnt=0;
-			int sn=1; //number of signals
-			            //istr =strtok(client_message,";");
-			            //strcpy (buf_signals[0],istr);
+			size_t cnt=0;			
+			int sn=1; //number of signals started from 1, because before while we get 1 signal
+			
+			printf ("SERVER: recive from client: [%s]\n\r",client_message);
+			istr =strtok(client_message,";");			            
+			if ( istr != NULL ){
+			    strcpy (buf_signals[0],istr);
+			   } else {printf ("Not found delimiter [;]\n\r");}
+			   
 			//istr = strtok (NULL,";");			
 			//printf ("EXPLODE NAME: [ %s ]\n\r",istr);
+			
 			while ( istr != NULL ){
 			        /*if (istr == NULL) // defend from sigfault
 			        {
@@ -398,16 +410,16 @@ int n=0;
 			         */
 			         if (istr == NULL) // defend from sigfault
 			        {
-			         printf("End write list\n\r");
+			         printf("[%i] End write list\n\r",sn);
 			         // return ;
 			         break;
 			        } else {
 			    		strcpy (buf_signals[sn],istr);
-					//printf ("[#%i] NAME: [%s] \n\r",sn,buf_signals[sn]);
+					printf ("explode to cache [#%i]  NAME: [%s] \n\r",sn,buf_signals[sn]); //debug
 			               }
 				
 				sn++;
-			}
+			   }
 			
 			//printf("Start Write list parser\n\r");		
 			         
@@ -455,7 +467,7 @@ int n=0;
 			//arg->hello = "~core";
 			//mesErr = "Err! WriteSignals Not FOund ";
 			write(sock, mesErr, strlen(mesErr));			
-			//memset(client_message, 0, mess_length); //erase the buffer
+			memset(client_message, 0, mess_length); //erase the buffer
 			strcpy(client_message,""); //erase the buffer
 			//close(*arg->nSock);
 			//free((int*)arg->nSock);
