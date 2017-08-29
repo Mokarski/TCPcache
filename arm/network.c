@@ -7,12 +7,6 @@
 #include "signals.h"
 #include "network.h"
 
-//char  message[2000];
-//char signal_buffer[20000];
-//char signal_parser_buf[90000] = "";
-//int sock;
-//struct sockaddr_in server;
-
 /*
  * приведение целого к строковому формату
   */
@@ -41,17 +35,17 @@
                                                                                       
                                                                                       
 
-int socket_init()
+int socket_init(char *ipaddr)
 {
 
 //    struct sockaddr_in server;
 //    char duffer[10000];
 //    char message[10000];
-	char server_reply[10000] = "";
-	char *pSR = server_reply;
-	char *pMok = "Ok!\n";
-	char *pHello;
-	pHello = "~core";
+//	char server_reply[10000] = "";
+//	char *pSR = server_reply;
+//	char *pMok = "Ok!\n";
+//	char *pHello;
+//	pHello = "~core";
 	
 	
     //Create socket
@@ -62,7 +56,7 @@ int socket_init()
     }
     puts("Socket created");
      
-    server.sin_addr.s_addr = inet_addr("127.0.0.1");
+    server.sin_addr.s_addr = inet_addr(ipaddr);
     server.sin_family = AF_INET;
     server.sin_port = htons( 8888 );
  
@@ -80,6 +74,7 @@ int socket_init()
 return 0;
 }
 
+
 int socket_close(){
 shutdown(sock, SHUT_RDWR);
 close(sock);
@@ -87,80 +82,8 @@ puts("Socket closed");
 return 0;
 }
 
-int tcp_rw(char *message_in){
-        char message[10000];
-	char server_reply[10000] = "";
-	char *pSR = server_reply;
-	char *pMok = "Ok!\n";
-	char *pHello;
-	pHello = "~core";
-        int sended_signals=0;
-        int signal_counter=0;
 
-    while(1)
-    {
-        strcat (message,"signal_read:wagoTCP.rl_oil_pump");
-        
-        if( send(sock , message , strlen(message) , 0) < 0)
-        {
-            puts("Send failed");
-            return 1;
-        }
-        
-        //Receive a reply from the server
-        if( recv(sock , server_reply , 10000 , 0) < 0)
-        {
-            puts("recv failed");
-            break;
-        }
-        printf("Server reply: \n\r");
-        //puts("Server reply :");
-        puts(server_reply);
-        
-	if( strstr(pSR,pMok) != NULL)
-	{
-	  printf("Server reply error\n\r");
-	  break;
-	}
-	memset(server_reply, 0, sizeof(server_reply) / sizeof(server_reply[0]));
-	signal_counter++;
-    }
-return 0;
-}
-
-struct prototype {
-char Name[500];
-char chVal[100];
-int  iVal[2];
-} proto_arr[MAX_Signals];
-
-int signal_devider (){
-char sep2[10]=" ";
-char sep3[10]=":";
-char line[500];
-char *istr2;
-char *istr3;
-int signal_counter;
-for ( signal_counter = 0; signal_counter < MAX_Signals; signal_counter++ ){
-           //explode signal to name field and val field
-           strcpy(line,proto_arr[signal_counter].Name);
-           istr2 = strtok (line,sep2);
-           strcpy (proto_arr[signal_counter].Name,istr2);
-           istr2 = strtok (NULL,sep2);
-           strcpy (proto_arr[signal_counter].chVal,istr2);
-
-           //extract digits from struct "value:num" line
-           istr3 = strtok (proto_arr[signal_counter].chVal,sep3);
-           istr3 = strtok (NULL,sep3);
-           proto_arr[signal_counter].iVal[1] = atoi (istr3);
-           
-           printf("DEVIDER_[#%i] NAME: [%s] chVal: [%s] iVal[%i] \n\r",signal_counter ,proto_arr[signal_counter].Name, proto_arr[signal_counter].chVal, proto_arr[signal_counter].iVal[1] );                          
-           }
-return 0;
-}
-
-
-int tcpsignal_parser( char* tcp_buffer ){ //extract from tcp buffer signal and put to Name field
+int Data_to_sName( char* tcp_buffer ){ //extract from tcp buffer signal and put to Name field
 char sep[10]=";";
 char *istr;
 
@@ -169,12 +92,13 @@ int signal_counter=0;
         // Выделение первой части строки
            istr = strtok (tcp_buffer,sep);
            if ( istr == NULL ) {
-              printf ("tcpsignal_parser: istr1 NULL \n\r");
+              printf ("DATA_to_sName: istr1 NULL \n\r");
               return 1;
               //sDeSerial_by_num (signal_counter);
               }
             strcpy (Signal_Array[signal_counter].Name,istr); //copy 1 signal string to Signal_Array field Name
-             
+            signal_counter++; //increment before while
+            
         // Выделение последующих частей
                  while ( istr != NULL )
                     {
@@ -186,14 +110,9 @@ int signal_counter=0;
                                return 1;
                              }
                              
-                        strcpy (Signal_Array[signal_counter].Name,istr); //copy 1 signal string to Signal_Array field Name
-                          
-                        
-                          
-                       signal_counter++;
+                        strcpy (Signal_Array[signal_counter].Name,istr); //copy 1 signal string to Signal_Array field Name                        
+                        signal_counter++;
                      }
-              
-        
 
 return 0;
 }
@@ -254,6 +173,171 @@ int tcpsignal_read(char *message_in){
     //}
 return 0;
 }
+
+
+int frame_read_s (char *message_in, short int signals_count){
+    char message [MAX_MESS]; //max size for 1 packet send for tcp is 65534 bytes 
+    char c_len[4];
+    char c_count[4];
+    if ( strlen (message_in) >  MAX_MESS ) {
+        printf("Exeeded maximum buffer size, message_size: %i > then buffer_size:%i",strlen (message_in), MAX_MESS);
+        return -1;
+       }
+    strcpy (Frame_Container.type,"rd");
+    Frame_Container.count = signals_count;
+    strcpy (Frame_Container.data, message_in);
+    Frame_Container.len = strlen (Frame_Container.data) + strlen (Frame_Container.type);
+    printf("Frame[ type:%s len:%i count:%i data{ %s } ] \n\r",Frame_Container.type, Frame_Container.len, Frame_Container.count, Frame_Container.data);
+    
+    //Try Construct frame
+    //Frame_Container.type, Frame_Container.len, Frame_Container.count, Frame_Container.data
+    strcpy(message,Frame_Container.type);
+    if ( Frame_Container.len < 10 ){
+         //strcpy(c_len,"0"); //add a zerro 
+         ItoA(Frame_Container.len,c_len); //convert int to char
+         c_len[1]=c_len[0]; //copy converted number into high part of array
+         c_len[0] = '0'; //adding a zerro at low side
+         } else ItoA(Frame_Container.len,c_len); //convert int to char         
+    strcat(message,c_len);
+    
+    if ( Frame_Container.count < 10 ){
+        //strcpy(c_count,"0"); //add a zerro at first empty byte
+        ItoA(Frame_Container.count,c_count); //convert int to char
+        c_count[1]=c_count[0];
+        c_count[0]='0';
+       } else ItoA(Frame_Container.count,c_count); //convert int to char
+    strcat(message,c_count);
+    
+    strcat (message, Frame_Container.data);
+    printf("Constructed Frame^[%s] \n\r",message);
+return 0;
+}
+
+int frame_tcpreq (char *msg){
+ char *pSR = server_reply;
+ 
+ 
+    if( send(sock , msg , strlen(msg) , 0) < 0)
+        {
+            puts("Send request to CacheServer failed!!!");
+            return 1;
+            //break;
+         } else { printf ("[ Send to SRV ]: {%s} \n\r",msg); }
+        
+        //Receive a reply from the server
+        if( recv(sock , server_reply , strlen(server_reply) , 0) < 0) // recive message from server and put into global array
+        {
+            puts("recv from CacheServer failed!!!");
+            return 1;
+            //break;
+        } else { printf ("[ SRV reply ]: {%s} \n\r",server_reply); }
+        
+        if ( strlen (server_reply) > 4){ //if response from server more then 4 symbols, then we get signals
+            strcpy(signal_parser_buf, server_reply); //copy to global array 
+            }
+    
+	if( strstr(pSR,"Ok!") == NULL)
+	{
+	  printf("Server CMD_READ reply error\n\r");
+	  return 2;
+	  //break;
+	}
+	if ( strstr (pSR,"Ok!") != NULL ){
+	    printf("SERVER reply: Ok!\n\r");
+	   }
+	memset(server_reply, 0, sizeof(server_reply) / sizeof(server_reply[0]));
+    //}
+return 0;
+}
+
+
+int frame_pack (char *type, char *message_in, char *message_out) { //construct frame frome message_in and put result to message type is "rd" or "wr"
+    //char message [MAX_MESS]; //max size for 1 packet send for tcp is 65534 bytes 
+    char c_len[4];
+    char c_count[4];
+    
+    if ( strlen (message_in) >  MAX_MESS ) {
+        printf("Exeeded maximum buffer size, message_size: %i > then buffer_size:%i",strlen (message_in), MAX_MESS);
+        return -1;
+       }
+    strcpy (Frame_Container.type,type);
+    Frame_Container.count = 0;
+    strcpy (Frame_Container.data, message_in);
+    Frame_Container.len = strlen (Frame_Container.data) + 1; //length = Data container size in bytes + 1byte =";"
+    printf("Frame[ type:%s len:%i count:%i data{ %s } ] \n\r",Frame_Container.type, Frame_Container.len, Frame_Container.count, Frame_Container.data);
+    
+    //Try Construct frame
+    //Frame_Container.type, Frame_Container.len, Frame_Container.data
+    strcpy(message_out,Frame_Container.type);
+    strcat (message_out,";");
+    ItoA(Frame_Container.len,c_len); //convert int to char
+    strcat(message_out,c_len);    
+    strcat (message_out, "#");
+    strcat (message_out, Frame_Container.data);
+    strcat (message_out,";");
+    printf("Constructed Frame^[%s] \n\r",message_out);
+    return 0;
+}
+
+int frame_unpack (char *server_reply, char *data){ // copy serialized signals into data and return 1 if read or 2 if write
+    char sep[10]="#";
+    char type[5];
+    char *istr;
+    char header[100];
+    char c_len[10];
+    int  ret_rd_wr=0;
+    istr = strtok (server_reply,sep); //extract HEADER and DATA by "#"
+    if (istr != NULL) { //HEADER
+        printf("Header^{%s}\n\r",istr);
+        strcpy(header,istr);
+        } else {  printf ("data_extract: Header - NULL! \n\r");
+                  return -1;
+               }
+    
+    istr = strtok (NULL,sep);
+    if (istr != NULL) { //DATA
+        printf("PACKET^{%s}\n\r",istr);
+        strcpy (data,istr);
+        } else { printf ("data_extract: PACKET - NULL! \n\r");
+                 return -1;
+               }
+    
+    
+    
+    char sep2[10]=";";           
+    istr = strtok (header,sep2); //extract type and number bytes
+    if (istr != NULL) { //type of frame read or write
+        printf("Type^{%s}\n\r",istr);
+        strcpy(type,istr);
+        if (strstr(type,"rd")) ret_rd_wr=1; //read request
+        if (strstr(type,"wr")) ret_rd_wr=2; //write request
+        } else {  printf ("data_extract: Header1 - NULL! \n\r");
+                  return -1;
+               }
+               
+               
+    istr = strtok (NULL,sep2);    
+        if (istr != NULL) { //extrcat lenght 
+        printf("Len^{%s}\n\r",istr);
+        strcpy(c_len,istr);
+        printf("c_len {%s}\n\r",c_len);
+        } else {  printf ("data_extract: Header2 - NULL! \n\r");
+                  return -1;
+               }
+               
+         int r1= atoi (c_len); //number bytes in packet;
+         int r2= strlen (data);
+         //printf ("[r1-%i] [r2-%i]\n\r",r1,r2);
+         
+         if ( r1 != r2 ){
+             printf("Recived bytes != calculated | [%i != %i] \n\r",r1,r2);
+             return -1;
+             }
+     
+     
+    return ret_rd_wr;
+}
+
 
 int tcpsignal_write(char *message_in, int iVal){
         speedtest_start();

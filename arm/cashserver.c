@@ -15,6 +15,7 @@
 #include<time.h> // for time_t
 
 #include "signals.h"
+#include "network.h"
 #include "speedtest.h"
 
 #define ERROR_CREATE_THREAD -11
@@ -190,6 +191,7 @@ char * substr(char * dst, const char * src, size_t pos, size_t cnt){
 /*
  * приведение целого к строковому формату
  */
+/*
 void Reverse(char s[]) {
     int c, i, j;
     for ( i = 0, j = strlen(s)-1; i < j; i++, j--) {
@@ -211,6 +213,7 @@ void ItoA(int n, char s[]) {
     s[i] = '\0';
     Reverse(s);
 }
+*/
 
 /*
  * This will handle connection for each client
@@ -263,19 +266,23 @@ int n=0;
 	
 	mesOk = "Ok!";
 	mesNo = "Ooh!";
-	mesBad= "Bad cmd!";
+	mesBad= "NOcmd!";
 	mesErr = "Err!";
 	char a[4096];
 	char dig[128];	
     //write(sock , messHello , strlen(messHello));
     //Receive a message from client
-	
-	
-    int found=0;  
+//	char tst[50000]; // size = MAX_MESS
+	char tst[MAX_MESS];
+	int rd_wr=0;
+        int found=0;  
+    
     while( (read_size = recv(sock , client_message , 10000 , 0) ) > 0 )
     {
 		int mess_length = sizeof(client_message) / sizeof(client_message[0]);
 		printf("client_message: [%s] \r\n", client_message);
+		rd_wr = frame_unpack(client_message,tst);
+		printf("rd_wr[%i] client_tst: [%s] \r\n", rd_wr, tst);
 		
         /********  Команды от "Ядра Логики" - Modbus_Master_RTU  ***********************/
         //Проверка наличия в строке команд и признака конца команды
@@ -287,33 +294,27 @@ int n=0;
 		iCmdEnd = strstr (pCM,cmd_end); // check for input cmd end ";"
 		
 	   //********************************* COMMAND SELECTION AND EXECUTION ******************************/
-       if( iCmd1 != NULL ){ // cmd read_signal
+       //if( iCmd1 != NULL ){ // cmd read_signal
+       if( rd_wr == 1 ){ // cmd read_signal
 		speedtest_start();
+		char sep_comma[4]=";";
 		    found=0;  
 		    printf("[recived >CMD READ] read_signal \n\r");
 		    printf("THREAD Socket ID[#%i]\n\r",sock);
 			size_t xx=0;
 			size_t cnt=0;
-			printf ("SERVER: recive from client: [%s]\n\r",client_message);
-			istr =strtok(client_message,";");
+			printf ("SERVER: recive from client: [%s]\n\r",tst);
+			istr = strtok(tst,sep_comma);
+			if (istr != NULL){
+			    printf ("SERVER: GET the NAME [%s]\n\r",istr);
+			    }
+			
 			if (istr != NULL){
 			    istr = strtok (NULL,";"); //mask or signal name
 			   }
 			
-			// Выделение последующих частей
-			/*
-			while (istr != NULL)
-			     {
-			                // Вывод очередной выделенной части
-			                   printf ("EXPLODE: [ %s ]\n\r",istr);
-			                // Выделение очередной части строки
-			                istr = strtok (NULL,":");
-			     }
-			     */
 			if (istr != NULL) printf ("NAME: [ %s ]\n\r",istr);
-
-
-			char result[30000];  //buffer for response
+			char result[MAX_MESS];  //buffer for response 50 000 bytes
 			strcpy (result,""); //erase buffer
 			for(cnt=0; cnt <  MAX_Signals; cnt++)
 			{
@@ -448,18 +449,6 @@ int n=0;
 			                    utest = unpack_signal(buf_signals[pr],pr); //unpack from field buffer to signal properties fields
 
 			                    
-			                    //istr = strtok(buf_signals[pr],":");	 // first element NAME        
-			                    //if (istr != NULL){				         
-			                    //    istr = strtok (NULL,":");	 // second element Value
-				            //    printf ("Client Value: [ %s ]\n\r",istr);
-				            //    if (istr != NULL) strcpy(digit,istr);
-				                
-				            //    if (digit != NULL) val =  atoi(digit);
-				            //       printf("Value AtoI to write: [%i] \n\r",val);
-				            //    arg->SA_ptr[cnt].Value[1] = val;
-				            //    arg->SA_ptr[cnt].ExState = 0; //Flag value is changed
-				                   
-				                   if (arg->SA_ptr[cnt].Value[1] > 0) printf ("Socket[%i]| WRITE: NAME:{%s} Value:[%i] {ExState = %i} \n\r",sock,arg->SA_ptr[cnt].Name, arg->SA_ptr[cnt].Value[1] , arg->SA_ptr[cnt].ExState);
 				                  
 				            // }
 			                   }

@@ -205,7 +205,7 @@ int main(int argc , char *argv[])
 //INIT SIGNALS     
     printf("MAX_Signals [%i] \n",MAX_Signals);
     init_signals_list(); // erase signal lsit 
-    if( socket_init() != 0) {
+    if( socket_init("127.0.0.1") != 0) {
     printf ("NO Connection to server\n\r");
     return;    
     }

@@ -10,19 +10,20 @@
 
 #ifndef _NETWORK_H
 #define _NETWORK_H
+#define MAX_MESS 50000 // maximum size of buffer for send or recive
 
-char signal_parser_buf[20000];
-//struct sockaddr_in server;
-//char duffer[10000];
-char message[10000];
-char server_reply[10000];
-//char *pSR = server_reply;
-//char *pMok = "Ok!\n";
-//	char *pHello;
-//	pHello = "~core";
+char signal_parser_buf[MAX_MESS]; //global array
+char message[MAX_MESS];           //global array
+char server_reply[MAX_MESS];      //global array
 
+struct frame {
+char type[4]; // type rd or wr
+short int  len; // number bytes - size 2 byte = 65535
+short int  count; //number of signals - size 2 byte = 65535
+char data[MAX_MESS]; //data container
+};
+struct frame Frame_Container;
 
-//char message[2000];
 int sock;
 struct sockaddr_in server;
 
@@ -36,8 +37,9 @@ struct sockaddr_in server;
                                                                                       
 //  NETWORK
 int socket_init();
-
 int socket_close();
+int frame_unpack (char *server_reply, char *data);
+
 int tcpsignal_parser( char* tcp_buffer );
 int tcpsignal_read(char *message_in);
 int tcpsignal_write(char *message_in, int iVal);

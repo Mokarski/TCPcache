@@ -92,7 +92,7 @@ int main(int argc , char *argv[])
     init_signals_list(); // erase signal lsit 
 
 //************* CREATE SOCKET *********************
-if (socket_init() !=0){
+if (socket_init("127.0.0.1") !=0){
      printf ("No Connection to server\n\r");
      return; //return 0 if all OK else return 1
      }
@@ -111,20 +111,36 @@ while (1){
 	    printf("THIS IS LoGiC \n\r");
 
 	    speedtest_start(); //time start
+	    
+	    //frame_read_s(".",1);
+	    
+//	    char tst[MAX_MESS];
+	    
+//	    frame_pack("rd","485.kb.kei1.mode1",message);
+//	    frame_pack("wr","485.kb.kei1.mode1",message);
+//	    printf("Messasge: [%s]\n\r",message);
+	    
+//	    frame_unpack (message,tst);
+	    //printf("Packet_txt extracted DATA: %s \n\r",tst);
+	    
 
 	    //======================== read all 485 signals from server create signals and virtual devices ===================
             //strcpy (signal_parser_buf,""); 		//erase buffer
-	    if ( tcpsignal_read(".") == 0 ){ 		// if we get response from server, get all signals list
+	    //if ( tcpsignal_read(".") == 0 ){ 		// if we get response from server, get all signals list
+	    frame_pack("rd", ".", message);
+	    printf("Messasge: [%s] \n\r",message);
+	    frame_tcpreq(message);                      //send and recive response from server and copy to global signal_parser_buf
+	    Data_to_sName (signal_parser_buf);   	// explode signals by delimiter ";"	    
 	         printf("Recived Buffer ==== [%s] \n\r",signal_parser_buf); //-48
-                 tcpsignal_parser(signal_parser_buf);   	// explode signals by delimiter ";"
+                 //tcpsignal_parser(signal_parser_buf);   	// explode signals by delimiter ";"
                  strcpy(signal_parser_buf,""); 			//erase buffer before next iteration
                  //printf("Recived Buffer[%s] \n\r",signal_parser_buf);
                  
                 printf("=================== ==>   SPEEDTEST Time load signals: [ %ld ] ms. \n\r", speedtest_stop());       
   
-	       speedtest_start(); //time start
+	       speedtest_start(); //time start //deserial test
 	       int z=0;
-		int row=0;
+
 		
 	       for (z=0; z < MAX_Signals; z++) {
 	            //printf(" |Signal preparse: Name{%s} Val0[%i]  Val1[%i]| \n\r",Signal_Array[z].Name, Signal_Array[z].Value[0] , Signal_Array[z].Value[1]); //48
@@ -133,61 +149,17 @@ while (1){
 	            char buffer[350]="";
 	            strcpy (buffer, Signal_Array[z].Name);
 	            test = unpack_signal(buffer  ,z);
-                    //printf("\n\r ***Deserial: > Num{%i} State{%i} \n\r",z,test);
-	            //printf(" |Unpacked Signal : Name{%s} Val0[%i]  Val1[%i]| \n\r",Signal_Array[z].Name, Signal_Array[z].Value[0] , Signal_Array[z].Value[1]); //48                    
-	            
-	            if ( strstr(Signal_Array[z].Name,"485.kb.kei1.mode1") !=NULL ){
-	                if ( Signal_Array[z].Value[1] > 0){
-	                    //turn on 
-	                    strcpy(packed_txt_string,""); //erase buffer
-	                    int signal_number=0;
-	                    signal_number = signal_update_ex("485.kb.kbl.start_check",1,1);
-	                    sSerial_by_num(signal_number); //serialize signal by number
-	                    tcpsignal_packet_write (packed_txt_string);
-	                   }
-	               }
 	            
 	            if (Signal_Array[z].Value[1] > 0)   {
 	                    printf (" Name:[%s] Val:[%i] Ex[%i] \n\r",Signal_Array[z].Name,Signal_Array[z].Value[1],Signal_Array[z].ExState);	                    
 	                    }
                     
-	            if ( test == 0) { //---
-            
-    		        //printf ("Name:[%s] Val:[%i] \n\r",Signal_Array[z].Name,Signal_Array[z].Value[1]); //debug
-	                //print_by_name(Signal_Array[z].Name);
-	                
-	                if (Signal_Array[z].Value[1] > 0)   {
-	                    //printf ("- Name:[%s] Val:[%i] \n\r",Signal_Array[z].Name,Signal_Array[z].Value[1]);
-	                    
-	                    }
-	                    
-	                    
-	                if ( row > 3 ){
-	                     row=0;
-	                    // printf (" \n\r "); //show string delimiter
-	                    }
-			    row++;
-	                } else break;
+
 	                
 	                
 	                  
     		   }
                  
-               } else { printf ("No lists of signals  recived from Server \n\r"); }
-
-
-               /*
-               u=0;
-                    for (u=0; u < MAX_Signals; u++) {
-	            printf("2Signal preparse: Name{%s} Val[%i] \n\r",Signal_Array[u].Name ,Signal_Array[u].Value[1]); //-48
-                    }
-                */    
-                    
-
-    
-
-    		   
-    		   
 
 
 		  printf(" ==>   SPEEDTEST Deserial signals signals: [ %ld ] ms. \n\r", speedtest_stop());     
