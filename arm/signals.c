@@ -80,7 +80,7 @@ char Value[3];
 }
                                                                                     
 
-int unpack_signal (char *str, int n){
+int unpack_signal (char *str, int n){ //unpack from buffer to signal parameters with name_id n
     char sep[3]=":";
     char *istr;
     //printf("Unpack Signal: [%s]\n\r",str);
@@ -123,26 +123,32 @@ if (istr != NULL){
 
            case 7:
                  //printf ("%i - %s ",c,istr);
+                 Signal_Array[n].TCP_Type = atoi ( istr );
            break;
 
            case 8:
                  //printf ("%i - %s ",c,istr);
+                 strcpy (Signal_Array[n].TCP_Addr ,istr );
            break;
 
            case 9:
                  //printf ("%i - %s ",c,istr);
+                 Signal_Array[n].Prio = atoi ( istr );
            break;
 
            case 10:
                  //printf ("%i - %s ",c,istr);
+                 Signal_Array[n].Off = atoi ( istr );
            break;
 
            case 11:
                  //printf ("%i - %s \n\r",c,istr);
+                 Signal_Array[n].ExState = atoi ( istr );                 
            break;
 
            default:
-           printf("error index %i\n\r",c);
+           printf("Input_string {%s} ",str);
+           printf(" error index more then fields 11 < [%i]\n\r",c);
            }
 
            c++;
@@ -310,6 +316,7 @@ char Value[3];
                  strcat(packed_txt_string,Value);
                  strcat(packed_txt_string,":");
                  
+                 if (strlen (Signal_Array[n].TCP_Addr) < 5 ) strcpy (Signal_Array[n].TCP_Addr,"127.0.0.1");
                  strcat(packed_txt_string,Signal_Array[n].TCP_Addr);
                  strcat(packed_txt_string,":");
                  
@@ -527,7 +534,7 @@ int cnt=0;
                      break;
                }
    }
-  return cnt; //if zerro then not found signals else number of matches
+  return n; //if zerro then not found signals else return number of signal
 }
                                                       
 

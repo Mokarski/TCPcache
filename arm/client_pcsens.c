@@ -217,9 +217,8 @@ while (1){
 	//======================== read all 485 signals from server create signals and virtual devices ===================
 
 	if ( tcpsignal_read("485.kb.k") == 0 ){ // if we get response from server
-	    printf("--- LOADED SIGNALS FROM SERVER: \n\r {%s} \n\r",signal_parser_buf);
+	    printf("--- LOADED SIGNALS FROM SERVER: \n\r {%s} \n\r",signal_parser_buf); // debug
             tcpsignal_parser(signal_parser_buf); //explode by ";"
-
             strcpy (signal_parser_buf,""); //erase buffer for next iteration
 	    }
 //    socket_close();
@@ -230,12 +229,13 @@ while (1){
 	 speedtest_start(); //time start
          int z=0;
 
-         for (z=0; z < MAX_Signals; z++) {
+         for (z=0; z < MAX_Signals; z++) {             
 
             if ( sDeSerial_by_num (z) == 0){
 //                print_by_name(Signal_Array[z].Name);
                 virt_mb_filldev(Signal_Array[z].Name, Signal_Array[z].MB_Id, Signal_Array[z].MB_Reg_Num); //init device list
              } else break;
+    
         }
      //virt_mb_devlist(); //show virtdev list
 
@@ -256,10 +256,15 @@ while (1){
               }
         else break; //if MB_Id = 0  BREAK all
        }
-      virt_mb_devlist(); //show virtdev list
+    //  virt_mb_devlist(); //show virtdev list
       virtdev_to_signals();
      // END MB
-     
+     printf("\n\rVirtDev to real signals:\n\r");
+     z=0;
+     for ( z=0; z < MAX_Signals; z++ ) {
+          if ( Signal_Array[z].Value[1] > 0 ) printf ("[%i] Name:[%s] Value:[%i] \n\r ", z, Signal_Array[z].Name, Signal_Array[z].Value[1] );
+          if ( Signal_Array[z].ExState > 0 ) printf  ("[%i] Name:[%s] ExState:[%i] \n\r ", z, Signal_Array[z].Name, Signal_Array[z].ExState );
+     }
      
   printf(" ==>   SPEEDTEST Get MB_ID and REGS from signals: [ %ld ] ms. \n\r", speedtest_stop());          
 
@@ -267,7 +272,7 @@ while (1){
 
      //=========  SEND all 485 signals to TCPCache =======
 
-speedtest_start(); //time start     
+     speedtest_start(); //time start     
      int x=0;
 //     socket_init();     
 
@@ -278,7 +283,7 @@ speedtest_start(); //time start
       if ( strlen (Signal_Array[x].Name) > 1 ){ //write if Name not empty
 //          socket_init();
             strcpy(packed_txt_string,""); //erase buffer
-            sSerial_by_num_short(x);
+            sSerial_by_num(x); //pack to serial prepare for send
             strcat(message, packed_txt_string);
             //printf("message part:[%s] \n\r",message);
 //          socket_close();
@@ -286,7 +291,7 @@ speedtest_start(); //time start
      }
      
      tcpsignal_packet_write(message);
-     printf("Send to TCPCache:[%s] \n\r",message);
+    // printf("Send to TCPCache:[%s] \n\r",message);
     
      
 

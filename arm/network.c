@@ -215,9 +215,9 @@ int tcpsignal_read(char *message_in){
     //while(1)
     //{
         strcpy (msg,"");
-        strcpy (msg, "signal_read:");
+        strcpy (msg, "signal_read;");
         strcat (msg,message_in);
-        printf("-Read from Server Signal_Array [%s] \n\r",message);
+        //printf("tcpsignal_read: Server Signal_Array [%s] \n\r",message); //debug
         if( send(sock , msg , strlen(msg) , 0) < 0)
         {
             puts("Send request to CacheServer failed");
@@ -268,7 +268,7 @@ int tcpsignal_write(char *message_in, int iVal){
 
     //while(1)
     //{
-        strcpy (message,"signal_write:");    
+        strcpy (message,"signal_write;");    
         strcat (message,message_in);
         ItoA(iVal,cVal);
         strcat (message,":");    
@@ -322,7 +322,7 @@ int tcpsignal_packet_write(char *message_in ){
 
     //while(1)
     //{
-        strcpy (message2,"signal_write:");    
+        strcpy (message2,"signal_write;");    
         strcat (message2,message_in);
 //        ItoA(iVal,cVal);
 //        strcat (message2,":");    

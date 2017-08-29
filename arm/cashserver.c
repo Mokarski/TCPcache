@@ -28,7 +28,7 @@
 // ********************************** Массив сигналов **********************************
 
 typedef struct Discrete_Signals { // store one  signal state
-    char Input_Signal[100];        //searched signal name
+    char Input_Signal[150];        //searched signal name
     char Reaction_Signal[100];     //reaction signal name
 //    char Buf_Signal[100];          //buffer for parser
     int adc_val;                   //control this state on ADC
@@ -246,8 +246,8 @@ int n=0;
 	//char header404[2000];
 	// указатели вхождения метки в массиве посылки + общий указатель разделителя сигналов;
     char *iStr1, *iStr2, *iStr, *iCmd1, *iCmd2, *iCmdEnd; 
-	char *cmd_read_signal = "signal_read:";
-	char *cmd_write_signal = "signal_write:";
+	char *cmd_read_signal = "signal_read;";
+	char *cmd_write_signal = "signal_write;";
 	char *cmd_end = ";";
 	char *cmp1 = "start_set_signals";
 	char *cmp2 = "end_set_signals";
@@ -295,9 +295,9 @@ int n=0;
 			size_t xx=0;
 			size_t cnt=0;
 			printf ("SERVER: recive from client: [%s]\n\r",client_message);
-			istr =strtok(client_message,":");
+			istr =strtok(client_message,";");
 			if (istr != NULL){
-			    istr = strtok (NULL,":"); //mask or signal name
+			    istr = strtok (NULL,";"); //mask or signal name
 			   }
 			
 			// Выделение последующих частей
@@ -310,7 +310,7 @@ int n=0;
 			                istr = strtok (NULL,":");
 			     }
 			     */
-			printf ("NAME: [ %s ]\n\r",istr);
+			if (istr != NULL) printf ("NAME: [ %s ]\n\r",istr);
 
 
 			char result[30000];  //buffer for response
@@ -320,8 +320,11 @@ int n=0;
 				if( strstr(arg->SA_ptr[cnt].Name, istr))
 				{
 				 //      printf ("[%i] Signal Name: [%s]\t",cnt,arg->SA_ptr[cnt].Name); //debug
-				       //printf (" READ: Signal Name: [%s]  Value: {%i} ExState: [%i] \n\r",arg->SA_ptr[cnt].Name,arg->SA_ptr[cnt].Value[1],arg->SA_ptr[cnt].ExState); //debug
+				       if ( arg->SA_ptr[cnt].Value[1] > 0 ){
+				           printf ("Socket[%i]|  READ: Signal > 0 [ Name: [%s]  Value: {%i} ExState: [%i] ] \n\r",sock,arg->SA_ptr[cnt].Name,arg->SA_ptr[cnt].Value[1],arg->SA_ptr[cnt].ExState); //debug
+				          }
 				        //arg->SA_ptr[cnt].ExState=0; // Flag ExState turn off 
+				        
 				        strcpy(packed_txt_string,""); //erase buffer
 				        sSerial_by_num(cnt); //serialize to packet by number of signals				        
 				        strcat (result,packed_txt_string);
@@ -367,10 +370,10 @@ int n=0;
 		
 		if( iCmd2 != NULL ){ // cmd write_signal
 		    speedtest_start();
-		    found=0;  
-		    char digit[5]; //buffer Value of signal as CHAR
+		    found=0;          //flag how many founded signals
+		    char digit[5];    //buffer Value of signal as CHAR
 		    char sname [100]; //buffer for temp store signal NAME
-		    char buf_signals[MAX_Signals][300]; //array of MAX_signal elements AND 300 characters each
+		    char buf_signals[MAX_Signals][150]; //array of MAX_signal elements AND 150 characters each
 		    int t=0;		        
 		    int val;
 		    
@@ -379,13 +382,13 @@ int n=0;
 		               strcpy(buf_signals[t],""); //clear buffer
 		              }
 		    */        
-		    printf("[recived >CMD WRITE] write_signal \n\r");
-		        printf("THREAD Socket ID[#%i]\n\r",sock);
+		        //printf("[recived >CMD WRITE] write_signal \n\r");
+		        //printf("THREAD Socket ID[#%i]\n\r",sock);
 			size_t xx=0;
 			size_t cnt=0;			
 			int sn=1; //number of signals started from 1, because before while we get 1 signal
 			
-			printf ("SERVER: recive from client: [%s]\n\r",client_message);
+			printf ("SERVER: recive from client sock_id[%i]: [%s]\n\r",sock,client_message);
 			istr =strtok(client_message,";");			            
 			if ( istr != NULL ){
 			    strcpy (buf_signals[0],istr);
@@ -410,12 +413,13 @@ int n=0;
 			         */
 			         if (istr == NULL) // defend from sigfault
 			        {
-			         printf("[%i] End write list\n\r",sn);
+			         printf("Socket[%i]|  End write to cachebuf, at position [%i]\n\r",sock,sn);
 			         // return ;
 			         break;
 			        } else {
+			                //strcpy (buf_signals[sn],""); //erase buffer segment before copy new parameter
 			    		strcpy (buf_signals[sn],istr);
-					printf ("explode to cache [#%i]  NAME: [%s] \n\r",sn,buf_signals[sn]); //debug
+					printf ("Socket[%i]| explode ; to cachebuf [#%i]  NAME: [%s] \n\r",sock,sn,buf_signals[sn]); //debug
 			               }
 				
 				sn++;
@@ -434,24 +438,30 @@ int n=0;
 			
 			              
 			                //printf("[Total clientsignals#%i][#%i]Cyrrent client signal: [%s]\n\r",sn,pr,buf_signals[pr]);
-			                if ( strstr( buf_signals[pr], arg->SA_ptr[cnt].Name ) != NULL ) {
+			                if ( strstr( buf_signals[pr], arg->SA_ptr[cnt].Name ) != NULL ) { //if in buffer we find signal name			                   
 			                    
 			                    //printf ("StrStr: [%s] [%s]\n\r",buf_signals[pr],arg->SA_ptr[cnt].Name); //debug
+			                    
 			                    found++;
-			                    istr = strtok(buf_signals[pr],":");	 // first element NAME        
-			                    if (istr != NULL){				         
-			                        istr = strtok (NULL,":");	 // second element Value
+			                    int utest=0;
+			                    printf ("before unpack %s \n\r",buf_signals[pr]);			                    
+			                    utest = unpack_signal(buf_signals[pr],pr); //unpack from field buffer to signal properties fields
+
+			                    
+			                    //istr = strtok(buf_signals[pr],":");	 // first element NAME        
+			                    //if (istr != NULL){				         
+			                    //    istr = strtok (NULL,":");	 // second element Value
 				            //    printf ("Client Value: [ %s ]\n\r",istr);
-				                if (istr != NULL) strcpy(digit,istr);
+				            //    if (istr != NULL) strcpy(digit,istr);
 				                
-				                if (digit != NULL) val =  atoi(digit);
+				            //    if (digit != NULL) val =  atoi(digit);
 				            //       printf("Value AtoI to write: [%i] \n\r",val);
-				                arg->SA_ptr[cnt].Value[1] = val;
+				            //    arg->SA_ptr[cnt].Value[1] = val;
 				            //    arg->SA_ptr[cnt].ExState = 0; //Flag value is changed
 				                   
-				                   if (val > 0) printf ("WRITE: NAME:{%s} Value:[%i] {ExState = %i} \n\r",arg->SA_ptr[cnt].Name,val, arg->SA_ptr[cnt].ExState);
+				                   if (arg->SA_ptr[cnt].Value[1] > 0) printf ("Socket[%i]| WRITE: NAME:{%s} Value:[%i] {ExState = %i} \n\r",sock,arg->SA_ptr[cnt].Name, arg->SA_ptr[cnt].Value[1] , arg->SA_ptr[cnt].ExState);
 				                  
-				             }
+				            // }
 			                   }
 			            
 			          }
@@ -496,7 +506,7 @@ int n=0;
 		/****************************** ERROR CMD SECTION ********************************************/
 		
 		if(  (iCmd1 == NULL) && (iCmd2 == NULL)  ){
-			printf("\nUnformatted Client Message!!!! \n\r");
+			printf("\n >>>>>>>> Unformatted Client Message!!!! \n\r");
 			//arg->msg = "~~~";
 			write(sock, mesBad, strlen(mesBad));
 			memset(client_message, 0, mess_length);

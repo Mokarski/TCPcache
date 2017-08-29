@@ -136,9 +136,19 @@ while (1){
                     //printf("\n\r ***Deserial: > Num{%i} State{%i} \n\r",z,test);
 	            //printf(" |Unpacked Signal : Name{%s} Val0[%i]  Val1[%i]| \n\r",Signal_Array[z].Name, Signal_Array[z].Value[0] , Signal_Array[z].Value[1]); //48                    
 	            
+	            if ( strstr(Signal_Array[z].Name,"485.kb.kei1.mode1") !=NULL ){
+	                if ( Signal_Array[z].Value[1] > 0){
+	                    //turn on 
+	                    strcpy(packed_txt_string,""); //erase buffer
+	                    int signal_number=0;
+	                    signal_number = signal_update_ex("485.kb.kbl.start_check",1,1);
+	                    sSerial_by_num(signal_number); //serialize signal by number
+	                    tcpsignal_packet_write (packed_txt_string);
+	                   }
+	               }
+	            
 	            if (Signal_Array[z].Value[1] > 0)   {
-	                    printf (" Name:[%s] Val:[%i] \n\r",Signal_Array[z].Name,Signal_Array[z].Value[1]);
-	                    
+	                    printf (" Name:[%s] Val:[%i] Ex[%i] \n\r",Signal_Array[z].Name,Signal_Array[z].Value[1],Signal_Array[z].ExState);	                    
 	                    }
                     
 	            if ( test == 0) { //---
@@ -147,9 +157,10 @@ while (1){
 	                //print_by_name(Signal_Array[z].Name);
 	                
 	                if (Signal_Array[z].Value[1] > 0)   {
-	                    printf (" Name:[%s] Val:[%i] ",Signal_Array[z].Name,Signal_Array[z].Value[1]);
+	                    //printf ("- Name:[%s] Val:[%i] \n\r",Signal_Array[z].Name,Signal_Array[z].Value[1]);
 	                    
 	                    }
+	                    
 	                    
 	                if ( row > 3 ){
 	                     row=0;
