@@ -225,75 +225,40 @@ void* connection_handler (void *args)
 //	someArgs_t *arg = (someArgs_t*) args;
 	Discrete_Signals_t *arg = (Discrete_Signals_t*) args;
 	
-int n=0;
-//DEBUG CODE
-/*
-  for (n=0; n < MAX_Signals; n++)
-      {
-        printf("THREAD Found Signal Name:[ %s ] IN Signal_Array\n\n", arg->SA_ptr[n].Name); //DEBUG
-        if (strstr(arg->SA_ptr[n].Name ,"." ) != NULL ) //if found "." in field Name
-            {
-               printf("THREAD Found Signal Name:[ %s ] IN Signal_Array\n\n", arg->SA_ptr[n].Name); 
-                    
-            }
-        }
-                                                   
-*/
+    int n=0;
+
     //Get the socket descriptor
     int sock = *(int*)arg->nSock; //get id
     free((int*)arg->nSock); // release memblock
     printf("THREAD Socket ID[#%i]\n\r",sock);
 	//
 	int read_size;
-    char *mesOk, *mesNo, *mesErr, *mesBad, *messHello, client_message[10000], signalsBuffer[10000];
-	//char header404[2000];
-	// указатели вхождения метки в массиве посылки + общий указатель разделителя сигналов;
+    char *mesOk, *mesNo, *mesErr, *mesBad,  client_message[MAX_MESS], signalsBuffer[MAX_MESS];
     char *iStr1, *iStr2, *iStr, *iCmd1, *iCmd2, *iCmdEnd; 
-	char *cmd_read_signal = "signal_read;";
-	char *cmd_write_signal = "signal_write;";
 	char *cmd_end = ";";
-	char *cmp1 = "start_set_signals";
-	char *cmp2 = "end_set_signals";
-
 	char *pCM = client_message;
-	
 	char *istr,ival;
-
-	int posStartFrame =0;
-	int posEndFrame=0;
-	int cntFrame=0;
-	char *pSB = signalsBuffer;
-	
-	mesOk = "Ok!";
-	mesNo = "Ooh!";
-	mesBad= "NOcmd!";
+	mesOk = "Ok!";	
+	mesBad = "NOcmd!";
 	mesErr = "Err!";
 	char a[4096];
 	char dig[128];	
-    //write(sock , messHello , strlen(messHello));
-    //Receive a message from client
-//	char tst[50000]; // size = MAX_MESS
+
 	char tst[MAX_MESS];
 	int rd_wr=0;
-        int found=0;  
+        int found=0;  //founded signals counter
     
-    while( (read_size = recv(sock , client_message , 10000 , 0) ) > 0 )
+    while( (read_size = recv(sock , client_message , MAX_MESS , 0) ) > 0 )
     {
 		int mess_length = sizeof(client_message) / sizeof(client_message[0]);
-		printf("client_message: [%s] \r\n", client_message);
+		printf("[SRV recived: %i bytes] client_message: [%s]\r\n",read_size ,client_message);
+
+		
+	//********************************* COMMAND SELECTION AND EXECUTION ******************************/
 		rd_wr = frame_unpack(client_message,tst);
-		printf("rd_wr[%i] client_tst: [%s] \r\n", rd_wr, tst);
-		
-        /********  Команды от "Ядра Логики" - Modbus_Master_RTU  ***********************/
-        //Проверка наличия в строке команд и признака конца команды
-		iStr1 = strstr(pCM,cmp1); // команда CoreLogic start_set_signals;
-		iStr2 = strstr(pCM,cmp2); // команда CoreLogic end_set_signals;
-		
-		iCmd1 = strstr (pCM,cmd_read_signal); // check for input cmd "signal_read"
-		iCmd2 = strstr (pCM,cmd_write_signal); // check for input cmd "signal_write"
-		iCmdEnd = strstr (pCM,cmd_end); // check for input cmd end ";"
-		
-	   //********************************* COMMAND SELECTION AND EXECUTION ******************************/
+		printf("[FRAMEUNPACK: rd_wr[%i]] Unpacked: [%s] \r\n", rd_wr, tst);	   
+	   
+       //********************************** READ **********************************************************
        //if( iCmd1 != NULL ){ // cmd read_signal
        if( rd_wr == 1 ){ // cmd read_signal
 		speedtest_start();
@@ -308,13 +273,15 @@ int n=0;
 			if (istr != NULL){
 			    printf ("SERVER: GET the NAME [%s]\n\r",istr);
 			    }
-			
+			/*
 			if (istr != NULL){
 			    istr = strtok (NULL,";"); //mask or signal name
 			   }
 			
 			if (istr != NULL) printf ("NAME: [ %s ]\n\r",istr);
+			*/
 			char result[MAX_MESS];  //buffer for response 50 000 bytes
+			char result2[MAX_MESS];  //buffer for response 50 000 bytes
 			strcpy (result,""); //erase buffer
 			for(cnt=0; cnt <  MAX_Signals; cnt++)
 			{
@@ -349,13 +316,16 @@ int n=0;
 			//pthread_exit(0);		
 			}
 
-			if (found > 0) {
+			if (found > 0) { //section to send client finded signals
 			printf("Signals READ  found [%i]! \n\r",found);
-			
-			//mesOk = "Ok!";
+						
 			strcat (result,mesOk); //add Ok to end
 			//printf ("BUF to SEND:[%s] \n \n \r",result); //debug
-			write(sock, result, strlen(result)); //send packet to client			
+			frame_pack("Ok!",result,result2); //pack all info to FRAME
+			printf ("result2: {%s}",result2);
+			//write(sock, result, strlen(result)); //send packet to client			
+			int msg_len = strlen(result2);
+			write(sock, result2, msg_len ); //send packet to client			
 			strcpy (client_message,"");
 			memset(client_message, 0, mess_length);
 			}
@@ -368,8 +338,9 @@ int n=0;
 		         printf(" ++++++++++++++++++++++++==>   SPEEDTEST TCPCache READ_REQ Time: [ %ld ] ms. \n\r", speedtest_stop());
 		         
 		}
-		
-		if( iCmd2 != NULL ){ // cmd write_signal
+		//*********************************** WRITE ************************************************************
+		//if( iCmd2 != NULL ){ // cmd write_signal
+		 if( rd_wr == 2 ) {
 		    speedtest_start();
 		    found=0;          //flag how many founded signals
 		    char digit[5];    //buffer Value of signal as CHAR
@@ -480,6 +451,7 @@ int n=0;
 			write(sock, mesOk, strlen(mesOk));
 			memset(client_message, 0, mess_length);
 			}
+			
 			/*
 			memset(client_message, 0, mess_length);
 			close(*arg->nSock);
@@ -493,9 +465,10 @@ int n=0;
 		
 		
 		/****************************** ERROR CMD SECTION ********************************************/
-		
-		if(  (iCmd1 == NULL) && (iCmd2 == NULL)  ){
-			printf("\n >>>>>>>> Unformatted Client Message!!!! \n\r");
+		// At this place we have no command write or read occured
+		//if(  (iCmd1 == NULL) && (iCmd2 == NULL)  ){
+		 if( rd_wr == -1 ) {
+			printf("\n >>>>>>>> Unformatted Client Message -1!!!! \n\r");
 			//arg->msg = "~~~";
 			write(sock, mesBad, strlen(mesBad));
 			memset(client_message, 0, mess_length);
@@ -504,12 +477,22 @@ int n=0;
 			//pthread_exit(0);			
 		}		
 		
+		if( rd_wr == -2 ) {
+			printf("\n >>>>>>>> Unformatted Client Message -2!!!! \n\r");
+			//arg->msg = "~~~";
+			write(sock, mesBad, strlen(mesBad));
+			memset(client_message, 0, mess_length);
+			//close(*arg->nSock);
+			//free((int*)arg->nSock);
+			//pthread_exit(0);			
+		}
+		
     }
      
     if(read_size == 0)    
     {   
-        printf("ERROR^: \n\r  THREAD Socket ID[#%i]\n\r",sock);
-        printf ("SERVER RECIVED MESSAGE: {%s} \n\r",client_message);
+        printf("ERROR^: recived size = 0 \n\r  THREAD Socket ID[#%i]\n\r",sock);
+        //printf ("SERVER RECIVED MESSAGE: {%s} \n\r",client_message);
         puts("SERVER: Client disconnected / Read_ Size = 0");
         fflush(stdout);
         //close(*arg->nSock);

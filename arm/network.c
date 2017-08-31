@@ -215,12 +215,12 @@ return 0;
 
 int frame_tcpreq (char *msg){
  char *pSR = server_reply;
- 
+ int ret=0;
  
     if( send(sock , msg , strlen(msg) , 0) < 0)
         {
             puts("Send request to CacheServer failed!!!");
-            return 1;
+            return -1;
             //break;
          } else { printf ("[ Send to SRV ]: {%s} \n\r",msg); }
         
@@ -228,26 +228,28 @@ int frame_tcpreq (char *msg){
         if( recv(sock , server_reply , strlen(server_reply) , 0) < 0) // recive message from server and put into global array
         {
             puts("recv from CacheServer failed!!!");
-            return 1;
+            return -1;
             //break;
-        } else { printf ("[ SRV reply ]: {%s} \n\r",server_reply); }
+        } else { printf ("[ SRV reply ]: {%s} \n\r",server_reply); ret=1; }
         
-        if ( strlen (server_reply) > 4){ //if response from server more then 4 symbols, then we get signals
+        if ( strlen (server_reply) > 5){ //if response from server more then 4 symbols, then we get signals
             strcpy(signal_parser_buf, server_reply); //copy to global array 
+            ret=2;
             }
     
 	if( strstr(pSR,"Ok!") == NULL)
 	{
-	  printf("Server CMD_READ reply error\n\r");
-	  return 2;
+	  printf("Server reply error: not Ok!\n\r");
+	  return -2;
 	  //break;
 	}
 	if ( strstr (pSR,"Ok!") != NULL ){
 	    printf("SERVER reply: Ok!\n\r");
+	    ret = 3;
 	   }
 	memset(server_reply, 0, sizeof(server_reply) / sizeof(server_reply[0]));
     //}
-return 0;
+return ret;
 }
 
 
@@ -257,14 +259,14 @@ int frame_pack (char *type, char *message_in, char *message_out) { //construct f
     char c_count[4];
     
     if ( strlen (message_in) >  MAX_MESS ) {
-        printf("Exeeded maximum buffer size, message_size: %i > then buffer_size:%i",strlen (message_in), MAX_MESS);
+        printf("Exeeded maximum buffer size, message_size: %i > then buffer_size:%i",strlen(message_in), MAX_MESS);
         return -1;
        }
     strcpy (Frame_Container.type,type);
     Frame_Container.count = 0;
     strcpy (Frame_Container.data, message_in);
     Frame_Container.len = strlen (Frame_Container.data) + 1; //length = Data container size in bytes + 1byte =";"
-    printf("Frame[ type:%s len:%i count:%i data{ %s } ] \n\r",Frame_Container.type, Frame_Container.len, Frame_Container.count, Frame_Container.data);
+    //printf("Frame[ type:%s len:%i count:%i data{ %s } ] \n\r",Frame_Container.type, Frame_Container.len, Frame_Container.count, Frame_Container.data);
     
     //Try Construct frame
     //Frame_Container.type, Frame_Container.len, Frame_Container.data
@@ -275,7 +277,7 @@ int frame_pack (char *type, char *message_in, char *message_out) { //construct f
     strcat (message_out, "#");
     strcat (message_out, Frame_Container.data);
     strcat (message_out,";");
-    printf("Constructed Frame^[%s] \n\r",message_out);
+    printf("Constructed Frame^[%s]\n\n\r",message_out);
     return 0;
 }
 
@@ -311,6 +313,9 @@ int frame_unpack (char *server_reply, char *data){ // copy serialized signals in
         strcpy(type,istr);
         if (strstr(type,"rd")) ret_rd_wr=1; //read request
         if (strstr(type,"wr")) ret_rd_wr=2; //write request
+        if (strstr(type,"ok")) ret_rd_wr=3; //ack - ok
+        if (strstr(type,"err")) ret_rd_wr=4; //server return "error request"
+        if (strstr(type,"ret")) ret_rd_wr=5; //retry request, if packet len no OK
         } else {  printf ("data_extract: Header1 - NULL! \n\r");
                   return -1;
                }
@@ -330,8 +335,8 @@ int frame_unpack (char *server_reply, char *data){ // copy serialized signals in
          //printf ("[r1-%i] [r2-%i]\n\r",r1,r2);
          
          if ( r1 != r2 ){
-             printf("Recived bytes != calculated | [%i != %i] \n\r",r1,r2);
-             return -1;
+             printf("ERR Recived bytes != calculated | [%i != %i] \n\r",r1,r2);
+             return -2; //if data length != calculated data lenght
              }
      
      
