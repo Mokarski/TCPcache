@@ -21,10 +21,17 @@ int main(int argc , char *argv[])
     init_signals_list(); // erase signal lsit 
 
 //************* CREATE SOCKET *********************
-if (socket_init("127.0.0.1") !=0){
+//if (socket_init("127.0.0.1") !=0){
+//     printf ("No Connection to server\n\r");
+//     return; //return 0 if all OK else return 1
+//     }
+     
+     
+     if (socket_init2() !=0){
      printf ("No Connection to server\n\r");
      return; //return 0 if all OK else return 1
      }
+     
      //ok
      /*
                int u=0;
@@ -60,7 +67,9 @@ while (1){
 	    frame_pack("rd", ".", message);
 	    printf("Message: [%s] \n\r",message);	    
 	    
-		tcpresult = frame_tcpreq(message);                      //send and recive response from server and copy to global signal_parser_buf
+		//tcpresult = frame_tcpreq(message);                      //send and recive response from server and copy to global signal_parser_buf
+		
+		tcpresult = frame_tcpsend(message); 
 		
 		printf ("tcp send result[%i]\n\r",tcpresult);	    
 		

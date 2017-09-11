@@ -35,6 +35,48 @@
                                                                                       
                                                                                       
 
+
+int socket_init2()
+{
+
+//    struct sockaddr_in server;
+    char duffer[10000];
+        char message[10000];
+    	char server_reply[10000] = "";
+        char *pSR = server_reply;
+    	char *pMok = "Ok!\n";
+        char *pHello;
+    	pHello = "~core";
+    			    
+    				
+    	    //Create socket
+            sock = socket(AF_INET , SOCK_STREAM , 0);
+            if (sock == -1)
+               {
+    		printf("Could not create socket");
+    		}
+    		
+    		puts("Socket created");
+    		                                     
+    		 server.sin_addr.s_addr = inet_addr("127.0.0.1");
+    		 server.sin_family = AF_INET;
+    		 server.sin_port = htons( 8888 );
+    				                                                  
+                  //Connect to remote server
+                  if (connect(sock , (struct sockaddr *)&server , sizeof(server)) < 0)
+                      {
+                          perror("connect failed. Error");
+                          return 1;
+                      }
+    			                                                                                       
+      puts("Connected with TCPCache Server\n\r");
+       //send(sock , pHello , strlen(pHello) , 0) ;
+       //keep communicating with server
+    				                                                                                                   
+return 0;
+}
+
+
 int socket_init(char *ipaddr)
 {
 
@@ -243,6 +285,7 @@ int frame_tcpreq (char *msg){
 	  return -2;
 	  //break;
 	}
+	
 	if ( strstr (pSR,"Ok!") != NULL ){
 	    printf("SERVER reply: Ok!\n\r");
 	    ret = 3;
@@ -251,6 +294,55 @@ int frame_tcpreq (char *msg){
     //}
 return ret;
 }
+
+
+int frame_tcpsend (char *msg){
+ char *pSR = server_reply;
+ int ret=0;
+ 
+    if( send(sock , msg , strlen(msg) , 0) < 0)
+        {
+            puts("Send request to CacheServer failed!!!");
+            return -1;
+            //break;
+         } else { printf ("[ Send to SRV ]: {%s} \n\r",msg); }
+        
+        //Receive a reply from the server
+        int cnt=0;
+        while (cnt != 6)
+        {
+        
+         if( recv(sock , server_reply , strlen(server_reply) , 0) < 0) // recive message from server and put into global array
+           {
+            puts("recv from CacheServer failed!!!");
+            return -1;
+            //break;
+            } else { printf ("[ SRV reply ]: {%s} \n\r",server_reply); ret=1; }
+        
+          if ( strlen (server_reply) > 5){ //if response from server more then 4 symbols, then we get signals
+              strcpy(signal_parser_buf, server_reply); //copy to global array 
+              ret=2;
+              }
+    
+	   if( strstr(pSR,"Ok!") == NULL)
+	      {
+	       printf("Server reply error: not Ok!\n\r");
+	       return -2;
+	       //break;
+	      }
+	
+	    if ( strstr (pSR,"Ok!") != NULL ){
+	        printf("SERVER reply: Ok!\n\r");
+	        ret = 3;
+	       }
+	     cnt++;
+	  }
+	memset(server_reply, 0, sizeof(server_reply) / sizeof(server_reply[0]));
+    //}
+    
+return ret;
+}
+
 
 
 int frame_pack (char *type, char *message_in, char *message_out) { //construct frame frome message_in and put result to message type is "rd" or "wr"

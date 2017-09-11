@@ -247,11 +247,12 @@ void* connection_handler (void *args)
 	char tst[MAX_MESS];
 	int rd_wr=0;
         int found=0;  //founded signals counter
-    
+        int iterration=0;
     while( (read_size = recv(sock , client_message , MAX_MESS , 0) ) > 0 )
     {
+       iterration++;
 		int mess_length = sizeof(client_message) / sizeof(client_message[0]);
-		printf("[SRV recived: %i bytes] client_message: [%s]\r\n",read_size ,client_message);
+		printf("\n\r {Cycle %i} \n\r [SRV received: %i bytes] client_message: [%s]\r\n",iterration,read_size ,client_message);
 
 		
 	//********************************* COMMAND SELECTION AND EXECUTION ******************************/
@@ -325,7 +326,9 @@ void* connection_handler (void *args)
 			printf ("result2: {%s}",result2);
 			//write(sock, result, strlen(result)); //send packet to client			
 			int msg_len = strlen(result2);
-			write(sock, result2, msg_len ); //send packet to client			
+			int write_ok;
+			write_ok = write(sock, result2, msg_len ); //send packet to client			
+			printf("Write state: [%i]\n\r",write_ok);
 			strcpy (client_message,"");
 			memset(client_message, 0, mess_length);
 			}
@@ -472,6 +475,7 @@ void* connection_handler (void *args)
 			//arg->msg = "~~~";
 			write(sock, mesBad, strlen(mesBad));
 			memset(client_message, 0, mess_length);
+			strcpy(client_message,"");
 			//close(*arg->nSock);
 			//free((int*)arg->nSock);
 			//pthread_exit(0);			
@@ -482,6 +486,7 @@ void* connection_handler (void *args)
 			//arg->msg = "~~~";
 			write(sock, mesBad, strlen(mesBad));
 			memset(client_message, 0, mess_length);
+			strcpy(client_message,"");
 			//close(*arg->nSock);
 			//free((int*)arg->nSock);
 			//pthread_exit(0);			
