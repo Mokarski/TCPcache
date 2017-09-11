@@ -10,7 +10,7 @@
 
 #ifndef _NETWORK_H
 #define _NETWORK_H
-#define MAX_MESS 50000 // maximum size of buffer for send or recive
+#define MAX_MESS 30000 // maximum size of buffer for send or recive
 
 char signal_parser_buf[MAX_MESS]; //global array
 char message[MAX_MESS];           //global array

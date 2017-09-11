@@ -267,7 +267,7 @@ int frame_tcpreq (char *msg){
          } else { printf ("[ Send to SRV ]: {%s} \n\r",msg); }
         
         //Receive a reply from the server
-        if( recv(sock , server_reply , strlen(server_reply) , 0) < 0) // recive message from server and put into global array
+        if( recv(sock , server_reply , MAX_MESS , 0) < 0) // recive message from server and put into global array
         {
             puts("recv from CacheServer failed!!!");
             return -1;
@@ -368,7 +368,7 @@ int frame_pack (char *type, char *message_in, char *message_out) { //construct f
     strcat(message_out,c_len);    
     strcat (message_out, "#");
     strcat (message_out, Frame_Container.data);
-    strcat (message_out,";");
+    strcat (message_out,";\0");
     printf("Constructed Frame^[%s]\n\n\r",message_out);
     return 0;
 }

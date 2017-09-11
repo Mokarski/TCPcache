@@ -69,7 +69,7 @@ while (1){
 	    
 		//tcpresult = frame_tcpreq(message);                      //send and recive response from server and copy to global signal_parser_buf
 		
-		tcpresult = frame_tcpsend(message); 
+		tcpresult = frame_tcpreq(message); 
 		
 		printf ("tcp send result[%i]\n\r",tcpresult);	    
 		

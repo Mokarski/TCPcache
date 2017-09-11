@@ -13,6 +13,8 @@
 #include<unistd.h>    //write
 #include<pthread.h> //for threading , link with lpthread
 #include<time.h> // for time_t
+#include<errno.h> // for print errors
+
 
 #include "signals.h"
 #include "network.h"
@@ -320,7 +322,7 @@ void* connection_handler (void *args)
 			if (found > 0) { //section to send client finded signals
 			printf("Signals READ  found [%i]! \n\r",found);
 						
-			strcat (result,mesOk); //add Ok to end
+			//strcat (result,mesOk); //add Ok to end
 			//printf ("BUF to SEND:[%s] \n \n \r",result); //debug
 			frame_pack("Ok!",result,result2); //pack all info to FRAME
 			printf ("result2: {%s}",result2);
@@ -328,7 +330,12 @@ void* connection_handler (void *args)
 			int msg_len = strlen(result2);
 			int write_ok;
 			write_ok = write(sock, result2, msg_len ); //send packet to client			
-			printf("Write state: [%i]\n\r",write_ok);
+			printf("\n\rTry to Write, write_ok state: [%i] \n\r",write_ok);
+			if (write_ok < 0){
+			    
+                             printf("Error description is : %s\n",strerror(errno));			    
+
+			    }
 			strcpy (client_message,"");
 			memset(client_message, 0, mess_length);
 			}
