@@ -272,7 +272,9 @@ int frame_tcpreq (char *msg){
             puts("recv from CacheServer failed!!!");
             return -1;
             //break;
-        } else { printf ("[ SRV reply ]: {%s} \n\r",server_reply); ret=1; }
+        } else { 
+                  //printf ("[ SRV reply ]: {%s} \n\r",server_reply); ret=1; 
+                  }
         
         if ( strlen (server_reply) > 5){ //if response from server more then 4 symbols, then we get signals
             strcpy(signal_parser_buf, server_reply); //copy to global array 
@@ -405,7 +407,7 @@ int frame_unpack (char *server_reply, char *data){ // copy serialized signals in
         strcpy(type,istr);
         if (strstr(type,"rd")) ret_rd_wr=1; //read request
         if (strstr(type,"wr")) ret_rd_wr=2; //write request
-        if (strstr(type,"ok")) ret_rd_wr=3; //ack - ok
+        if (strstr(type,"Ok!")) ret_rd_wr=3; //ack - ok
         if (strstr(type,"err")) ret_rd_wr=4; //server return "error request"
         if (strstr(type,"ret")) ret_rd_wr=5; //retry request, if packet len no OK
         } else {  printf ("data_extract: Header1 - NULL! \n\r");
