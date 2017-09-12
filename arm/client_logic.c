@@ -75,7 +75,7 @@ while (1){
 		printf ("tcp send result[%i]\n\r",tcpresult);	    
 		//in this place need to unpack signals from frame
 		frame_unpack(signal_parser_buf,tst);
-		printf ("\n\r uFRAME_UNPACK: \n\r %s\n\r",tst);
+		//printf ("\n\r FRAME_UNPACK: \n\r %s\n\r",tst);
 		//Data_to_sName (signal_parser_buf);     	            // explode signals by delimiter ";"	  and copy to Signal.Name[]
 		
 		Data_to_sName (tst);
@@ -90,19 +90,21 @@ while (1){
   	        
 	        int z=0;		
 	        for (z=0; z < MAX_Signals; z++) {
-	            printf(" \n\r |Signal FIELDS BEFORE parser: Name{%s} Val0[%i]  Val1[%i]| \n\r",Signal_Array[z].Name, Signal_Array[z].Value[0] , Signal_Array[z].Value[1]); //48
+	            printf(" \n\r |Signal FIELDS BEFORE parser: Name{%s} Val0[%i]  Val1[%i]| \n\r",Signal_Array[z].Name, Signal_Array[z].Value[0] , Signal_Array[z].Value[1]); //DEBUG
 	            int test=0;
 	            //*****************************************
 	            //test =  sDeSerial_by_num (z); // explode by :
 	            char buffer[350]="";
 	            strcpy (buffer, Signal_Array[z].Name);
 	            test = unpack_signal(buffer  ,z); //from buffer to signal with number Z
-	            printf ("\n\r #%i RESTORED SIGNAL -  Name:[%s] Val:[%i] Ex[%i] \n\r",z,Signal_Array[z].Name,Signal_Array[z].Value[1],Signal_Array[z].ExState);	                    
-	            /*
-	            if (Signal_Array[z].Value[1] > 0) {
+	            printf ("\n\r #%i RESTORED SIGNAL -  Name:[%s] Val:[%i] Ex[%i] \n\r",z,Signal_Array[z].Name,Signal_Array[z].Value[1],Signal_Array[z].ExState);  //DEBUG	                    
+	            
+	            if ( (Signal_Array[z].Value[1] > 0) || (Signal_Array[z].ExState > 0 ) ) {
+	                printf("\n\r ================================ *Value OR ExState* ====================================");
 	                printf (" Name:[%s] Val:[%i] Ex[%i] \n\r",Signal_Array[z].Name,Signal_Array[z].Value[1],Signal_Array[z].ExState);	                    
+	                printf("\n\r ================================ *** ====================================");
 	                }
-	            */
+	            
 
     		    }
                  

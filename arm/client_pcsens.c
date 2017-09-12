@@ -210,19 +210,33 @@ int main(int argc , char *argv[])
     return;    
     }
     
+int tcpresult=0;
+char tst[MAX_MESS];    
 while (1){
-	printf ("***THIS iS PcSense***\n\r");
+	printf ("***THIS iS PcSense [MordorBUS]***\n\r");
 	speedtest_start(); //time start
-
+        strcpy (signal_parser_buf,""); //erase buffer for next iteration
 	//======================== read all 485 signals from server create signals and virtual devices ===================
-
+       strcpy(message,"");
+       frame_pack("rd","485.kb.k",message);
+       tcpresult = frame_tcpreq(message);
+       printf("Status of TCP SEND: [%i]\n\r",tcpresult);
+       if ( tcpresult > 1){
+           frame_unpack(signal_parser_buf, tst);
+          }
+    
+    /*      
 	if ( tcpsignal_read("485.kb.k") == 0 ){ // if we get response from server
 	    printf("--- LOADED SIGNALS FROM SERVER: \n\r {%s} \n\r",signal_parser_buf); // debug
             tcpsignal_parser(signal_parser_buf); //explode by ";"
             strcpy (signal_parser_buf,""); //erase buffer for next iteration
 	    }
+     */
 //    socket_close();
-    
+      int signals_found=0;
+       signals_found  = Data_to_sName (tst);
+       
+       
 	printf("=================== ==>   SPEEDTEST Time load signals: [ %ld ] ms. \n\r", speedtest_stop());     
   
   
@@ -231,13 +245,16 @@ while (1){
 
          for (z=0; z < MAX_Signals; z++) {             
 
-            if ( sDeSerial_by_num (z) == 0){
+            //if ( sDeSerial_by_num (z) == 0){
+            
+             if ( signals_found > 0) {
 //                print_by_name(Signal_Array[z].Name);
                 virt_mb_filldev(Signal_Array[z].Name, Signal_Array[z].MB_Id, Signal_Array[z].MB_Reg_Num); //init device list
              } else break;
     
         }
-     //virt_mb_devlist(); //show virtdev list
+        
+        virt_mb_devlist(); //show virtdev list
 
         printf(" ==>   SPEEDTEST Deserial signals signals: [ %ld ] ms. \n\r", speedtest_stop());     
   
@@ -279,6 +296,7 @@ while (1){
      
      strcpy(message,""); //erase buffer     
      printf("Packed_txt_string:[%s] \n\r",packed_txt_string);
+     
      for (x=0; x < MAX_Signals; x++){
       if ( strlen (Signal_Array[x].Name) > 1 ){ //write if Name not empty
 //          socket_init();
@@ -289,8 +307,12 @@ while (1){
 //          socket_close();
          } else break; // signals list is end
      }
-     
-     tcpsignal_packet_write(message);
+       strcpy(tst,"");
+       frame_pack("wr",message,tst);
+       tcpresult = frame_tcpreq(tst);
+       printf("\n\r SEND TST^[%s] \n\r",tst);
+       printf("Status of TCP SEND: [%i]\n\r",tcpresult);
+     //tcpsignal_packet_write(message);
     // printf("Send to TCPCache:[%s] \n\r",message);
     
      

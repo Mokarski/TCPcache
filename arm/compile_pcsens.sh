@@ -35,5 +35,5 @@ gcc -Wall -g  -c client_pcsens.c
 #gcc -o client client.o signals.o 
 
 
-gcc -Wall -g  $(pkg-config --libs --cflags /home/opc/Kombain/libmodbus-3.0.6/libmodbus.pc) -o client_pcsens client_pcsens.o signals.o virtmb.o
+gcc -Wall -g  $(pkg-config --libs --cflags /home/opc/Kombain/libmodbus-3.0.6/libmodbus.pc) -o client_pcsens client_pcsens.o signals.o virtmb.o network.o
 #./client_pcsens

@@ -259,7 +259,12 @@ void* connection_handler (void *args)
 		
 	//********************************* COMMAND SELECTION AND EXECUTION ******************************/
 		rd_wr = frame_unpack(client_message,tst);
-		printf("[FRAMEUNPACK: rd_wr[%i]] Unpacked: [%s] \r\n", rd_wr, tst);	   
+		if (rd_wr < 0) {
+		printf ("FRAME_UNPACK ERROR: %i \n\r",rd_wr);
+		return 0; 
+		} else {
+  		         printf("[FRAMEUNPACK: rd_wr[%i]]   Unpacked: [%s] \r\n", rd_wr, tst);	   
+  		         }
 	   
        //********************************** READ **********************************************************
        //if( iCmd1 != NULL ){ // cmd read_signal
@@ -364,14 +369,14 @@ void* connection_handler (void *args)
 		               strcpy(buf_signals[t],""); //clear buffer
 		              }
 		    */        
-		        //printf("[recived >CMD WRITE] write_signal \n\r");
+		        printf("[recived >CMD WRITE] write_signal \n\r");
 		        //printf("THREAD Socket ID[#%i]\n\r",sock);
 			size_t xx=0;
 			size_t cnt=0;			
 			int sn=1; //number of signals started from 1, because before while we get 1 signal
 			
-			printf ("SERVER: recive from client sock_id[%i]: [%s]\n\r",sock,client_message);
-			istr =strtok(client_message,";");			            
+			printf ("SERVER: recive from client sock_id[%i]: [%s]\n\r",sock,tst);
+			istr =strtok(tst,";");			            
 			if ( istr != NULL ){
 			    strcpy (buf_signals[0],istr);
 			   } else {printf ("Not found delimiter [;]\n\r");}
