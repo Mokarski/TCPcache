@@ -274,13 +274,23 @@ while (1){
         else break; //if MB_Id = 0  BREAK all
        }
     //  virt_mb_devlist(); //show virtdev list
-      virtdev_to_signals();
+      virtdev_to_signals(); //convert virtual devices to real signals
      // END MB
      printf("\n\rVirtDev to real signals:\n\r");
      z=0;
-     for ( z=0; z < MAX_Signals; z++ ) {
-          if ( Signal_Array[z].Value[1] > 0 ) printf ("[%i] Name:[%s] Value:[%i] \n\r ", z, Signal_Array[z].Name, Signal_Array[z].Value[1] );
-          if ( Signal_Array[z].ExState > 0 ) printf  ("[%i] Name:[%s] ExState:[%i] \n\r ", z, Signal_Array[z].Name, Signal_Array[z].ExState );
+     for ( z=0; z < MAX_Signals; z++ ) { //at this point ALL FINE
+           printf ("Parameters in field Name: \n\r" );
+           printf ("TOrealSignals[%i] Name:[%s]  \n\r ", z, Signal_Array[z].Name);
+           printf ("Parameters in Signal struct fields: \n\r" );           
+           printf ("TOrealSignals[%i] Name:[%s] Value:[%i] ExState[%i]\n\r ", z, Signal_Array[z].Name, Signal_Array[z].Value[1] ,Signal_Array[z].ExState  );
+           char buffer[350]="";
+           int test=0;
+            strcpy (buffer, Signal_Array[z].Name);
+            test = unpack_signal(buffer  ,z); //from buffer to signal with number Z
+            printf ("\n\r #%i RESTORED SIGNAL -  Name:[%s] Val:[%i] Ex[%i] \n\r",z,Signal_Array[z].Name,Signal_Array[z].Value[1],Signal_Array[z].ExState);  //DEBUG
+                                                                       
+          if ( Signal_Array[z].Value[1] > 0 ) printf ("[%i] >> Name:[%s] Value:[%i] \n\r ", z, Signal_Array[z].Name, Signal_Array[z].Value[1] );
+          if ( Signal_Array[z].ExState > 0 ) printf  ("[%i] >> Name:[%s] ExState:[%i] \n\r ", z, Signal_Array[z].Name, Signal_Array[z].ExState );
      }
      
   printf(" ==>   SPEEDTEST Get MB_ID and REGS from signals: [ %ld ] ms. \n\r", speedtest_stop());          
@@ -295,15 +305,23 @@ while (1){
 
      
      strcpy(message,""); //erase buffer     
-     printf("Packed_txt_string:[%s] \n\r",packed_txt_string);
-     
+     printf("1Must be empty buffer - MESSAGE:[%s] \n\r",message);
+     char tmpz[150];
      for (x=0; x < MAX_Signals; x++){
       if ( strlen (Signal_Array[x].Name) > 1 ){ //write if Name not empty
 //          socket_init();
             strcpy(packed_txt_string,""); //erase buffer
-            sSerial_by_num(x); //pack to serial prepare for send
-            strcat(message, packed_txt_string);
-            //printf("message part:[%s] \n\r",message);
+            printf("2Must be empty buffer - Packed_txt_string:[%s] \n\r",packed_txt_string);
+            
+            // PIZDEC ---
+            sSerial_by_num(x); //pack to serial prepare for send into global buffer packed_txt_string
+            pack_signal(x,tmpz);
+            // end pizdec
+            
+            printf("After sSerial_by_num [%s] \n\r",packed_txt_string);
+            printf("After pack_signal [%s] \n\r",tmpz);
+            strcat(message, tmpz);
+            printf("[%i] construct MESSAGE:[%s] \n\r",x,message);
 //          socket_close();
          } else break; // signals list is end
      }

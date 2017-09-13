@@ -279,13 +279,128 @@ char *istr1;
 return 0;
 }
 
+int pack_signal (int n,char *str){ //pack from Signaal_id[n] to buffer 
+    char tmp[9];
+    char *istr;
+    //printf("Unpack Signal: [%s]\n\r",str);
+
+//istr = strtok (str, sep);
+if (istr != NULL){
+   //printf ("1 - %s ",istr);
+   int c =1;
+    while ( c < 12 ){
+           switch (c) {
+           case 1:
+                  strcpy ( str,Signal_Array[n].Name ); //firstly USE strcpy, for erase buffer
+                  strcat ( str,":" );  //next use strcat for cuncatinate strings
+                  printf("--[#%i]Pack_signal:{%s} ",c,str);// DEBUG
+           break;
+
+           case 2:
+                  strcat ( str,Signal_Array[n].Val_Type ); //type of signal bit or int
+                  strcat ( str,":" );
+                  printf("[#%i]Pack_signal:{%s} ",c,str);// DEBUG
+           break;
+
+           case 3:
+                 //printf ("%i - %s ",c,istr);
+                  //Signal_Array[n].MB_Id = atoi ( istr );
+                  itoa (Signal_Array[n].MB_Id,tmp);
+                  strcat(str,tmp); //copy the number of ID
+                  strcat ( str,":" );
+                  printf("[#%i]Pack_signal:{%s} ",c,str);// DEBUG
+           break;
+
+           case 4:
+                 //printf ("%i - %s ",c,istr);
+                 //Signal_Array[n].MB_Reg_Num = atoi ( istr );
+                  itoa (Signal_Array[n].MB_Reg_Num ,tmp);
+                  strcat(str,tmp); //copy the number of MB register number 
+                  strcat ( str,":" );
+                  printf("[#%i]Pack_signal:{%s} ",c,str);// DEBUG
+           break;
+
+           case 5:
+                 //printf ("%i - %s ",c,istr);
+                 //Signal_Array[n].Bit_Pos = atoi ( istr );
+                  itoa (Signal_Array[n].Bit_Pos ,tmp);
+                  strcat(str,tmp); //copy the number of Bit position
+                  strcat ( str,":" );
+                  printf("[#%i]Pack_signal:{%s} ",c,str);// DEBUG
+           break;
+
+           case 6:
+                 //printf ("%i - %s ",c,istr);
+                 //Signal_Array[n].Value[1] = atoi ( istr );
+                  itoa (Signal_Array[n].Value[1] ,tmp);
+                  strcat(str,tmp); //copy the Value
+                  strcat ( str,":" );
+                  printf("[#%i]Pack_signal:{%s} ",c,str);// DEBUG
+           break;
+
+           case 7:
+                 //printf ("%i - %s ",c,istr);
+                 //Signal_Array[n].TCP_Type = atoi ( istr );
+                  itoa (Signal_Array[n].TCP_Type ,tmp);
+                  strcat(str,tmp); //copy the type of TCP
+                  strcat ( str,":" );
+                  printf("[#%i]Pack_signal:{%s} ",c,str);// DEBUG
+           break;
+
+           case 8:
+                 //printf ("%i - %s ",c,istr);
+                 strcat (str,Signal_Array[n].TCP_Addr ); // TCP ADDR
+                 strcat ( str,":" );
+                 printf("[#%i]Pack_signal:{%s} ",c,str);// DEBUG
+           break;
+
+           case 9:
+                 //printf ("%i - %s ",c,istr);
+                 //Signal_Array[n].Prio = atoi ( istr );
+                  itoa (Signal_Array[n].Prio ,tmp);
+                  strcat(str,tmp); //copy the Priority of signal
+                  strcat ( str,":" );
+                  printf("[#%i]Pack_signal:{%s} ",c,str);// DEBUG
+           break;
+
+           case 10:
+                 //printf ("%i - %s ",c,istr);
+                 //Signal_Array[n].Off = atoi ( istr );
+                  itoa (Signal_Array[n].Off ,tmp);
+                  strcat(str,tmp); //copy the On or Off signal
+                  strcat ( str,":" );
+                  printf("[#%i]Pack_signal:{%s} ",c,str);// DEBUG
+           break;
+
+           case 11:
+                 //printf ("%i - %s \n\r",c,istr);
+                 //Signal_Array[n].ExState = atoi ( istr );                 
+                  itoa (Signal_Array[n].ExState ,tmp);
+                  strcat(str,tmp); //copy the Execution state
+                  strcat ( str,";" );
+                  printf("[#%i]Pack_signal:{%s} -- \n\r \n\r ",c,str);// DEBUG
+           break;
+
+           default:
+           printf("constructed_string {%s} ",str);
+           printf(" error index [%i] more > then signals fields [11]  ]\n\r",c);
+           }
+
+           c++;
+           //istr = strtok (NULL, sep);
+           //printf ("%i - %s ",c,istr);
+          }
+}
+return 0;
+}
+
 int sSerial_by_num(int n){
 //int n=0;
 int result=0;
 char Value[3];
 //int signals_counter=0;
 
-             if (strlen(Signal_Array[n].Name) > 2 ) //if name signal more then 4 symbols
+             if (strlen(Signal_Array[n].Name) > 3 ) //if name signal more then 4 symbols
                  {
                  
                  strcat(packed_txt_string,Signal_Array[n].Name);
@@ -316,7 +431,7 @@ char Value[3];
                  strcat(packed_txt_string,Value);
                  strcat(packed_txt_string,":");
                  
-                 if (strlen (Signal_Array[n].TCP_Addr) < 5 ) strcpy (Signal_Array[n].TCP_Addr,"127.0.0.1");
+                 // if (strlen (Signal_Array[n].TCP_Addr) < 5 ) strcpy (Signal_Array[n].TCP_Addr,"127.0.0.1");
                  strcat(packed_txt_string,Signal_Array[n].TCP_Addr);
                  strcat(packed_txt_string,":");
                  
