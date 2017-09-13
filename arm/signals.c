@@ -293,13 +293,13 @@ if (istr != NULL){
            case 1:
                   strcpy ( str,Signal_Array[n].Name ); //firstly USE strcpy, for erase buffer
                   strcat ( str,":" );  //next use strcat for cuncatinate strings
-                  printf("--[#%i]Pack_signal:{%s} ",c,str);// DEBUG
+                  //printf("--[#%i]Pack_signal:{%s} ",c,str);// DEBUG
            break;
 
            case 2:
                   strcat ( str,Signal_Array[n].Val_Type ); //type of signal bit or int
                   strcat ( str,":" );
-                  printf("[#%i]Pack_signal:{%s} ",c,str);// DEBUG
+                 // printf("[#%i]Pack_signal:{%s} ",c,str);// DEBUG
            break;
 
            case 3:
@@ -308,7 +308,7 @@ if (istr != NULL){
                   itoa (Signal_Array[n].MB_Id,tmp);
                   strcat(str,tmp); //copy the number of ID
                   strcat ( str,":" );
-                  printf("[#%i]Pack_signal:{%s} ",c,str);// DEBUG
+                 // printf("[#%i]Pack_signal:{%s} ",c,str);// DEBUG
            break;
 
            case 4:
@@ -317,7 +317,7 @@ if (istr != NULL){
                   itoa (Signal_Array[n].MB_Reg_Num ,tmp);
                   strcat(str,tmp); //copy the number of MB register number 
                   strcat ( str,":" );
-                  printf("[#%i]Pack_signal:{%s} ",c,str);// DEBUG
+                  //printf("[#%i]Pack_signal:{%s} ",c,str);// DEBUG
            break;
 
            case 5:
@@ -326,7 +326,7 @@ if (istr != NULL){
                   itoa (Signal_Array[n].Bit_Pos ,tmp);
                   strcat(str,tmp); //copy the number of Bit position
                   strcat ( str,":" );
-                  printf("[#%i]Pack_signal:{%s} ",c,str);// DEBUG
+                  //printf("[#%i]Pack_signal:{%s} ",c,str);// DEBUG
            break;
 
            case 6:
@@ -335,7 +335,7 @@ if (istr != NULL){
                   itoa (Signal_Array[n].Value[1] ,tmp);
                   strcat(str,tmp); //copy the Value
                   strcat ( str,":" );
-                  printf("[#%i]Pack_signal:{%s} ",c,str);// DEBUG
+                  //printf("[#%i]Pack_signal:{%s} ",c,str);// DEBUG
            break;
 
            case 7:
@@ -344,14 +344,14 @@ if (istr != NULL){
                   itoa (Signal_Array[n].TCP_Type ,tmp);
                   strcat(str,tmp); //copy the type of TCP
                   strcat ( str,":" );
-                  printf("[#%i]Pack_signal:{%s} ",c,str);// DEBUG
+                  //printf("[#%i]Pack_signal:{%s} ",c,str);// DEBUG
            break;
 
            case 8:
                  //printf ("%i - %s ",c,istr);
                  strcat (str,Signal_Array[n].TCP_Addr ); // TCP ADDR
                  strcat ( str,":" );
-                 printf("[#%i]Pack_signal:{%s} ",c,str);// DEBUG
+                 //printf("[#%i]Pack_signal:{%s} ",c,str);// DEBUG
            break;
 
            case 9:
@@ -360,7 +360,7 @@ if (istr != NULL){
                   itoa (Signal_Array[n].Prio ,tmp);
                   strcat(str,tmp); //copy the Priority of signal
                   strcat ( str,":" );
-                  printf("[#%i]Pack_signal:{%s} ",c,str);// DEBUG
+                  //printf("[#%i]Pack_signal:{%s} ",c,str);// DEBUG
            break;
 
            case 10:
@@ -369,7 +369,7 @@ if (istr != NULL){
                   itoa (Signal_Array[n].Off ,tmp);
                   strcat(str,tmp); //copy the On or Off signal
                   strcat ( str,":" );
-                  printf("[#%i]Pack_signal:{%s} ",c,str);// DEBUG
+                  //printf("[#%i]Pack_signal:{%s} ",c,str);// DEBUG
            break;
 
            case 11:
