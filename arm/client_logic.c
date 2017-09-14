@@ -90,19 +90,19 @@ while (1){
   	        
 	        int z=0;		
 	        for (z=0; z < MAX_Signals; z++) {
-	            printf(" \n\r |Signal FIELDS BEFORE parser: Name{%s} Val0[%i]  Val1[%i]| \n\r",Signal_Array[z].Name, Signal_Array[z].Value[0] , Signal_Array[z].Value[1]); //DEBUG
+//////	            printf(" \n\r |Signal FIELDS BEFORE parser: Name{%s} Val0[%i]  Val1[%i]| \n\r",Signal_Array[z].Name, Signal_Array[z].Value[0] , Signal_Array[z].Value[1]); //DEBUG
 	            int test=0;
 	            //*****************************************
 	            //test =  sDeSerial_by_num (z); // explode by :
 	            char buffer[350]="";
 	            strcpy (buffer, Signal_Array[z].Name);
 	            test = unpack_signal(buffer  ,z); //from buffer to signal with number Z
-	            printf ("\n\r #%i RESTORED SIGNAL -  Name:[%s] Val:[%i] Ex[%i] \n\r",z,Signal_Array[z].Name,Signal_Array[z].Value[1],Signal_Array[z].ExState);  //DEBUG	                    
+//////	            printf ("\n\r #%i RESTORED SIGNAL -  Name:[%s] Val:[%i] Ex[%i] \n\r",z,Signal_Array[z].Name,Signal_Array[z].Value[1],Signal_Array[z].ExState);  //DEBUG	                    
 	            
 	            if ( (Signal_Array[z].Value[1] > 0) || (Signal_Array[z].ExState > 0 ) ) {
-	                printf("\n\r ================================ *Value OR ExState* ====================================");
+	                printf("\n\r ================================ *Value OR ExState* ====================================\n\r");
 	                printf (" Name:[%s] Val:[%i] Ex[%i] \n\r",Signal_Array[z].Name,Signal_Array[z].Value[1],Signal_Array[z].ExState);	                    
-	                printf("\n\r ================================ *** ====================================");
+	                printf(" ================================ *** ====================================\n\r");
 	                }
 	            
 
