@@ -288,7 +288,7 @@ while (1){
            int test=0;
             strcpy (buffer, Signal_Array[z].Name);
             test = unpack_signal(buffer  ,z); //from buffer to signal with number Z
-            printf ("\n\r #%i RESTORED SIGNAL -  Name:[%s] Val:[%i] Ex[%i] \n\r",z,Signal_Array[z].Name,Signal_Array[z].Value[1],Signal_Array[z].ExState);  //DEBUG
+            //printf ("\n\r #%i RESTORED SIGNAL -  Name:[%s] Val:[%i] Ex[%i] \n\r",z,Signal_Array[z].Name,Signal_Array[z].Value[1],Signal_Array[z].ExState);  //DEBUG
                                                                        
           if ( Signal_Array[z].Value[1] > 0 ) printf ("[%i] >> Name:[%s] Value:[%i] \n\r ", z, Signal_Array[z].Name, Signal_Array[z].Value[1] );
           if ( Signal_Array[z].ExState > 0 ) printf  ("[%i] >> Name:[%s] ExState:[%i] \n\r ", z, Signal_Array[z].Name, Signal_Array[z].ExState );
