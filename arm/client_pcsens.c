@@ -274,6 +274,19 @@ main (int argc, char *argv[])
 
       for (z = 0; z < MAX_Signals; z++)
 	{
+	
+	char buffer[350] = "";
+	  int test = 0;
+	  strcpy (buffer, Signal_Array[z].Name);
+	  test = unpack_signal (buffer, z);	//from buffer to signal with number Z
+	  //printf ("\n\r #%i RESTORED SIGNAL -  Name:[%s] Val:[%i] Ex[%i] \n\r",z,Signal_Array[z].Name,Signal_Array[z].Value[1],Signal_Array[z].ExState);  //DEBUG
+
+	  if (Signal_Array[z].Value[1] > 0)
+	    printf ("[%i] >> Name:[%s] Value:[%i] \n\r ", z,
+		    Signal_Array[z].Name, Signal_Array[z].Value[1]);
+	  if (Signal_Array[z].ExState > 0)
+	    printf ("[%i] >> Name:[%s] ExState:[%i] \n\r ", z,
+		    Signal_Array[z].Name, Signal_Array[z].ExState);
 
 	  if (signals_found > 0)
 	    {
@@ -289,7 +302,7 @@ main (int argc, char *argv[])
 
      // virt_mb_devlist ();	//show virtdev list
 
-      printf (" ==>   SPEEDTEST Deserial signals signals: [ %ld ] ms. \n\r", speedtest_stop ());
+      printf (" ==>   SPEEDTEST Deserial signals: [ %ld ] ms. \n\r", speedtest_stop ());
 	      
 
 
@@ -297,10 +310,11 @@ main (int argc, char *argv[])
       // MODBUS CODES
       int c = 0;
       int total_dev_regs = 0;
+      //printf ("Device_Array[c].MB_Id ", Device_Array[c].MB_Id );
       for (c = 0; c < VirtDev; c++)
 	{
-	
-	  printf ("[Device_Array MB_ID {%i} Register_counter %i] \n\r", Device_Array[c].MB_Id, total_dev_regs);
+	  printf ("Device_Array[c].MB_Id %i\n\r ", Device_Array[c].MB_Id );
+	  printf ("[Device_Array MB_ID {%i} Register_counter {%i}] \n\r", Device_Array[c].MB_Id, total_dev_regs);
 	  if (Device_Array[c].MB_Id > 0)
 	    {			//if mb device ID  > 0
 
@@ -309,10 +323,10 @@ main (int argc, char *argv[])
 	      virt_mb_ReadtoCache (c, total_dev_regs);	// read from real devices to virtual
 
 	    }
-	  else
-	    break;		//if MB_Id = 0  BREAK all ???????
+	     //else
+	         // break;		//if MB_Id = 0  BREAK all ???????
 	}
-      virt_mb_devlist ();	//show virtdev list
+        virt_mb_devlist ();	//show virtdev list
       
       printf("222BREAK !!!\n\r");
 break;
@@ -322,26 +336,7 @@ break;
       // END MB
 
       printf ("\n\rVirtDev to real signals:\n\r");
-      z = 0;
-      for (z = 0; z < MAX_Signals; z++)
-	{			//at this point ALL FINE
-	  //   printf ("Parameters in field Name: \n\r" );
-	  //   printf ("TOrealSignals[%i] Name:[%s]  \n\r ", z, Signal_Array[z].Name);
-	  //   printf ("Parameters in Signal struct fields: \n\r" );           
-	  //   printf ("TOrealSignals[%i] Name:[%s] Value:[%i] ExState[%i]\n\r ", z, Signal_Array[z].Name, Signal_Array[z].Value[1] ,Signal_Array[z].ExState  );
-	  char buffer[350] = "";
-	  int test = 0;
-	  strcpy (buffer, Signal_Array[z].Name);
-	  test = unpack_signal (buffer, z);	//from buffer to signal with number Z
-	  //printf ("\n\r #%i RESTORED SIGNAL -  Name:[%s] Val:[%i] Ex[%i] \n\r",z,Signal_Array[z].Name,Signal_Array[z].Value[1],Signal_Array[z].ExState);  //DEBUG
-
-	  if (Signal_Array[z].Value[1] > 0)
-	    printf ("[%i] >> Name:[%s] Value:[%i] \n\r ", z,
-		    Signal_Array[z].Name, Signal_Array[z].Value[1]);
-	  if (Signal_Array[z].ExState > 0)
-	    printf ("[%i] >> Name:[%s] ExState:[%i] \n\r ", z,
-		    Signal_Array[z].Name, Signal_Array[z].ExState);
-	}
+     
 
       printf
 	(" ==>   SPEEDTEST Get MB_ID and REGS from signals: [ %ld ] ms. \n\r",
