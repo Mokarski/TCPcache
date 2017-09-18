@@ -15,7 +15,7 @@
 #include<time.h> // for time_t
 #include<errno.h> // for print errors
 
-
+#define DEBUG 0 // 0 -not debug  1- debug
 #include "signals.h"
 #include "network.h"
 #include "speedtest.h"
@@ -28,6 +28,8 @@
 #define NUM_THREADS 		  4
 #define MAX_SIZE			100
 #define RFC1123FMT "%a, %d %b %Y %H:%M:%S GMT"
+
+
 // ********************************** Массив сигналов **********************************
 
 typedef struct Discrete_Signals { // store one  signal state
@@ -252,9 +254,9 @@ void* connection_handler (void *args)
         int iterration=0;
     while( (read_size = recv(sock , client_message , MAX_MESS , 0) ) > 0 )
     {
-       iterration++;
+      if (DEBUG == 1) iterration++;
 		int mess_length = sizeof(client_message) / sizeof(client_message[0]);
-		printf("\n\r {Cycle %i} \n\r [SRV received: %i bytes] client_message: [%s]\r\n",iterration,read_size ,client_message);
+		 if (DEBUG == 1) printf("\n\r {Cycle %i} \n\r [SRV received: %i bytes] client_message: [%s]\r\n",iterration,read_size ,client_message);
 
 		
 	//********************************* COMMAND SELECTION AND EXECUTION ******************************/
@@ -263,7 +265,7 @@ void* connection_handler (void *args)
 		printf ("FRAME_UNPACK ERROR: %i \n\r",rd_wr);
 		return 0; 
 		} else {
-  		         printf("[FRAMEUNPACK: rd_wr[%i]]   Unpacked: [%s] \r\n", rd_wr, tst);	   
+  		         if (DEBUG == 1) printf("[FRAMEUNPACK: rd_wr[%i]]   Unpacked: [%s] \r\n", rd_wr, tst);	   
   		         }
 	   
        //********************************** READ **********************************************************
@@ -297,7 +299,7 @@ void* connection_handler (void *args)
 				{
 				 //      printf ("[%i] Signal Name: [%s]\t",cnt,arg->SA_ptr[cnt].Name); //debug
 				       if ( arg->SA_ptr[cnt].Value[1] > 0 ){
-				           printf ("Socket[%i]|  READ: Signal > 0 [ Name: [%s]  Value: {%i} ExState: [%i] ] \n\r",sock,arg->SA_ptr[cnt].Name,arg->SA_ptr[cnt].Value[1],arg->SA_ptr[cnt].ExState); //debug
+				           if (DEBUG == 1)    printf ("Socket[%i]|  READ: Signal > 0 [ Name: [%s]  Value: {%i} ExState: [%i] ] \n\r",sock,arg->SA_ptr[cnt].Name,arg->SA_ptr[cnt].Value[1],arg->SA_ptr[cnt].ExState); //debug
 				          }
 				        //arg->SA_ptr[cnt].ExState=0; // Flag ExState turn off 
 				        
@@ -330,12 +332,12 @@ void* connection_handler (void *args)
 			//strcat (result,mesOk); //add Ok to end
 			//printf ("BUF to SEND:[%s] \n \n \r",result); //debug
 			frame_pack("Ok!",result,result2); //pack all info to FRAME
-			printf ("result2: {%s}",result2);
+			if (DEBUG == 1) printf ("result2: {%s}",result2);
 			//write(sock, result, strlen(result)); //send packet to client			
 			int msg_len = strlen(result2);
 			int write_ok;
 			write_ok = write(sock, result2, msg_len ); //send packet to client			
-			printf("\n\rTry to Write, write_ok state: [%i] \n\r",write_ok);
+			if (DEBUG == 1) printf("\n\rTry to Write, write_ok state: [%i] \n\r",write_ok);
 			if (write_ok < 0){
 			    
                              printf("Error description is : %s\n",strerror(errno));			    
@@ -375,7 +377,7 @@ void* connection_handler (void *args)
 			size_t cnt=0;			
 			int sn=1; //number of signals started from 1, because before while we get 1 signal
 			
-			printf ("SERVER: recive from client sock_id[%i]: [%s]\n\r",sock,tst);
+			if (DEBUG == 1) printf ("SERVER: recive from client sock_id[%i]: [%s]\n\r",sock,tst);
 			istr =strtok(tst,";");			            
 			if ( istr != NULL ){
 			    strcpy (buf_signals[0],istr);
@@ -406,7 +408,7 @@ void* connection_handler (void *args)
 			        } else {
 			                //strcpy (buf_signals[sn],""); //erase buffer segment before copy new parameter
 			    		strcpy (buf_signals[sn],istr);
-					printf ("Socket[%i]| explode ; to cachebuf [#%i]  NAME: [%s] \n\r",sock,sn,buf_signals[sn]); //debug
+					if (DEBUG == 1) printf ("Socket[%i]| explode ; to cachebuf [#%i]  NAME: [%s] \n\r",sock,sn,buf_signals[sn]); //debug
 			               }
 				
 				sn++;
@@ -431,7 +433,7 @@ void* connection_handler (void *args)
 			                    
 			                    found++;
 			                    int utest=0;
-			                    printf ("before unpack %s \n\r",buf_signals[pr]);			                    
+			                    if (DEBUG == 1) printf ("before unpack %s \n\r",buf_signals[pr]);			                    
 			                    utest = unpack_signal(buf_signals[pr],pr); //unpack from field buffer to signal properties fields
 
 			                    
