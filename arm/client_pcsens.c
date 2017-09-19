@@ -278,7 +278,7 @@ main (int argc, char *argv[])
 	char buffer[350] = "";
 	  int test = 0;
 	  strcpy (buffer, Signal_Array[z].Name);
-	  test = unpack_signal (buffer, z);	//from buffer to signal with number Z
+	  test = unpack_signal (buffer, z);	//UnPACK Signal from buffer to signal with number Z
 	  //printf ("\n\r #%i RESTORED SIGNAL -  Name:[%s] Val:[%i] Ex[%i] \n\r",z,Signal_Array[z].Name,Signal_Array[z].Value[1],Signal_Array[z].ExState);  //DEBUG
 
 	  if (Signal_Array[z].Value[1] > 0)
@@ -313,23 +313,22 @@ main (int argc, char *argv[])
       //printf ("Device_Array[c].MB_Id ", Device_Array[c].MB_Id );
       for (c = 0; c < VirtDev; c++)
 	{
-	  printf ("Device_Array[c].MB_Id %i\n\r ", Device_Array[c].MB_Id );
-	  printf ("[Device_Array MB_ID {%i} Register_counter {%i}] \n\r", Device_Array[c].MB_Id, total_dev_regs);
+	 // printf ("Device_Array[c].MB_Id %i\n\r ", Device_Array[c].MB_Id );
+	 // printf ("[Device_Array MB_ID {%i} Register_counter {%i}] \n\r", Device_Array[c].MB_Id, total_dev_regs);
 	  if (Device_Array[c].MB_Id > 0)
 	    {			//if mb device ID  > 0
 
 	      total_dev_regs = virt_mb_registers (c);	// get total registers count for virtual devices list
-	      printf ("[MB_ID %i Regs %i] \n\r", Device_Array[c].MB_Id, total_dev_regs);
+	//      printf ("[MB_ID %i Regs %i] \n\r", Device_Array[c].MB_Id, total_dev_regs);
 	      virt_mb_ReadtoCache (c, total_dev_regs);	// read from real devices to virtual
 
 	    }
 	     //else
 	         // break;		//if MB_Id = 0  BREAK all ???????
 	}
-        virt_mb_devlist ();	//show virtdev list
+    //    virt_mb_devlist ();	//show virtdev list
       
-      printf("222BREAK !!!\n\r");
-break;
+      
       
       
       virtdev_to_signals ();	//convert virtual devices to real signals

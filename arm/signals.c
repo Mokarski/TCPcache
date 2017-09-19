@@ -378,12 +378,12 @@ if (istr != NULL){
                   itoa (Signal_Array[n].ExState ,tmp);
                   strcat(str,tmp); //copy the Execution state
                   strcat ( str,";" );
-                  printf("[#%i]Pack_signal:{%s} -- \n\r \n\r ",c,str);// DEBUG
+                  //printf("[#%i]Pack_signal:{%s} -- \n\r \n\r ",c,str);// DEBUG
            break;
 
            default:
-           printf("constructed_string {%s} ",str);
-           printf(" error index [%i] more > then signals fields [11]  ]\n\r",c);
+           printf("Buffer assembly string {%s} \n\r",str);
+           printf(" ERROR: index [%i] more > then signals fields [11] TMP_STRING:[%s] \n\r",c,tmp);
            }
 
            c++;

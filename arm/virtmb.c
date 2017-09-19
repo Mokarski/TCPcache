@@ -141,9 +141,9 @@ int virt_mb_registers (int ID){ //search and count used registers
 	   for(z=0; z < VirtDevRegs; z++) { // numbers of virtual registers in struct Device_Array
 	        //printf ("Used registers[%i] : [ %i ] \n\r",z, Device_Array[t].MB_Registers[z]);
                 if ( Device_Array[ID].MB_reg_counter[z] > 0 ) {
-                    printf ("\n\r Count registers:  DEV_ID[%i]  Mark as Used registers num[%i] : Value [ %i ] ",ID,z, Device_Array[ID].MB_reg_counter[z]);
+                    //printf ("\n\r Count registers:  DEV_ID[%i]  Mark as Used registers num[%i] : Value [ %i ] ",ID,z, Device_Array[ID].MB_reg_counter[z]); //DEBUG
                     tmp++;  //May be bug? count from 2
-                    printf ("[Registers counter %i] \n\r ",tmp);
+                    //printf ("[Registers counter %i] \n\r ",tmp); //DEBUG
                     }
            }
 
