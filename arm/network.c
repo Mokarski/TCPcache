@@ -253,7 +253,7 @@ int frame_read_s (char *message_in, short int signals_count){
     strcat(message,c_count);
     
     strcat (message, Frame_Container.data);
-    printf("Constructed Frame^[%s] \n\r",message);
+    if (DEBUG == 1) printf("Constructed Frame^[%s] \n\r",message);
 return 0;
 }
 
@@ -266,7 +266,7 @@ int frame_tcpreq (char *msg){
             puts("Send request to CacheServer failed!!!");
             return -1;
             //break;
-         } else { printf ("[ Send to SRV ]: {%s} \n\r",msg); }
+         } else { if (DEBUG == 1) printf ("[ Send to SRV ]: {%s} \n\r",msg); } //debug info
         
         //Receive a reply from the server
         if( recv(sock , server_reply , MAX_MESS , 0) < 0) // recive message from server and put into global array
@@ -374,7 +374,7 @@ int frame_pack (char *type, char *message_in, char *message_out) { //construct f
     strcat (message_out, "#");
     strcat (message_out, Frame_Container.data);
     strcat (message_out,";\0");
-    printf("Constructed Frame^[%s]\n\n\r",message_out);
+    if (DEBUG == 1) printf("Constructed Frame^[%s]\n\n\r",message_out);
     return 0;
 }
 

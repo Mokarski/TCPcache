@@ -6,12 +6,14 @@
 #include <sys/socket.h>    //socket
 #include <arpa/inet.h> //inet_addr
 #include <stdlib.h>
+
+#define  DEBUG 1
 #include "network.h"
 #include "signals.h"
 #include "speedtest.h"
 #include <errno.h>
 #include <unistd.h>
-
+#define  DEBUG 1
 
 int main(int argc , char *argv[])
 {
@@ -75,6 +77,7 @@ while (1){
 		printf ("tcp send result[%i]\n\r",tcpresult);	    
 		//in this place need to unpack signals from frame
 		frame_unpack(signal_parser_buf,tst);
+		if ( DEBUG == 1 ) printf(">>>>RECIVED^{%s} \n\r",tst);
 		//printf ("\n\r FRAME_UNPACK: \n\r %s\n\r",tst);
 		//Data_to_sName (signal_parser_buf);     	            // explode signals by delimiter ";"	  and copy to Signal.Name[]
 		
@@ -89,6 +92,7 @@ while (1){
   	        speedtest_start(); //time start //deserial test  	         
   	        
 	        int z=0;		
+	                printf("\n\r ================================ *Value OR ExState* ====================================\n\r");	        
 	        for (z=0; z < MAX_Signals; z++) {
 //////	            printf(" \n\r |Signal FIELDS BEFORE parser: Name{%s} Val0[%i]  Val1[%i]| \n\r",Signal_Array[z].Name, Signal_Array[z].Value[0] , Signal_Array[z].Value[1]); //DEBUG
 	            int test=0;
@@ -97,18 +101,69 @@ while (1){
 	            char buffer[350]="";
 	            strcpy (buffer, Signal_Array[z].Name);
 	            test = unpack_signal(buffer  ,z); //from buffer to signal with number Z
-//////	            printf ("\n\r #%i RESTORED SIGNAL -  Name:[%s] Val:[%i] Ex[%i] \n\r",z,Signal_Array[z].Name,Signal_Array[z].Value[1],Signal_Array[z].ExState);  //DEBUG	                    
 	            
-	            if ( (Signal_Array[z].Value[1] > 0) || (Signal_Array[z].ExState > 0 ) ) {
-	                printf("\n\r ================================ *Value OR ExState* ====================================\n\r");
-	                printf (" Name:[%s] Val:[%i] Ex[%i] \n\r",Signal_Array[z].Name,Signal_Array[z].Value[1],Signal_Array[z].ExState);	                    
-	                printf(" ================================ *** ====================================\n\r");
+	            if ( strstr(Signal_Array[z].Name,"485.kb.kei") != NULL ) 
+	               {
+	                 if (Signal_Array[z].ExState == 0 ) Signal_Array[z].ExState = 1; //Set Flag to signal as RAED from modbus DEVICES
+	                 if (Signal_Array[z].ExState == 4 ) Signal_Array[z].ExState = 1; //Set Flag to signal as RAED from modbus DEVICES
+	               }
+	            
+//////	             printf ("\n\r #%i RESTORED SIGNAL -  Name:[%s] Val:[%i] Ex[%i] \n\r",z,Signal_Array[z].Name,Signal_Array[z].Value[1],Signal_Array[z].ExState);  //DEBUG	                    
+	            
+	             if ( (Signal_Array[z].Value[1] > 0) || (Signal_Array[z].ExState > 0 ) ) {
+
+	                printf ("[#%i]  Name:[%s]   Val:[%i]     Ex[%i] \n\r",z,Signal_Array[z].Name,Signal_Array[z].Value[1],Signal_Array[z].ExState);	                    
+
 	                }
 	            
 
     		    }
+	                printf(" ================================ *** ====================================\n\r");    		    
                  
 		  printf(" ==>   SPEEDTEST Deserial signals signals: [ %ld ] ms. \n\r", speedtest_stop());     
+
+         
+         
+                     //=========  SEND all 485 signals to TCPCache =======
+
+      speedtest_start ();       //time start
+      int x = 0;
+//     socket_init();
+
+
+      strcpy (message, "");     //erase buffer
+      //printf("1Must be empty buffer - MESSAGE:[%s] \n\r",message);
+      char tmpz[150];
+      for (x = 0; x < MAX_Signals; x++)
+        {
+          if (strlen (Signal_Array[x].Name) > 1)
+            {                   //write if Name not empty
+//          socket_init();
+              strcpy (packed_txt_string, "");   //erase buffer
+              //printf("2Must be empty buffer - Packed_txt_string:[%s] \n\r",packed_txt_string);
+
+              // PIZDEC ---
+              sSerial_by_num (x);       //pack to serial prepare for send into global buffer packed_txt_string
+              pack_signal (x, tmpz);
+              // end pizdec
+
+              //printf("After sSerial_by_num [%s] \n\r",packed_txt_string);
+              //printf("After pack_signal [%s] \n\r",tmpz);
+              strcat (message, tmpz);
+              //printf("[%i] construct MESSAGE:[%s] \n\r",x,message);
+//          socket_close();
+            }
+          else
+            break;              // signals list is end
+        }
+      strcpy (tst, "");
+      frame_pack ("wr", message, tst);
+      tcpresult = frame_tcpreq (tst);
+      if (DEBUG == 1) printf ("\n\r SEND TST^[%s] \n\r", tst);
+      printf ("Status of TCP SEND: [%i]\n\r", tcpresult);
+      //tcpsignal_packet_write(message);
+      // printf("Send to TCPCache:[%s] \n\r",message);
+
 
          
         printf("end iteration.. \n\r");     

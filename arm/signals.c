@@ -148,7 +148,8 @@ if (istr != NULL){
 
            default:
            printf("Input_string {%s} ",str);
-           printf(" error index more then fields 11 < [%i]\n\r",c);
+           printf(" unpack_signal error index more then fields 11 < [%i]\n\r",c);
+           
            }
 
            c++;
@@ -161,7 +162,7 @@ return 0;
 
 
                 
-int sDeSerial_by_num (int n){
+int sDeSerial_by_num (int n){ //for thread solution
 char sep1[10]=":";
 //char sep2[10]=";";
 char line[503]; //buffer for parsing
@@ -394,7 +395,7 @@ if (istr != NULL){
 return 0;
 }
 
-int sSerial_by_num(int n){
+int sSerial_by_num(int n){ //for thread solution
 //int n=0;
 int result=0;
 char Value[3];
@@ -459,7 +460,7 @@ char Value[3];
                 
 
 
-int sDeSerial_by_num_short (int n){
+int sDeSerial_by_num_short (int n){ //for thread solution
 char sep1[10]=":";
 char sep2[10]=";";
 char line[503]; //buffer for parsing
@@ -565,7 +566,7 @@ return 0;
 }
 
 
-int sSerial_by_num_short(int n){
+int sSerial_by_num_short(int n){ //for thread solution
 //int n=0;
 int result=0;
 char Value[3];

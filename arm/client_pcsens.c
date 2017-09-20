@@ -7,11 +7,15 @@
 #include <arpa/inet.h>		//inet_addr
 #include <stdlib.h>
 #include "/home/opc/Kombain/test/include/modbus/modbus.h"
+
+#define DEBUG 0
 #include "network.h"
 #include "signals.h"
 #include "virtmb.h"
 #include "speedtest.h"
 #include <errno.h>
+
+
 
 int
 virt_mb_ReadtoCache (int dIndex, int reg_count)
@@ -22,13 +26,14 @@ virt_mb_ReadtoCache (int dIndex, int reg_count)
   int rc;
   int i;
   int fl;
-
+  int ret=0;
   ctx = modbus_new_rtu ("/dev/ttySP0", 115200, 'N', 8, 1);
 
   if (ctx == NULL)
     {
       fprintf (stderr, "Unable to create the libmodbus context\n");
-      return -1;
+      ret=-1;
+      return ret;
     }
   struct timeval old_response_timeout;
   struct timeval response_timeout;
@@ -55,9 +60,17 @@ virt_mb_ReadtoCache (int dIndex, int reg_count)
   connected = modbus_connect (ctx);
 
   if (connected == -1)
-    printf ("Connection failed %i\n", ID);
-  if (connected == 0)
+    {
+     printf ("Connection failed %i\n", ID);
+     ret=4; 
+     return ret;
+         
+    }
+    
+  if (connected == 0){
     printf ("connected %i\n", ID);
+    ret=0;
+    }
   int cn = 0;
 
   rc = modbus_read_registers (ctx, 0, reg_count, tab_reg);
@@ -66,7 +79,8 @@ virt_mb_ReadtoCache (int dIndex, int reg_count)
     {
       printf ("[MB_ID #%i]  Connection failed !\n", ID);
       fprintf (stderr, "MB_READ: %s\n", modbus_strerror (errno));
-      return -1;
+      ret=4;
+      return ret;
     }
 
 
@@ -88,7 +102,7 @@ virt_mb_ReadtoCache (int dIndex, int reg_count)
   modbus_free (ctx);		//close COM ?
 
 
-  return tab_reg[0];
+  return ret;
 }
 
 
@@ -187,7 +201,7 @@ CheckBit (uint sigReg, int iBit)
 
 int
 virtdev_to_signals (void)
-{				//from virtual devices to signals parser
+{				//from virtual devices to signals
   int c, x;
   for (c = 0; c < VirtDev; c++)
     {				// cycle for divices 
@@ -201,6 +215,7 @@ virtdev_to_signals (void)
 		{		// if value int
 		  Signal_Array[x].Value[1] =
 		    Device_Array[c].MB_Registers[Signal_Array[x].MB_Reg_Num];
+		  Signal_Array[x].ExState = Device_Array[c].ExState; // for write device connecton state
 		  //    printf("INT SIGNAL [Name: %s] [Value:%i] \n\r",Signal_Array[x].Name, Signal_Array[x].Value[1]); //DEBUG
 		}
 
@@ -211,8 +226,8 @@ virtdev_to_signals (void)
 		  //return result to Signal.Value
 		  int reg;
 		  reg =
-		    Device_Array[c].MB_Registers[Signal_Array[x].MB_Reg_Num];
-
+		  Device_Array[c].MB_Registers[Signal_Array[x].MB_Reg_Num];
+		  Signal_Array[x].ExState = Device_Array[c].ExState; //for write ExState back to Signals.ExState
 		  Signal_Array[x].Value[1] = CheckBit (reg, Signal_Array[x].Bit_Pos);	//register and bit position
 		  //      printf("BIT SIGNAL [Name: %s] [Value:%i] \n\r",Signal_Array[x].Name, Signal_Array[x].Value[1]);     //DEBUG  
 		}
@@ -228,7 +243,7 @@ main (int argc, char *argv[])
 {
 
 //INIT SIGNALS     
-  printf ("MAX_Signals [%i] \n", MAX_Signals);
+if (DEBUG == 1)   printf ("MAX_Signals [%i] \n", MAX_Signals);
   init_signals_list ();		// erase signal lsit 
   if (socket_init ("127.0.0.1") != 0)
     {
@@ -241,7 +256,7 @@ main (int argc, char *argv[])
   while (1)
     {
       printf ("***THIS iS PcSense [MordorBUS]***\n\r");
-      speedtest_start ();	//time start
+      //speedtest_start ();	//time start
       strcpy (signal_parser_buf, "");	//erase buffer for next iteration
       //======================== read all 485 signals from server create signals and virtual devices ===================
       strcpy (message, "");
@@ -265,8 +280,7 @@ main (int argc, char *argv[])
       signals_found = Data_to_sName (tst); //extract all signals from buffer and put into Signal.Name field
 
 
-      printf
-	("=================== ==>   SPEEDTEST Time load signals: [ %ld ] ms. \n\r",	 speedtest_stop ());
+     // printf	("=================== ==>   SPEEDTEST Time load signals: [ %ld ] ms. \n\r",	 speedtest_stop ());
 
 
       speedtest_start ();	//time start
@@ -278,21 +292,23 @@ main (int argc, char *argv[])
 	char buffer[350] = "";
 	  int test = 0;
 	  strcpy (buffer, Signal_Array[z].Name);
+	  //printf ("#%i NameField {%s} \n\r",z,Signal_Array[z].Name);
 	  test = unpack_signal (buffer, z);	//UnPACK Signal from buffer to signal with number Z
 	  //printf ("\n\r #%i RESTORED SIGNAL -  Name:[%s] Val:[%i] Ex[%i] \n\r",z,Signal_Array[z].Name,Signal_Array[z].Value[1],Signal_Array[z].ExState);  //DEBUG
 
-	  if (Signal_Array[z].Value[1] > 0)
-	    printf ("[%i] >> Name:[%s] Value:[%i] \n\r ", z,
-		    Signal_Array[z].Name, Signal_Array[z].Value[1]);
-	  if (Signal_Array[z].ExState > 0)
-	    printf ("[%i] >> Name:[%s] ExState:[%i] \n\r ", z,
-		    Signal_Array[z].Name, Signal_Array[z].ExState);
+	  if ( (Signal_Array[z].Value[1] > 0) || (Signal_Array[z].ExState > 0) )
+	           printf ("[%i]From_SRV NOW -->> Name:[%s] Value:[%i] ExState:[%i]\n\r ", z,Signal_Array[z].Name, Signal_Array[z].Value[1], Signal_Array[z].ExState);
+	 // if (Signal_Array[z].ExState > 0)
+	 //          printf ("[%i]FromSRV NOW -->> Name:[%s] ExState:[%i] \n\r ", z,Signal_Array[z].Name, Signal_Array[z].ExState);
 
 	  if (signals_found > 0)
 	    {
 //            print_by_name(Signal_Array[z].Name);
-	      virt_mb_filldev (Signal_Array[z].Name, Signal_Array[z].MB_Id, Signal_Array[z].MB_Reg_Num);	//init device list
-	      
+              if (Signal_Array[z].ExState > 0 ) {  //flag to read or write
+                  //Signal_Array[z].ExState = 0; //reset flag - bad idea
+                  
+	          virt_mb_filldev (Signal_Array[z].Name, Signal_Array[z].MB_Id, Signal_Array[z].MB_Reg_Num, Signal_Array[z].ExState );	//init virtual device list and copy ExState
+	          }
 	    }
 	    else  {  printf("signals_found = 0\n\r");
 	             break;
@@ -319,8 +335,8 @@ main (int argc, char *argv[])
 	    {			//if mb device ID  > 0
 
 	      total_dev_regs = virt_mb_registers (c);	// get total registers count for virtual devices list
-	//      printf ("[MB_ID %i Regs %i] \n\r", Device_Array[c].MB_Id, total_dev_regs);
-	      virt_mb_ReadtoCache (c, total_dev_regs);	// read from real devices to virtual
+	//    printf ("[MB_ID %i Regs %i] \n\r", Device_Array[c].MB_Id, total_dev_regs);
+	      Device_Array[c].ExState = virt_mb_ReadtoCache (c, total_dev_regs);	// read from real devices to virtual and Write ExState to virtual device/ if ExState = 4 or -1 ->  error connection
 
 	    }
 	     //else
@@ -334,7 +350,7 @@ main (int argc, char *argv[])
       virtdev_to_signals ();	//convert virtual devices to real signals
       // END MB
 
-      printf ("\n\rVirtDev to real signals:\n\r");
+       printf ("\n\rVirtDev to real signals:\n\r");
      
 
       printf
@@ -355,6 +371,8 @@ main (int argc, char *argv[])
       char tmpz[150];
       for (x = 0; x < MAX_Signals; x++)
 	{
+	  if ( (Signal_Array[x].Value[1] > 0) || (Signal_Array[x].ExState > 0) )
+	           printf ("[%i]TO_SRV NOW -->> Name:[%s] Value:[%i] ExState:[%i]\n\r ", x,Signal_Array[x].Name, Signal_Array[x].Value[1], Signal_Array[x].ExState);
 	  if (strlen (Signal_Array[x].Name) > 1)
 	    {			//write if Name not empty
 //          socket_init();
@@ -378,7 +396,7 @@ main (int argc, char *argv[])
       strcpy (tst, "");
       frame_pack ("wr", message, tst);
       tcpresult = frame_tcpreq (tst);
-      printf ("\n\r SEND TST^[%s] \n\r", tst);
+      if (DEBUG == 1) printf ("\n\r SEND TST^[%s] \n\r", tst);
       printf ("Status of TCP SEND: [%i]\n\r", tcpresult);
       //tcpsignal_packet_write(message);
       // printf("Send to TCPCache:[%s] \n\r",message);

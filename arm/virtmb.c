@@ -71,7 +71,7 @@ return tab_reg[0];
 }
 
 
-int virt_mb_filldev( char *sName, int mb_id, int mb_reg){ //fill unic dev to virt
+int virt_mb_filldev( char *sName, int mb_id, int mb_reg, int inExState){ //fill unic dev to virt
 	int i=0;
 	int uniq_test=0;
 	//int reg_counter[VirtDevRegs]; //temporary array for count number of regs
@@ -91,7 +91,7 @@ int virt_mb_filldev( char *sName, int mb_id, int mb_reg){ //fill unic dev to vir
 			if ( strlen (Device_Array[i].Name) < 2){			
 		                strcpy(Device_Array[i].Name,sName); //fill the name
 				Device_Array[i].MB_Id = mb_id;
-				
+				Device_Array[i].ExState = inExState; //very bad idea
 				break; // device copied to array DONE
 			}
 		}

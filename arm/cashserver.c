@@ -15,7 +15,7 @@
 #include<time.h> // for time_t
 #include<errno.h> // for print errors
 
-#define DEBUG 0 // 0 -not debug  1- debug
+#define DEBUG 1 // 0 -not debug  1- debug
 #include "signals.h"
 #include "network.h"
 #include "speedtest.h"
@@ -48,6 +48,7 @@ typedef struct Discrete_Signals { // store one  signal state
     struct Signal *SA_ptr; //pointer to signals array
     struct Mb_Event *MbEv_ptr; //pointer to event array
     int *nSock;
+    //add mutex 
 } Discrete_Signals_t;
                         
 //Discrete_Signals_t args; // Create array of Tasks to control signals by threads
@@ -414,36 +415,55 @@ void* connection_handler (void *args)
 				sn++;
 			   }
 			
-			//printf("Start Write list parser\n\r");		
+			if (DEBUG == 1) printf("Signal_counter sn=%i\n\r",sn);		
 			         
 			for(cnt=0; cnt < MAX_Signals; cnt++) //cycle for signals
 			{ 
-			
+			    //if (DEBUG == 1) printf ("buf_signals[%s] -  SignalsName [%s]\n\r",buf_signals[cnt],arg->SA_ptr[cnt].Name); //debug
+			    
 			    int pr=0;
 			    if ( strlen ( arg->SA_ptr[cnt].Name ) > 2 ) {  // test if signal name not empty
 			             //printf ("Cyrrent SA: [%s] \n\r",arg->SA_ptr[cnt].Name);
 			             
 			         for (pr = 0; pr < sn; pr++){ //cycle for recived signals from client. number of recived signals = sn
 			
-			              
+			              //************************** !!!!!!!!!!!!!!!!!! **********************
 			                //printf("[Total clientsignals#%i][#%i]Cyrrent client signal: [%s]\n\r",sn,pr,buf_signals[pr]);
-			                if ( strstr( buf_signals[pr], arg->SA_ptr[cnt].Name ) != NULL ) { //if in buffer we find signal name			                   
+			                //if (DEBUG == 1) printf ("StrStr: buf_signals[%s]  -  SignalsName [%s]\n\r",buf_signals[pr],arg->SA_ptr[cnt].Name); //debug
+			                //pack_signal(cnt,tmpz);
+			                //if (DEBUG == 1) printf ("StrStr: buf_signals[%s]  -  SignalsName [%s]\n\r",buf_signals[pr],tmpz); //debug
+			                char tmpz[190];
+			                char *istrName;
+			                strcpy(tmpz,buf_signals[pr]); //tmp buf
+			                //printf("tmpz %s\n\r",tmpz);
+			                istrName =strtok(tmpz,":"); //extract name			            
+			                if ( istrName != NULL ){
+			                    //printf("istr %s \n\r",istrName);
+			                    strcpy (tmpz,istrName);
+			                    //printf("tmpz %s \n\r",tmpz);
+			                    } else {
+			                             printf ("Not found Name in buf_signals[:]\n\r");
+			                             break;
+			                             }
 			                    
-			                    //printf ("StrStr: [%s] [%s]\n\r",buf_signals[pr],arg->SA_ptr[cnt].Name); //debug
-			                    
-			                    found++;
-			                    int utest=0;
-			                    if (DEBUG == 1) printf ("before unpack %s \n\r",buf_signals[pr]);			                    
-			                    utest = unpack_signal(buf_signals[pr],pr); //unpack from field buffer to signal properties fields
+			                if ( strstr( arg->SA_ptr[cnt].Name,tmpz  ) != NULL ) { //if in buffer we find signal name			                   
+			                    if (strcmp (arg->SA_ptr[cnt].Name, tmpz)==0) 
+			                       { 
+			                         if ( DEBUG ==1 ) printf(">>>CMPNAME SignalName=[%s]\n\r",arg->SA_ptr[cnt].Name);
 
 			                    
-				                  
-				            // }
+			                         found++;
+			                         int utest=0;
+			                         if ( DEBUG == 1) printf("SignalName[%s] = RecivedName[%s]",arg->SA_ptr[cnt].Name,tmpz);
+			                         if (DEBUG == 1) printf ("before unpack %s \n\r",buf_signals[pr]);			                    
+			                         utest = unpack_signal(buf_signals[pr],pr); //unpack from field buffer to signal properties fields
+			                       }
 			                   }
 			            
 			          }
+			          
 			      
-			      pr++; // increment start index position of cycle for start next step exclude previus step!!!
+			      //pr++; // increment start index position of cycle for start next step exclude previus step!!!
 			    }
 			}
 			
