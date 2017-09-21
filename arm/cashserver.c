@@ -271,6 +271,8 @@ void* connection_handler (void *args)
 		rd_wr = frame_unpack(client_message,tst);
 		if (rd_wr < 0) {
 		printf ("FRAME_UNPACK ERROR: %i \n\r",rd_wr);
+		// close socket before exit
+		close (sock);
 		return 0; 
 		} else {
   		         if (DEBUG == 1) printf("[FRAMEUNPACK: rd_wr[%i]]   Unpacked: [%s] \r\n", rd_wr, tst);	   
@@ -281,16 +283,8 @@ void* connection_handler (void *args)
        //********************************** READ **********************************************************
        //if( iCmd1 != NULL ){ // cmd read_signal
        if( rd_wr == 1 ){ // cmd read_signal
-                //pthread_mutex_lock(&mutex); // block mutex 
-                int rc;
-                if ( (rc = pthread_mutex_trylock(&mutex)) == EBUSY ) {
-                        printf("Mutex is already locked by another process.\nLet's lock mutex using pthread_mutex_lock().\n");
-                        pthread_mutex_lock (&mutex);
-                        } else if ( rc == 0 ) {
-                                                printf("Mutex lock by Read operation!\n");
-                                                } else { 
-                                                         printf("Error: %d\n", rc);                                                        
-                                                        }
+                pthread_mutex_lock(&mutex); // block mutex 
+                
             
                 
 		speedtest_start();
@@ -380,16 +374,8 @@ void* connection_handler (void *args)
 		//*********************************** WRITE ************************************************************
 		//if( iCmd2 != NULL ){ // cmd write_signal
 		 if( rd_wr == 2 ) {
-		    //pthread_mutex_lock(&mutex); // block mutex 
-		    int rc;
-		                    if ( (rc = pthread_mutex_trylock(&mutex)) == EBUSY ) {
-                                          printf("Mutex is already locked by another process.\nLet's lock mutex using pthread_mutex_lock().\n");
-                                          pthread_mutex_lock (&mutex);
-                                         } else if ( rc == 0 ) {
-                                                printf("Mutex lock by Write operation!\n");
-                                                } else { 
-                                                         printf("Error: %d\n", rc);                                                        
-                                                        }
+		    pthread_mutex_lock(&mutex); // block mutex 
+		    
 		    
 		    speedtest_start();
 		    found=0;          //flag how many founded signals
@@ -574,10 +560,10 @@ void* connection_handler (void *args)
         perror("SERVER: Recv failed");
     }
 	//close(*arg->nSock);         
-	close (sock);
+
     //Free the socket pointer
     //printf(" ++++++++++++++++++++++++==>   SPEEDTEST  TCPCache write from client Time: [ %ld ] ms. \n\r", speedtest_stop());
-     
+     close (sock);
     //free((int*)arg->nSock);
     //free (sock);
     return 0;
