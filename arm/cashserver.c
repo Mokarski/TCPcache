@@ -49,7 +49,7 @@ typedef struct Discrete_Signals { // store one  signal state
     uint Trigger;       //signal has trigger state
     struct Signal *SA_ptr; //pointer to signals array
     struct Mb_Event *MbEv_ptr; //pointer to event array
-    int *nSock;
+    int nSock;
     //add mutex 
 } Discrete_Signals_t;
                         
