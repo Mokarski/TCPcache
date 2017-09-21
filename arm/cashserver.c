@@ -124,7 +124,7 @@ int main(int argc , char *argv[])
     while( (client_sock = accept(socket_desc, (struct sockaddr *)&client, (socklen_t*)&c)) )
     {   printf("\n\r ***TCPSERVER: \n\r");
         puts("Connection accepted");
-        printf("(MAIN While) CLient socket ID[#%i] \n\r",client_sock); 
+        printf("\n\r>>>>>    (MAIN While) CLient socket ID[#%i] \n\r",client_sock); 
 		
 		
          pthread_t sniffer_thread;
@@ -146,22 +146,17 @@ int main(int argc , char *argv[])
 		args.SA_ptr = Signal_Array;
 		//if( pthread_create( &sniffer_thread, NULL,  connection_handler, (void*) &args[0]) < 0)
 		
-        //if( pthread_create( &sniffer_thread, &threadAttr,  connection_handler, (void*) &args) < 0) //for detached thread
-        // if( pthread_create( &sniffer_thread, NULL,  connection_handler, (void*) &args) < 0)
-        if( pthread_create( &sniffer_thread, NULL,  connection_handler, (void*) client_sock) < 0)
+
+        if( pthread_create( &sniffer_thread, &threadAttr,  connection_handler, (void*) client_sock) < 0)
         {
             perror("SERVER: Could not create thread");
             return (ERROR_CREATE_THREAD);
         }
         puts("\nSERVER: Handler assigned"); 
-		// Very HARD problem with thread resorces and thread termination
+	
 		
-        //Now join the thread , so that we dont terminate before the thread
-        int status = pthread_join(sniffer_thread, (void**)&status_addr);
-        if (status != SUCCESS) {
-            printf("SERVER: Main error: can't join thread, status = %d\n", status);
-            exit(ERROR_JOIN_THREAD);
-        }
+        
+        
 		
 		
     }
@@ -270,9 +265,9 @@ void* connection_handler (void *args)
 	//********************************* COMMAND SELECTION AND EXECUTION ******************************/
 		rd_wr = frame_unpack(client_message,tst);
 		if (rd_wr < 0) {
-		printf ("FRAME_UNPACK ERROR: %i \n\r",rd_wr);
-		// close socket before exit
-		close (sock);
+		printf ("----------------------> FRAME_UNPACK ERROR!!!!!: %i \n\r",rd_wr);
+		
+		close (sock); // close socket before exit
 		return 0; 
 		} else {
   		         if (DEBUG == 1) printf("[FRAMEUNPACK: rd_wr[%i]]   Unpacked: [%s] \r\n", rd_wr, tst);	   
@@ -330,7 +325,7 @@ void* connection_handler (void *args)
 			}
 			pthread_mutex_unlock(&mutex); //unlock mutex
 			if (found == 0) {
-			printf("CMD_READ: Signal not found/ Close socket \n\r");
+			printf("CMD_READ: Signal not found \n\r");
 			
 			//arg->hello = "~core";
 			//mesErr = "Err! NotFound \n\r";
