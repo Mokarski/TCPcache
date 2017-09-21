@@ -1,21 +1,21 @@
 /*
      Cash TCP Server for data exchange between Logic_Core, Panel_Keyboard, Web-client;
 	***********************************************************************************
-	Created in May, 2017. Author: "Zeromnimus",zerom@sibmail.com; "'SPARC' Company"(c).
+	Created in May, 2017. Author: "Mokar",tomsknets@yandex.ru; "'SPARC' Company"(c).
 */
  
 #include<stdio.h>
-#include<string.h>    //strlen
-#include<stdlib.h>    //strlen
-#include<string.h> // strstr
+#include<string.h>    
+#include<stdlib.h>     
+#include<string.h>        
 #include<sys/socket.h>
 #include<arpa/inet.h> //inet_addr
 #include<unistd.h>    //write
-#include<pthread.h> //for threading , link with lpthread
-#include<time.h> // for time_t
-#include<errno.h> // for print errors
+#include<pthread.h>   //for threading , link with lpthread
+#include<time.h>      // for time_t
+#include<errno.h>     // for print errors
 
-#define DEBUG 1 // 0 -not debug  1- debug
+#define DEBUG 1       // 0 -not debug  1- debug
 #include "signals.h"
 #include "network.h"
 #include "speedtest.h"
@@ -28,6 +28,8 @@
 #define NUM_THREADS 		  4
 #define MAX_SIZE			100
 #define RFC1123FMT "%a, %d %b %Y %H:%M:%S GMT"
+
+static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
 
 // ********************************** Массив сигналов **********************************
@@ -143,22 +145,23 @@ int main(int argc , char *argv[])
 		//args.pSignal = Signals;
 		args.SA_ptr = Signal_Array;
 		//if( pthread_create( &sniffer_thread, NULL,  connection_handler, (void*) &args[0]) < 0)
-        if( pthread_create( &sniffer_thread, &threadAttr,  connection_handler, (void*) &args) < 0)
+		
+        //if( pthread_create( &sniffer_thread, &threadAttr,  connection_handler, (void*) &args) < 0) //for detached thread
+        if( pthread_create( &sniffer_thread, NULL,  connection_handler, (void*) &args) < 0)
         {
             perror("SERVER: Could not create thread");
             return (ERROR_CREATE_THREAD);
         }
         puts("\nSERVER: Handler assigned"); 
 		// Very HARD problem with thread resorces and thread termination
-		/*
+		
         //Now join the thread , so that we dont terminate before the thread
         int status = pthread_join(sniffer_thread, (void**)&status_addr);
         if (status != SUCCESS) {
             printf("SERVER: Main error: can't join thread, status = %d\n", status);
             exit(ERROR_JOIN_THREAD);
         }
-		*/
-		//printf("Last client by: %s \n", args.hello);
+		
 		
     }
 	
@@ -193,6 +196,7 @@ char * substr(char * dst, const char * src, size_t pos, size_t cnt){
     
     return dst;
 }
+
 /*
  * приведение целого к строковому формату
  */
