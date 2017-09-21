@@ -15,7 +15,7 @@
 #include<time.h>      // for time_t
 #include<errno.h>     // for print errors
 
-#define DEBUG 1       // 0 -not debug  1- debug
+#define DEBUG 0       // 0 -not debug  1- debug
 #include "signals.h"
 #include "network.h"
 #include "speedtest.h"
@@ -271,11 +271,25 @@ void* connection_handler (void *args)
 		return 0; 
 		} else {
   		         if (DEBUG == 1) printf("[FRAMEUNPACK: rd_wr[%i]]   Unpacked: [%s] \r\n", rd_wr, tst);	   
+  		         //mutex here
+  		         
   		         }
 	   
        //********************************** READ **********************************************************
        //if( iCmd1 != NULL ){ // cmd read_signal
        if( rd_wr == 1 ){ // cmd read_signal
+                //pthread_mutex_lock(&mutex); // block mutex 
+                int rc;
+                if ( (rc = pthread_mutex_trylock(&mutex)) == EBUSY ) {
+                        printf("Mutex is already locked by another process.\nLet's lock mutex using pthread_mutex_lock().\n");
+                        pthread_mutex_lock (&mutex);
+                        } else if ( rc == 0 ) {
+                                                printf("Mutex lock by Read operation!\n");
+                                                } else { 
+                                                         printf("Error: %d\n", rc);                                                        
+                                                        }
+            
+                
 		speedtest_start();
 		char sep_comma[4]=";";
 		    found=0;  
@@ -317,7 +331,7 @@ void* connection_handler (void *args)
 					found++;
 				}
 			}
-			
+			pthread_mutex_unlock(&mutex); //unlock mutex
 			if (found == 0) {
 			printf("CMD_READ: Signal not found/ Close socket \n\r");
 			
@@ -358,11 +372,22 @@ void* connection_handler (void *args)
 			pthread_exit(0);		
 		        */
 		         printf(" ++++++++++++++++++++++++==>   SPEEDTEST TCPCache READ_REQ Time: [ %ld ] ms. \n\r", speedtest_stop());
-		         
+		    
 		}
 		//*********************************** WRITE ************************************************************
 		//if( iCmd2 != NULL ){ // cmd write_signal
 		 if( rd_wr == 2 ) {
+		    //pthread_mutex_lock(&mutex); // block mutex 
+		    int rc;
+		                    if ( (rc = pthread_mutex_trylock(&mutex)) == EBUSY ) {
+                                          printf("Mutex is already locked by another process.\nLet's lock mutex using pthread_mutex_lock().\n");
+                                          pthread_mutex_lock (&mutex);
+                                         } else if ( rc == 0 ) {
+                                                printf("Mutex lock by Write operation!\n");
+                                                } else { 
+                                                         printf("Error: %d\n", rc);                                                        
+                                                        }
+		    
 		    speedtest_start();
 		    found=0;          //flag how many founded signals
 		    char digit[5];    //buffer Value of signal as CHAR
@@ -471,6 +496,7 @@ void* connection_handler (void *args)
 			    }
 			}
 			
+			pthread_mutex_unlock(&mutex); //unlock mutex
 			
 			if (found == 0) {
 			printf("CMD_WRITE: Signal not found! [%i] \n\r",found);
