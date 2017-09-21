@@ -58,6 +58,8 @@ typedef struct Discrete_Signals { // store one  signal state
                          
 
 
+        void * getglobalsignals() { return (void*)&args; }
+
 
 
 
@@ -145,7 +147,8 @@ int main(int argc , char *argv[])
 		//if( pthread_create( &sniffer_thread, NULL,  connection_handler, (void*) &args[0]) < 0)
 		
         //if( pthread_create( &sniffer_thread, &threadAttr,  connection_handler, (void*) &args) < 0) //for detached thread
-        if( pthread_create( &sniffer_thread, NULL,  connection_handler, (void*) &args) < 0)
+        // if( pthread_create( &sniffer_thread, NULL,  connection_handler, (void*) &args) < 0)
+        if( pthread_create( &sniffer_thread, NULL,  connection_handler, (void*) client_sock) < 0)
         {
             perror("SERVER: Could not create thread");
             return (ERROR_CREATE_THREAD);
@@ -222,6 +225,8 @@ void ItoA(int n, char s[]) {
 }
 */
 
+
+
 /*
  * This will handle connection for each client
  * */
@@ -229,13 +234,14 @@ void* connection_handler (void *args)
 {
 
 // from struct
-//	someArgs_t *arg = (someArgs_t*) args;
-	Discrete_Signals_t *arg = (Discrete_Signals_t*) args;
-	
-    int n=0;
+//		
+
+	Discrete_Signals_t *arg = (Discrete_Signals_t * ) getglobalsignals();
+        int n=0;
 
     //Get the socket descriptor
-    int sock = arg->nSock; //problem one id to many threads
+    //int sock = arg->nSock; //problem one id to many threads
+    int sock =(int)args; // client_sock
     printf(">>>> THREAD Socket ID[#%i] \n\r",sock);
 	//
 	int read_size;
