@@ -136,12 +136,10 @@ int main(int argc , char *argv[])
 		}
 		*/
 		
-        new_sock = malloc(1);
-        *new_sock = client_sock;
 		
 		// структура аргументов для записи сокета и результата обработки
 		
-		args.nSock = new_sock;
+		args.nSock = client_sock;
 		//args.pSignal = Signals;
 		args.SA_ptr = Signal_Array;
 		//if( pthread_create( &sniffer_thread, NULL,  connection_handler, (void*) &args[0]) < 0)
@@ -173,7 +171,7 @@ int main(int argc , char *argv[])
     }
 	
 	close(socket_desc);
-	close(client_sock);
+//	close(client_sock);
 	close(c);
 	
     return SUCCESS;
@@ -237,9 +235,8 @@ void* connection_handler (void *args)
     int n=0;
 
     //Get the socket descriptor
-    int sock = *(int*)arg->nSock; //get id
-    free((int*)arg->nSock); // release memblock
-    printf("THREAD Socket ID[#%i]\n\r",sock);
+    int sock = arg->nSock; //problem one id to many threads
+    printf(">>>> THREAD Socket ID[#%i] \n\r",sock);
 	//
 	int read_size;
     char *mesOk, *mesNo, *mesErr, *mesBad,  client_message[MAX_MESS], signalsBuffer[MAX_MESS];
@@ -271,7 +268,7 @@ void* connection_handler (void *args)
 		return 0; 
 		} else {
   		         if (DEBUG == 1) printf("[FRAMEUNPACK: rd_wr[%i]]   Unpacked: [%s] \r\n", rd_wr, tst);	   
-  		         //mutex here
+  		         
   		         
   		         }
 	   
