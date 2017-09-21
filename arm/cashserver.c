@@ -15,7 +15,7 @@
 #include<time.h>      // for time_t
 #include<errno.h>     // for print errors
 
-#define DEBUG 0       // 0 -not debug  1- debug
+#define DEBUG 2       // 0 -not debug  1- debug
 #include "signals.h"
 #include "network.h"
 #include "speedtest.h"
@@ -240,7 +240,7 @@ void* connection_handler (void *args)
     printf(">>>> THREAD Socket ID[#%i] \n\r",sock);
 	//
 	int read_size;
-    char *mesOk, *mesNo, *mesErr, *mesBad,  client_message[MAX_MESS], signalsBuffer[MAX_MESS];
+    char *mesOk, *mesNo, *mesErr, *mesBad, *mesUnp,  client_message[MAX_MESS], signalsBuffer[MAX_MESS];
     char *iStr1, *iStr2, *iStr, *iCmd1, *iCmd2, *iCmdEnd; 
 	char *cmd_end = ";";
 	char *pCM = client_message;
@@ -248,9 +248,10 @@ void* connection_handler (void *args)
 	mesOk = "Ok!";	
 	mesBad = "NOcmd!";
 	mesErr = "Err!";
+	mesUnp = "Err! unpack Farme!";
 	char a[4096];
 	char dig[128];	
-
+        char packed_txt_string[40000];
 	char tst[MAX_MESS];
 	int rd_wr=0;
         int found=0;  //founded signals counter
@@ -265,14 +266,15 @@ void* connection_handler (void *args)
 	//********************************* COMMAND SELECTION AND EXECUTION ******************************/
 		rd_wr = frame_unpack(client_message,tst);
 		if (rd_wr < 0) {
-		printf ("----------------------> FRAME_UNPACK ERROR!!!!!: %i \n\r",rd_wr);
-		
-		close (sock); // close socket before exit
-		return 0; 
-		} else {
-  		         if (DEBUG == 1) printf("[FRAMEUNPACK: rd_wr[%i]]   Unpacked: [%s] \r\n", rd_wr, tst);	   
-  		         
-  		         
+		    printf ("\n ===============================================================\n");
+		    printf ("----------------------> FRAME_UNPACK ERROR!!!!!: %i \n\r",rd_wr);
+		    if (DEBUG == 2) printf("\n\r {Cycle %i} \n\r [SRV received: %i bytes] client_message: [%s]\r\n",iterration,read_size ,client_message);
+		    printf ("\n ===============================================================\n");
+		    write(sock, mesUnp, strlen(mesUnp));
+		    close (sock); // close socket before exit
+		    return 0; 
+		   } else {
+  		          if (DEBUG == 1) printf("[FRAMEUNPACK: rd_wr[%i]]   Unpacked: [%s] \r\n", rd_wr, tst);	   
   		         }
 	   
        //********************************** READ **********************************************************
@@ -303,6 +305,7 @@ void* connection_handler (void *args)
 			*/
 			char result[MAX_MESS];  //buffer for response 50 000 bytes
 			char result2[MAX_MESS];  //buffer for response 50 000 bytes
+			char tmpz[150];
 			strcpy (result,""); //erase buffer
 			for(cnt=0; cnt <  MAX_Signals; cnt++)
 			{
@@ -315,8 +318,9 @@ void* connection_handler (void *args)
 				        //arg->SA_ptr[cnt].ExState=0; // Flag ExState turn off 
 				        
 				        strcpy(packed_txt_string,""); //erase buffer
-				        sSerial_by_num(cnt); //serialize to packet by number of signals				        
-				        strcat (result,packed_txt_string);
+				        //sSerial_by_num(cnt); //serialize to packet by number of signals				        
+				        pack_signal(cnt,tmpz);
+				        strcat (result,tmpz);
 				        //printf ("[ %s ]\n\r",packed_txt_string); //DEBUG
 
 					xx++;

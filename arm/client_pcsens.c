@@ -297,7 +297,7 @@ if (DEBUG == 1)   printf ("MAX_Signals [%i] \n", MAX_Signals);
 	  //printf ("\n\r #%i RESTORED SIGNAL -  Name:[%s] Val:[%i] Ex[%i] \n\r",z,Signal_Array[z].Name,Signal_Array[z].Value[1],Signal_Array[z].ExState);  //DEBUG
 
 	  if ( (Signal_Array[z].Value[1] > 0) || (Signal_Array[z].ExState > 0) )
-	           printf ("[%i]From_SRV NOW -->> Name:[%s] Value:[%i] ExState:[%i]\n\r ", z,Signal_Array[z].Name, Signal_Array[z].Value[1], Signal_Array[z].ExState);
+	           printf ("[%i]From_SRV  -->> Name:[%s] Value:[%i] ExState:[%i]\n\r ", z,Signal_Array[z].Name, Signal_Array[z].Value[1], Signal_Array[z].ExState);
 	 // if (Signal_Array[z].ExState > 0)
 	 //          printf ("[%i]FromSRV NOW -->> Name:[%s] ExState:[%i] \n\r ", z,Signal_Array[z].Name, Signal_Array[z].ExState);
 
@@ -337,7 +337,10 @@ if (DEBUG == 1)   printf ("MAX_Signals [%i] \n", MAX_Signals);
 	      total_dev_regs = virt_mb_registers (c);	// get total registers count for virtual devices list
 	//    printf ("[MB_ID %i Regs %i] \n\r", Device_Array[c].MB_Id, total_dev_regs);
 	      Device_Array[c].ExState = virt_mb_ReadtoCache (c, total_dev_regs);	// read from real devices to virtual and Write ExState to virtual device/ if ExState = 4 or -1 ->  error connection
-
+              if (Device_Array[c].ExState == 2){
+                  printf("Have signal to write! \n\r");
+                  virt_mb_CachetoDev (c, total_dev_regs);	// Write to Modbus real devices
+                 }
 	    }
 	     //else
 	         // break;		//if MB_Id = 0  BREAK all ???????
@@ -372,15 +375,15 @@ if (DEBUG == 1)   printf ("MAX_Signals [%i] \n", MAX_Signals);
       for (x = 0; x < MAX_Signals; x++)
 	{
 	  if ( (Signal_Array[x].Value[1] > 0) || (Signal_Array[x].ExState > 0) )
-	           printf ("[%i]TO_SRV NOW -->> Name:[%s] Value:[%i] ExState:[%i]\n\r ", x,Signal_Array[x].Name, Signal_Array[x].Value[1], Signal_Array[x].ExState);
+	           printf ("[%i]TO_SRV  <<-- Name:[%s] Value:[%i] ExState:[%i]\n\r ", x,Signal_Array[x].Name, Signal_Array[x].Value[1], Signal_Array[x].ExState);
 	  if (strlen (Signal_Array[x].Name) > 1)
 	    {			//write if Name not empty
 //          socket_init();
-	      strcpy (packed_txt_string, "");	//erase buffer
+	      //strcpy (packed_txt_string, "");	//erase buffer
 	      //printf("2Must be empty buffer - Packed_txt_string:[%s] \n\r",packed_txt_string);
 
 	      // PIZDEC ---
-	      sSerial_by_num (x);	//pack to serial prepare for send into global buffer packed_txt_string
+	      //sSerial_by_num (x);	//pack to serial prepare for send into global buffer packed_txt_string
 	      pack_signal (x, tmpz);
 	      // end pizdec
 

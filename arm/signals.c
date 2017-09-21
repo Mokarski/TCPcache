@@ -56,7 +56,7 @@ int result=0;
   return result; //if zerro then not found signals else return value
 }
 
-int signals_txt(){
+int signals_txt(char *packed_txt_string){
 int n=0;
 int result=0;
 char Value[3];
@@ -395,7 +395,7 @@ if (istr != NULL){
 return 0;
 }
 
-int sSerial_by_num(int n){ //for thread solution
+int sSerial_by_num(int n, char *pack_buf){ //for thread solution
 //int n=0;
 int result=0;
 char Value[3];
@@ -404,52 +404,52 @@ char Value[3];
              if (strlen(Signal_Array[n].Name) > 3 ) //if name signal more then 4 symbols
                  {
                  
-                 strcat(packed_txt_string,Signal_Array[n].Name);
-                 strcat(packed_txt_string,":");
+                 strcat(pack_buf,Signal_Array[n].Name);
+                 strcat(pack_buf,":");
                  
-                 strcat(packed_txt_string,Signal_Array[n].Val_Type);
-                 strcat(packed_txt_string,":");                 
+                 strcat(pack_buf,Signal_Array[n].Val_Type);
+                 strcat(pack_buf,":");                 
                  
                  itoa(Signal_Array[n].MB_Id,Value);
-                 strcat(packed_txt_string,Value);
-                 strcat(packed_txt_string,":");
+                 strcat(pack_buf,Value);
+                 strcat(pack_buf,":");
                  
                  itoa(Signal_Array[n].MB_Reg_Num,Value);
-                 strcat(packed_txt_string,Value);
-                 strcat(packed_txt_string,":");
+                 strcat(pack_buf,Value);
+                 strcat(pack_buf,":");
                  
                  itoa(Signal_Array[n].Bit_Pos,Value);
-                 strcat(packed_txt_string,Value);
-                 strcat(packed_txt_string,":");
+                 strcat(pack_buf,Value);
+                 strcat(pack_buf,":");
                  
                  
                  itoa(Signal_Array[n].Value[1],Value);
-                 strcat(packed_txt_string,Value);
-                 strcat(packed_txt_string,":");
+                 strcat(pack_buf,Value);
+                 strcat(pack_buf,":");
                  
 
                  itoa(Signal_Array[n].TCP_Type,Value);
-                 strcat(packed_txt_string,Value);
-                 strcat(packed_txt_string,":");
+                 strcat(pack_buf,Value);
+                 strcat(pack_buf,":");
                  
                  // if (strlen (Signal_Array[n].TCP_Addr) < 5 ) strcpy (Signal_Array[n].TCP_Addr,"127.0.0.1");
-                 strcat(packed_txt_string,Signal_Array[n].TCP_Addr);
-                 strcat(packed_txt_string,":");
+                 strcat(pack_buf,Signal_Array[n].TCP_Addr);
+                 strcat(pack_buf,":");
                  
 
                  itoa(Signal_Array[n].Prio,Value);
-                 strcat(packed_txt_string,Value);
-                 strcat(packed_txt_string,":");
+                 strcat(pack_buf,Value);
+                 strcat(pack_buf,":");
                  
                  itoa(Signal_Array[n].Off,Value);
-                 strcat(packed_txt_string,Value);
-                 strcat(packed_txt_string,":");
+                 strcat(pack_buf,Value);
+                 strcat(pack_buf,":");
                  
                  itoa(Signal_Array[n].ExState,Value);
-                 strcat(packed_txt_string,Value);
+                 strcat(pack_buf,Value);
                  //strcat(packed_txt_string,":");
                  
-                 strcat(packed_txt_string,";");                 
+                 strcat(pack_buf,";");                 
                                
                  result++;                                            
 //                 signasl_counter = result;
@@ -566,7 +566,7 @@ return 0;
 }
 
 
-int sSerial_by_num_short(int n){ //for thread solution
+int sSerial_by_num_short(int n, char *packed_txt_string){ //for thread solution
 //int n=0;
 int result=0;
 char Value[3];

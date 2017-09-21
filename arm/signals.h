@@ -5,7 +5,7 @@
 #define STR_LEN_TXT 100
 #define MAX_Signals 355
 
-char packed_txt_string[40000];
+//char packed_txt_string[40000];
 
 struct Signal {
  int Srv_id_num;         // server number in server list. Assigned by server.
@@ -47,11 +47,11 @@ void init_signals_list (void);
 void print_signals_list (void);
 void print_by_name (char *sName);
 
-int  signals_txt(void);
+int  signals_txt(char *packed_txt_string);
 int  signal_read(char sName[100]);
 
-int sSerial_by_num (int);
-int sSerial_by_num_short (int);
+int sSerial_by_num (int, char *buf);
+int sSerial_by_num_short (int, char *buf);
 
 int sDeSerial_by_num (int);
 int unpack_signal (char *str,int n);

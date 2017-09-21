@@ -48,6 +48,7 @@ int main(int argc , char *argv[])
 int delay = 0; //1 cycle 1 ms
 int tcpresult=0;
 char tst[MAX_MESS];
+char packed_txt_string[MAX_MESS];
 while (1){
 	    printf("THIS IS LoGiC \n\r");
 
@@ -92,6 +93,7 @@ while (1){
   	        speedtest_start(); //time start //deserial test  	         
   	        
 	        int z=0;		
+	        int id=0;
 	                printf("\n\r ================================ *Value OR ExState* ====================================\n\r");	        
 	        for (z=0; z < MAX_Signals; z++) {
 //////	            printf(" \n\r |Signal FIELDS BEFORE parser: Name{%s} Val0[%i]  Val1[%i]| \n\r",Signal_Array[z].Name, Signal_Array[z].Value[0] , Signal_Array[z].Value[1]); //DEBUG
@@ -102,17 +104,32 @@ while (1){
 	            strcpy (buffer, Signal_Array[z].Name);
 	            test = unpack_signal(buffer  ,z); //from buffer to signal with number Z
 	            
+	            if ( strstr(Signal_Array[z].Name,"485.rsrs.rm_u2_on0") != NULL ) 
+	               {
+	                id =z; //save id rm_modbus
+	                printf ("rm - 485.rsrs.rm_u2_on0 id = %i \n\r",id);
+	               }
+	               
 	            if ( strstr(Signal_Array[z].Name,"485.kb.kei") != NULL ) 
 	               {
+	                 printf ("before set Ex: [#%i]  Name:[%s]   Val:[%i]     Ex[%i] \n\r",z,Signal_Array[z].Name,Signal_Array[z].Value[1],Signal_Array[z].ExState);	                    
 	                 if (Signal_Array[z].ExState == 0 ) Signal_Array[z].ExState = 1; //Set Flag to signal as RAED from modbus DEVICES
 	                 if (Signal_Array[z].ExState == 4 ) Signal_Array[z].ExState = 1; //Set Flag to signal as RAED from modbus DEVICES
 	               }
 	            
+	            if ( strstr(Signal_Array[z].Name,"485.kb.kei1.mode2") != NULL ) 
+	               {
+	                 printf ("before set Ex: [#%i]  Name:[%s]   Val:[%i]     Ex[%i] \n\r",z,Signal_Array[z].Name,Signal_Array[z].Value[1],Signal_Array[z].ExState);	                    
+	                 if (Signal_Array[z].Value[1] == 1){
+	                     if (Signal_Array[id].ExState == 0 ) Signal_Array[id].ExState = 1; //Set Flag to signal as RAED from modbus DEVICES
+	                     if (Signal_Array[id].ExState == 4 ) Signal_Array[id].ExState = 1; //Set Flag to signal as RAED from modbus DEVICES
+	                    }
+	               }
 //////	             printf ("\n\r #%i RESTORED SIGNAL -  Name:[%s] Val:[%i] Ex[%i] \n\r",z,Signal_Array[z].Name,Signal_Array[z].Value[1],Signal_Array[z].ExState);  //DEBUG	                    
 	            
 	             if ( (Signal_Array[z].Value[1] > 0) || (Signal_Array[z].ExState > 0 ) ) {
 
-	                printf ("[#%i]  Name:[%s]   Val:[%i]     Ex[%i] \n\r",z,Signal_Array[z].Name,Signal_Array[z].Value[1],Signal_Array[z].ExState);	                    
+	                   printf ("[#%i]  Name:[%s]   Val:[%i]     Ex[%i] \n\r",z,Signal_Array[z].Name,Signal_Array[z].Value[1],Signal_Array[z].ExState);	                    
 
 	                }
 	            
@@ -142,8 +159,7 @@ while (1){
               strcpy (packed_txt_string, "");   //erase buffer
               //printf("2Must be empty buffer - Packed_txt_string:[%s] \n\r",packed_txt_string);
 
-              // PIZDEC ---
-              sSerial_by_num (x);       //pack to serial prepare for send into global buffer packed_txt_string
+              // PIZDEC ---              
               pack_signal (x, tmpz);
               // end pizdec
 
