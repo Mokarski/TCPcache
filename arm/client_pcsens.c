@@ -143,7 +143,7 @@ virt_mb_CachetoDev (int dIndex, int reg_count)
 
   int ID;
   ID = Device_Array[dIndex].MB_Id;
-  printf ("ID from virtdev list %i \n\r", ID);
+  printf ("WR ID from virtdev list %i \n\r", ID);
   modbus_set_slave (ctx, ID);
   connected = modbus_connect (ctx);
 
@@ -157,8 +157,8 @@ virt_mb_CachetoDev (int dIndex, int reg_count)
 
   if (rc == -1)
     {
-      printf ("[MB_ID #%i]  Connection failed !\n", ID);
-      fprintf (stderr, "MB_READ: %s\n", modbus_strerror (errno));
+      printf ("WR [MB_ID #%i]  Connection failed !\n", ID);
+      fprintf (stderr, "WR MB_READ: %s\n", modbus_strerror (errno));
       return -1;
     }
 
@@ -241,7 +241,7 @@ virtdev_to_signals (void)
 int
 main (int argc, char *argv[])
 {
-
+int TCP_SEND;
 //INIT SIGNALS     
 if (DEBUG == 1)   printf ("MAX_Signals [%i] \n", MAX_Signals);
   init_signals_list ();		// erase signal lsit 
@@ -285,7 +285,7 @@ if (DEBUG == 1)   printf ("MAX_Signals [%i] \n", MAX_Signals);
 
       speedtest_start ();	//time start
       int z = 0;
-
+      
       for (z = 0; z < MAX_Signals; z++)
 	{
 	
@@ -300,8 +300,16 @@ if (DEBUG == 1)   printf ("MAX_Signals [%i] \n", MAX_Signals);
 	        if ( DEBUG == 1 ) printf ("[%i]From_SRV  -->> Name:[%s] Value:[%i] ExState:[%i]\n\r ", z,Signal_Array[z].Name, Signal_Array[z].Value[1], Signal_Array[z].ExState);
 	       }
 	       
+	       if ( Signal_Array[z].ExState > 0 ) {
+	            TCP_SEND = 1;
+	           }
+	           
+	           if ( Signal_Array[z].ExState == 0 ) {
+	            TCP_SEND = 0;
+	           }
+	       
 	        if ( Signal_Array[z].ExState == 2 ) {  
-	        if ( DEBUG == 2 ) printf ("[%i]From_SRV  -->> Name:[%s] Value:[%i] ExState:[%i]\n\r ", z,Signal_Array[z].Name, Signal_Array[z].Value[1], Signal_Array[z].ExState);
+	        if ( DEBUG == 2 ) printf ("[%i]From_SRV  -->> Name:[%s] Value:[%i] ExState:[%i] MB_ID[%i] MB_REG[%i]\n\r ", z,Signal_Array[z].Name, Signal_Array[z].Value[1], Signal_Array[z].ExState,Signal_Array[z].MB_Id, Signal_Array[z].MB_Reg_Num );
 	       }
 	 // if (Signal_Array[z].ExState > 0)
 	 //          printf ("[%i]FromSRV NOW -->> Name:[%s] ExState:[%i] \n\r ", z,Signal_Array[z].Name, Signal_Array[z].ExState);
@@ -313,7 +321,10 @@ if (DEBUG == 1)   printf ("MAX_Signals [%i] \n", MAX_Signals);
                   //Signal_Array[z].ExState = 0; //reset flag - bad idea
                   
 	          virt_mb_filldev (Signal_Array[z].Name, Signal_Array[z].MB_Id, Signal_Array[z].MB_Reg_Num, Signal_Array[z].ExState );	//init virtual device list and copy ExState
-	          if ( DEBUG == 2) virt_mb_devlist ();	//show virtdev list
+
+	          if ( DEBUG == 2) {
+	              if (Signal_Array[z].ExState == 2 ) printf("Name [%s] MB_ID{%i} MB_reg[%i] Ex{%i} VAL{%i} \n\r ",Signal_Array[z].Name, Signal_Array[z].MB_Id, Signal_Array[z].MB_Reg_Num, Signal_Array[z].ExState, Signal_Array[z].Value[1] );
+	             }
 	          
 	          }
 	    }
@@ -344,16 +355,16 @@ if (DEBUG == 1)   printf ("MAX_Signals [%i] \n", MAX_Signals);
 	      total_dev_regs = virt_mb_registers (c);	// get total registers count for virtual devices list
 	//    printf ("[MB_ID %i Regs %i] \n\r", Device_Array[c].MB_Id, total_dev_regs);
 	      Device_Array[c].ExState = virt_mb_ReadtoCache (c, total_dev_regs);	// read from real devices to virtual and Write ExState to virtual device/ if ExState = 4 or -1 ->  error connection
-              if (Device_Array[c].ExState == 2){
+              //if (Device_Array[c].ExState == 2){
                   printf(" --->>> Have signal to write! \n\r");
                   virt_mb_CachetoDev (c, total_dev_regs);	// Write to Modbus real devices
-                 }
+                // }
 	    }
 	     //else
 	         // break;		//if MB_Id = 0  BREAK all ???????
 	}
     //    virt_mb_devlist ();	//show virtdev list
-      
+       if ( DEBUG == 2) virt_mb_devlist ();	//show virtdev list
       
       
       
@@ -370,7 +381,7 @@ if (DEBUG == 1)   printf ("MAX_Signals [%i] \n", MAX_Signals);
 
 
       //=========  SEND all 485 signals to TCPCache =======
-
+  if ( 1 == 1){ //TCP_SEND
       speedtest_start ();	//time start     
       int x = 0;
 //     socket_init();     
@@ -411,12 +422,9 @@ if (DEBUG == 1)   printf ("MAX_Signals [%i] \n", MAX_Signals);
       //tcpsignal_packet_write(message);
       // printf("Send to TCPCache:[%s] \n\r",message);
 
-
-
-
-
       printf
 	(" ++++++++++++++++++++++++==>   SPEEDTEST Send to TCPCache Time: [ %ld ] ms. \n\r",	 speedtest_stop ());
+      }
     }
   socket_close ();
 

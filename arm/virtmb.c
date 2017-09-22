@@ -134,7 +134,7 @@ return result;
 }
   
 int virt_mb_registers (int ID){ //search and count used registers
-	 int tmp=1; //counter of found used registers
+	 int tmp=1; //counter of found used registers BUG?
          int z=0;
 	   //calculate used registers
 	  // printf("ID in reg calculate [%i]",ID);
@@ -161,6 +161,7 @@ register int t;
 	 int tmp=0; //counter of found used registers
          printf("[Virt_Device Name: %s] ", Device_Array[t].Name);
          printf("[Virt_MB ID: %i] \n\r", Device_Array[t].MB_Id);
+         printf("[Ex: %i] \n\r", Device_Array[t].ExState);
            int z=0;
 	   //calculate used registers
 	   for(z=0; z < VirtDevRegs; z++) { // numbers of virtual registers in struct Device_Array
