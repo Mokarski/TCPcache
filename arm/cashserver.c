@@ -241,7 +241,8 @@ void* connection_handler (void *args)
 	//
 	int read_size;
     char *mesOk, *mesNo, *mesErr, *mesBad, *mesUnp,  client_message[MAX_MESS], signalsBuffer[MAX_MESS];
-    char *iStr1, *iStr2, *iStr, *iCmd1, *iCmd2, *iCmdEnd; 
+    char  *iCmd1, *iCmd2, *iCmdEnd; 
+    
 	char *cmd_end = ";";
 	char *pCM = client_message;
 	char *istr,ival;
@@ -264,11 +265,14 @@ void* connection_handler (void *args)
 
 		
 	//********************************* COMMAND SELECTION AND EXECUTION ******************************/
+	    pthread_mutex_lock(&mutex); // block mutex 
 		rd_wr = frame_unpack(client_message,tst);
+	    pthread_mutex_unlock(&mutex); //unlock mutex
+	    
 		if (rd_wr < 0) {
 		    printf ("\n ===============================================================\n");
 		    printf ("----------------------> FRAME_UNPACK ERROR!!!!!: %i \n\r",rd_wr);
-		    if (DEBUG == 2) printf("\n\r {Cycle %i} \n\r [SRV received: %i bytes] client_message: [%s]\r\n",iterration,read_size ,client_message);
+		    if (DEBUG > 0) printf("\n\r {Cycle %i} \n\r [SRV received: %i bytes] client_message: [%s]\r\n",iterration,read_size ,client_message);
 		    printf ("\n ===============================================================\n");
 		    write(sock, mesUnp, strlen(mesUnp));
 		    close (sock); // close socket before exit
@@ -282,7 +286,7 @@ void* connection_handler (void *args)
        if( rd_wr == 1 ){ // cmd read_signal
                 pthread_mutex_lock(&mutex); // block mutex 
                 
-            
+        char *iStr1, *iStr2, *iStr;        
                 
 		speedtest_start();
 		char sep_comma[4]=";";
@@ -317,7 +321,7 @@ void* connection_handler (void *args)
 				          }
 				        //arg->SA_ptr[cnt].ExState=0; // Flag ExState turn off 
 				        
-				        strcpy(packed_txt_string,""); //erase buffer
+				        //strcpy(packed_txt_string,""); //erase buffer
 				        //sSerial_by_num(cnt); //serialize to packet by number of signals				        
 				        pack_signal(cnt,tmpz);
 				        strcat (result,tmpz);
@@ -326,6 +330,7 @@ void* connection_handler (void *args)
 					xx++;
 					found++;
 				}
+			 if (DEBUG == 3) printf ("#%i  <<---- R-SignalsName [%s]  Val{%i} Ex{%i}  \n\r",cnt,arg->SA_ptr[cnt].Name, arg->SA_ptr[cnt].Value[0] ,arg->SA_ptr[cnt].ExState); //debug
 			}
 			pthread_mutex_unlock(&mutex); //unlock mutex
 			if (found == 0) {
@@ -374,7 +379,7 @@ void* connection_handler (void *args)
 		//if( iCmd2 != NULL ){ // cmd write_signal
 		 if( rd_wr == 2 ) {
 		    pthread_mutex_lock(&mutex); // block mutex 
-		    
+		    char *iStr1, *iStr2, *iStr;        
 		    
 		    speedtest_start();
 		    found=0;          //flag how many founded signals
@@ -433,10 +438,10 @@ void* connection_handler (void *args)
 			   }
 			
 			if (DEBUG == 1) printf("Signal_counter sn=%i\n\r",sn);		
-			         
+			cnt=0;         
 			for(cnt=0; cnt < MAX_Signals; cnt++) //cycle for signals
 			{ 
-			    //if (DEBUG == 1) printf ("buf_signals[%s] -  SignalsName [%s]\n\r",buf_signals[cnt],arg->SA_ptr[cnt].Name); //debug
+			//    if (DEBUG == 3) printf ("WR-SignalsName [%s]\n\r",arg->SA_ptr[cnt].Name, arg->SA_ptr[cnt].Value[0] ,arg->SA_ptr[cnt].ExState); //debug
 			    
 			    int pr=0;
 			    if ( strlen ( arg->SA_ptr[cnt].Name ) > 2 ) {  // test if signal name not empty
@@ -482,6 +487,12 @@ void* connection_handler (void *args)
 			      
 			      //pr++; // increment start index position of cycle for start next step exclude previus step!!!
 			    }
+			 if (DEBUG == 3) printf ("#%i --- >> WR-SignalsName [%s] Val{%i} Ex{%i} \n\r",cnt,arg->SA_ptr[cnt].Name, arg->SA_ptr[cnt].Value[0] ,arg->SA_ptr[cnt].ExState); //debug
+			 if (DEBUG == 2){
+			   if (arg->SA_ptr[cnt].ExState == 2)
+			    printf ("#%i --- >> WR-SignalsName [%s] Val{%i} Ex{%i} \n\r",cnt,arg->SA_ptr[cnt].Name, arg->SA_ptr[cnt].Value[0] ,arg->SA_ptr[cnt].ExState); //debug
+			   }
+
 			}
 			
 			pthread_mutex_unlock(&mutex); //unlock mutex

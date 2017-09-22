@@ -8,7 +8,7 @@
 #include <stdlib.h>
 #include "/home/opc/Kombain/test/include/modbus/modbus.h"
 
-#define DEBUG 0
+#define DEBUG 2
 #include "network.h"
 #include "signals.h"
 #include "virtmb.h"
@@ -148,9 +148,9 @@ virt_mb_CachetoDev (int dIndex, int reg_count)
   connected = modbus_connect (ctx);
 
   if (connected == -1)
-    printf ("Connection failed %i\n", ID);
+    printf ("WR - Connection failed %i\n", ID);
   if (connected == 0)
-    printf ("connected %i\n", ID);
+    printf ("WR - connected %i\n", ID);
   int cn = 0;
 
   rc = modbus_write_registers (ctx, 0, reg_count, tab_reg);
@@ -296,8 +296,13 @@ if (DEBUG == 1)   printf ("MAX_Signals [%i] \n", MAX_Signals);
 	  test = unpack_signal (buffer, z);	//UnPACK Signal from buffer to signal with number Z
 	  //printf ("\n\r #%i RESTORED SIGNAL -  Name:[%s] Val:[%i] Ex[%i] \n\r",z,Signal_Array[z].Name,Signal_Array[z].Value[1],Signal_Array[z].ExState);  //DEBUG
 
-	  if ( (Signal_Array[z].Value[1] > 0) || (Signal_Array[z].ExState > 0) )
-	           printf ("[%i]From_SRV  -->> Name:[%s] Value:[%i] ExState:[%i]\n\r ", z,Signal_Array[z].Name, Signal_Array[z].Value[1], Signal_Array[z].ExState);
+	  if ( (Signal_Array[z].Value[1] > 0) || (Signal_Array[z].ExState > 0) ) {  
+	        if ( DEBUG == 1 ) printf ("[%i]From_SRV  -->> Name:[%s] Value:[%i] ExState:[%i]\n\r ", z,Signal_Array[z].Name, Signal_Array[z].Value[1], Signal_Array[z].ExState);
+	       }
+	       
+	        if ( Signal_Array[z].ExState == 2 ) {  
+	        if ( DEBUG == 2 ) printf ("[%i]From_SRV  -->> Name:[%s] Value:[%i] ExState:[%i]\n\r ", z,Signal_Array[z].Name, Signal_Array[z].Value[1], Signal_Array[z].ExState);
+	       }
 	 // if (Signal_Array[z].ExState > 0)
 	 //          printf ("[%i]FromSRV NOW -->> Name:[%s] ExState:[%i] \n\r ", z,Signal_Array[z].Name, Signal_Array[z].ExState);
 
@@ -308,6 +313,8 @@ if (DEBUG == 1)   printf ("MAX_Signals [%i] \n", MAX_Signals);
                   //Signal_Array[z].ExState = 0; //reset flag - bad idea
                   
 	          virt_mb_filldev (Signal_Array[z].Name, Signal_Array[z].MB_Id, Signal_Array[z].MB_Reg_Num, Signal_Array[z].ExState );	//init virtual device list and copy ExState
+	          if ( DEBUG == 2) virt_mb_devlist ();	//show virtdev list
+	          
 	          }
 	    }
 	    else  {  printf("signals_found = 0\n\r");
@@ -338,7 +345,7 @@ if (DEBUG == 1)   printf ("MAX_Signals [%i] \n", MAX_Signals);
 	//    printf ("[MB_ID %i Regs %i] \n\r", Device_Array[c].MB_Id, total_dev_regs);
 	      Device_Array[c].ExState = virt_mb_ReadtoCache (c, total_dev_regs);	// read from real devices to virtual and Write ExState to virtual device/ if ExState = 4 or -1 ->  error connection
               if (Device_Array[c].ExState == 2){
-                  printf("Have signal to write! \n\r");
+                  printf(" --->>> Have signal to write! \n\r");
                   virt_mb_CachetoDev (c, total_dev_regs);	// Write to Modbus real devices
                  }
 	    }
@@ -375,7 +382,7 @@ if (DEBUG == 1)   printf ("MAX_Signals [%i] \n", MAX_Signals);
       for (x = 0; x < MAX_Signals; x++)
 	{
 	  if ( (Signal_Array[x].Value[1] > 0) || (Signal_Array[x].ExState > 0) )
-	           printf ("[%i]TO_SRV  <<-- Name:[%s] Value:[%i] ExState:[%i]\n\r ", x,Signal_Array[x].Name, Signal_Array[x].Value[1], Signal_Array[x].ExState);
+	          if ( DEBUG == 2 )  printf ("[%i]TO_SRV  <<-- Name:[%s] Value:[%i] ExState:[%i]\n\r ", x,Signal_Array[x].Name, Signal_Array[x].Value[1], Signal_Array[x].ExState);
 	  if (strlen (Signal_Array[x].Name) > 1)
 	    {			//write if Name not empty
 //          socket_init();

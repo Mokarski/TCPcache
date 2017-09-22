@@ -77,7 +77,11 @@ while (1){
 		
 		printf ("tcp send result[%i]\n\r",tcpresult);	    
 		//in this place need to unpack signals from frame
-		frame_unpack(signal_parser_buf,tst);
+		if ( frame_unpack(signal_parser_buf,tst) < 0){
+		    printf ("ERROR UNPACK! \n\r");
+		     printf(">>>>RECIVED^{%s} \n\r",tst);
+		    break;
+		    }
 		if ( DEBUG == 1 ) printf(">>>>RECIVED^{%s} \n\r",tst);
 		//printf ("\n\r FRAME_UNPACK: \n\r %s\n\r",tst);
 		//Data_to_sName (signal_parser_buf);     	            // explode signals by delimiter ";"	  and copy to Signal.Name[]
@@ -93,7 +97,8 @@ while (1){
   	        speedtest_start(); //time start //deserial test  	         
   	        
 	        int z=0;		
-	        int id=0;
+	        int id=-1;
+	        int wr=0;
 	                printf("\n\r ================================ *Value OR ExState* ====================================\n\r");	        
 	        for (z=0; z < MAX_Signals; z++) {
 //////	            printf(" \n\r |Signal FIELDS BEFORE parser: Name{%s} Val0[%i]  Val1[%i]| \n\r",Signal_Array[z].Name, Signal_Array[z].Value[0] , Signal_Array[z].Value[1]); //DEBUG
@@ -107,7 +112,7 @@ while (1){
 	            if ( strstr(Signal_Array[z].Name,"485.rsrs.rm_u2_on0") != NULL ) 
 	               {
 	                id =z; //save id rm_modbus
-	                printf ("rm - 485.rsrs.rm_u2_on0 id = %i \n\r",id);
+	                printf (">>RM HYDRO ID - 485.rsrs.rm_u2_on0 = {%s} id = [%i] \n\r",Signal_Array[z].Name,id);
 	               }
 	               
 	            if ( strstr(Signal_Array[z].Name,"485.kb.kei") != NULL ) 
@@ -119,17 +124,37 @@ while (1){
 	            
 	            if ( strstr(Signal_Array[z].Name,"485.kb.kei1.mode2") != NULL ) 
 	               {
-	                 printf ("before set Ex: [#%i]  Name:[%s]   Val:[%i]     Ex[%i] \n\r",z,Signal_Array[z].Name,Signal_Array[z].Value[1],Signal_Array[z].ExState);	                    
-	                 if (Signal_Array[z].Value[1] == 1){
-	                     if (Signal_Array[id].ExState == 0 ) Signal_Array[id].ExState = 1; //Set Flag to signal as RAED from modbus DEVICES
-	                     if (Signal_Array[id].ExState == 4 ) Signal_Array[id].ExState = 1; //Set Flag to signal as RAED from modbus DEVICES
-	                    }
+	                 
+	                 printf (">>MODE2 Ex: [#%i]  Name:[%s]   Val:[%i]     Ex[%i] \n\r",z,Signal_Array[z].Name,Signal_Array[z].Value[1],Signal_Array[z].ExState);	                    
+	                 if ( Signal_Array[z].Value[1] == 1) {	                     
+	                       //Signal_Array[id].ExState = 2; //Set Flag to signal as write from modbus DEVICES
+	                        //printf (">>>>>>>>> SetWR  [#%i]  Name:[%s]   Val:[%i]     Ex[%i] \n\r",id,Signal_Array[id].Name,Signal_Array[id].Value[1],Signal_Array[id].ExState);	                    
+	                        wr=1;
+	                    } 
+	                    
+	                    if ( Signal_Array[z].Value[1] == 0) {	                     
+	                       //Signal_Array[id].ExState = 2; //Set Flag to signal as write from modbus DEVICES
+	                        //printf (">>>>>>>>> SetWR  [#%i]  Name:[%s]   Val:[%i]     Ex[%i] \n\r",id,Signal_Array[id].Name,Signal_Array[id].Value[1],Signal_Array[id].ExState);	                    
+	                        wr=0;
+	                    } 
 	               }
+	               
+	                 if ( (wr == 1) && (id !=-1) ){	                     
+	                       Signal_Array[id].ExState = 2; //Set Flag to signal as write from modbus DEVICES
+	                       Signal_Array[id].Value[1] = 1;
+	                        printf (">>>>>>>>> SetWR  [#%i]  Name:[%s]   Val:[%i]     Ex[%i] \n\r",id,Signal_Array[id].Name,Signal_Array[id].Value[1],Signal_Array[id].ExState);	                    
+	                    }
+	                    
+	                     if ( (wr == 0) && (id !=-1) ){	                     
+	                       Signal_Array[id].ExState = 2; //Set Flag to signal as write from modbus DEVICES
+	                       Signal_Array[id].Value[1] = 0;
+	                        printf (">>>>>>>>> SetWR  [#%i]  Name:[%s]   Val:[%i]     Ex[%i] \n\r",id,Signal_Array[id].Name,Signal_Array[id].Value[1],Signal_Array[id].ExState);	                    
+	                    }
 //////	             printf ("\n\r #%i RESTORED SIGNAL -  Name:[%s] Val:[%i] Ex[%i] \n\r",z,Signal_Array[z].Name,Signal_Array[z].Value[1],Signal_Array[z].ExState);  //DEBUG	                    
 	            
 	             if ( (Signal_Array[z].Value[1] > 0) || (Signal_Array[z].ExState > 0 ) ) {
 
-	                   printf ("[#%i]  Name:[%s]   Val:[%i]     Ex[%i] \n\r",z,Signal_Array[z].Name,Signal_Array[z].Value[1],Signal_Array[z].ExState);	                    
+	                   printf ("SA [#%i]  Name:[%s]   Val:[%i]     Ex[%i] \n\r",z,Signal_Array[z].Name,Signal_Array[z].Value[1],Signal_Array[z].ExState);	                    
 
 	                }
 	            
