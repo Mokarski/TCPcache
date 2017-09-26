@@ -134,7 +134,7 @@ return result;
 }
   
 int virt_mb_registers (int ID){ //search and count used registers
-	 int tmp=1; //counter of found used registers BUG?
+	 int tmp=0; //counter of found used registers BUG?
          int z=0;
 	   //calculate used registers
 	  // printf("ID in reg calculate [%i]",ID);

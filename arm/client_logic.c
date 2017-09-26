@@ -117,7 +117,7 @@ while (1){
 	               
 	            if ( strstr(Signal_Array[z].Name,"485.kb.kei") != NULL ) 
 	               {
-	                 printf ("before set Ex: [#%i]  Name:[%s]   Val:[%i]     Ex[%i] \n\r",z,Signal_Array[z].Name,Signal_Array[z].Value[1],Signal_Array[z].ExState);	                    
+	                  if (DEBUG == 1) printf ("before set Ex: [#%i]  Name:[%s]   Val:[%i]     Ex[%i] \n\r",z,Signal_Array[z].Name,Signal_Array[z].Value[1],Signal_Array[z].ExState);	                    
 	                 if (Signal_Array[z].ExState == 0 ) Signal_Array[z].ExState = 1; //Set Flag to signal as RAED from modbus DEVICES
 	                 if (Signal_Array[z].ExState == 4 ) Signal_Array[z].ExState = 0; //Set Flag to signal as RAED from modbus DEVICES
 	               }
@@ -125,7 +125,7 @@ while (1){
 	            if ( strstr(Signal_Array[z].Name,"485.kb.kei1.mode2") != NULL ) 
 	               {
 	                 
-	                 printf (">>MODE2 Ex: [#%i]  Name:[%s]   Val:[%i]     Ex[%i] \n\r",z,Signal_Array[z].Name,Signal_Array[z].Value[1],Signal_Array[z].ExState);	                    
+	                  if (DEBUG == 2) printf (">>MODE2 Ex: [#%i]  Name:[%s]   Val:[%i]     Ex[%i] \n\r",z,Signal_Array[z].Name,Signal_Array[z].Value[1],Signal_Array[z].ExState);	                    
 	                 if ( Signal_Array[z].Value[1] == 1) {	                     
 	                       //Signal_Array[id].ExState = 2; //Set Flag to signal as write from modbus DEVICES
 	                        //printf (">>>>>>>>> SetWR  [#%i]  Name:[%s]   Val:[%i]     Ex[%i] \n\r",id,Signal_Array[id].Name,Signal_Array[id].Value[1],Signal_Array[id].ExState);	                    
@@ -142,7 +142,7 @@ while (1){
 	                 if ( (wr == 1) && (id !=-1) ){	                     
 	                       Signal_Array[id].ExState = 2; //Set Flag to signal as write from modbus DEVICES
 	                       Signal_Array[id].Value[1] = 1;
-	                        printf (">>>>>>>>> SetWR  [#%i]  Name:[%s]   Val:[%i]     Ex[%i] \n\r",id,Signal_Array[id].Name,Signal_Array[id].Value[1],Signal_Array[id].ExState);	                    
+	                        if (DEBUG == 2) printf (">>>>>>>>> SetWR  [#%i]  Name:[%s]   Val:[%i]     Ex[%i] \n\r",id,Signal_Array[id].Name,Signal_Array[id].Value[1],Signal_Array[id].ExState);	                    
 	                    }
 	                    
 	                    /*
@@ -157,7 +157,7 @@ while (1){
 	            
 	             if ( (Signal_Array[z].Value[1] > 0) || (Signal_Array[z].ExState > 0 ) ) {
 
-	                   printf ("SA [#%i]  Name:[%s]   Val:[%i]     Ex[%i] \n\r",z,Signal_Array[z].Name,Signal_Array[z].Value[1],Signal_Array[z].ExState);	                    
+	                   if (DEBUG == 1)  printf ("SA [#%i]  Name:[%s]   Val:[%i]     Ex[%i] \n\r",z,Signal_Array[z].Name,Signal_Array[z].Value[1],Signal_Array[z].ExState);	                    
 
 	                }
 	            

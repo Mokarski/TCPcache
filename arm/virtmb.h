@@ -9,9 +9,11 @@ struct Mb_Device {
  char Name[100];
  int  MB_Id;                //Modbus device ID
  int  MB_reg_counter[VirtDevRegs];   //temporary array for count number of regs if set yo 1 -> then used else unused
- int  MB_Registers[VirtDevRegs];     //Mb register values
+ int  MB_Registers[VirtDevRegs];     //Mb register values for read
+ int  WR_MB_Registers[VirtDevRegs];     //Mb register values to write
  int  ExState; //flag execution from signals array and return state - connect/fail
- int  Rd_Wr; //read/or write
+ int  Rd; //read/or write
+ int  Wr;
  int  Off;               //Signal not used if OFF = 1;
  int EventTrigger;          //signal has trigger state
  int For_Remove;        // mar for remove from tasks
