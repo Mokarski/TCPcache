@@ -28,7 +28,7 @@ virt_mb_ReadtoCache (int dIndex, int reg_count)
   int fl;
   int ret=0;
   ctx = modbus_new_rtu ("/dev/ttySP0", 115200, 'N', 8, 1);
-  if ( DEBUG > 0 ) printf ("\n \r >>>> READ real device [%i] from position [0] Number register to read [%i] \n\r",Device_Array[dIndex].MB_Id,reg_count);
+  if ( DEBUG > 0 ) printf ("\n \r >>>> READ real device [%i] from position [0] Number register to read [%i] Rd[%i] Wr[%i]\n\r",Device_Array[dIndex].MB_Id,reg_count, Device_Array[dIndex].Rd, Device_Array[dIndex].Wr);
   if (ctx == NULL)
     {
       fprintf (stderr, "Unable to create the libmodbus context\n");
@@ -329,16 +329,16 @@ if (DEBUG == 1)   printf ("MAX_Signals [%i] \n", MAX_Signals);
 	               }
 	       
 	  if ( Signal_Array[z].ExState == 2 ) {  
-	        if ( DEBUG == 2 ) printf ("[%i]From_SRV EX=2 -->> Name:[%s] Value:[%i] ExState:[%i] MB_ID[%i] MB_REG[%i]\n\r ", z,Signal_Array[z].Name, Signal_Array[z].Value[1], Signal_Array[z].ExState,Signal_Array[z].MB_Id, Signal_Array[z].MB_Reg_Num );
+	        if ( DEBUG == 2 ) printf ("[%i]>>>> Write From_SRV EX=2 -->> Name:[%s] Value:[%i] ExState:[%i] MB_ID[%i] MB_REG[%i]\n\r ", z,Signal_Array[z].Name, Signal_Array[z].Value[1], Signal_Array[z].ExState,Signal_Array[z].MB_Id, Signal_Array[z].MB_Reg_Num );
 	       }
 	 // if (Signal_Array[z].ExState > 0)
 	 //          printf ("[%i]FromSRV NOW -->> Name:[%s] ExState:[%i] \n\r ", z,Signal_Array[z].Name, Signal_Array[z].ExState);
          //****************** END DEBUG PRINT ***************************************
          
-        if ( LoadList ==0 ){
+        //if ( LoadList ==0 ){
              virt_mb_filldev (Signal_Array[z].Name, Signal_Array[z].MB_Id, Signal_Array[z].MB_Reg_Num, Signal_Array[z].ExState );	//init virtual device list and copy ExState
         
-            }
+        //    }
 
 	  if (signals_found > 0)
 	    {
@@ -358,7 +358,7 @@ if (DEBUG == 1)   printf ("MAX_Signals [%i] \n", MAX_Signals);
 
 	} //end for
 	
-	LoadList=1; //first signals loaded and configure virtual modbas devices
+	//LoadList=1; //first signals loaded and configure virtual modbas devices
 
      // virt_mb_devlist ();	//show virtdev list
 
@@ -380,14 +380,14 @@ if (DEBUG == 1)   printf ("MAX_Signals [%i] \n", MAX_Signals);
 
 	      total_dev_regs = virt_mb_registers (c);	// get total registers count for virtual devices list
 	//    printf ("[MB_ID %i Regs %i] \n\r", Device_Array[c].MB_Id, total_dev_regs);
-	      if ( total_dev_regs  > 1 ) total_dev_regs = total_dev_regs+1; //fix 1 position miss
+	      //if ( total_dev_regs  > 1 ) total_dev_regs = total_dev_regs+1; //fix 1 position miss
 	      
 	      Device_Array[c].ExState = virt_mb_ReadtoCache (c, total_dev_regs );	// read from real devices to virtual and Write ExState to virtual device/ if ExState = 4 or -1 ->  error connection
 	      
 	      if ( DEBUG == 1 ) printf ("READ FROM DEVICE ID[%i] Total_REGS[%i] \n\r",Device_Array[c].MB_Id,total_dev_regs); // if signals empty 
 
-              if (MB_Write == 1){ // separate write and read registers!!!
-                  printf(" --->>> Have signal to write! \n\r");
+              if (Device_Array[c].Wr == 1){ // separate write and read registers!!!
+                  printf(" ===------>>> Have signal to write! \n\r");
                   virt_mb_CachetoDev (c, total_dev_regs);	// Write to Modbus real devices
                  }
 	    }
@@ -400,7 +400,7 @@ if (DEBUG == 1)   printf ("MAX_Signals [%i] \n", MAX_Signals);
        //virt_mb_devlist ();	//show virtdev list
      
       //break;
-      //LoadList++;
+      LoadList++;
       //printf("Konec %i \n\r",LoadList);
       //if ( LoadList == 3 )       break; //***********
       
@@ -446,13 +446,13 @@ if (DEBUG == 1)   printf ("MAX_Signals [%i] \n", MAX_Signals);
 	
       strcpy (tst, "");
       frame_pack ("wr", message, tst);
-      if (TCP_SEND == 1)  tcpresult = frame_tcpreq (tst); //send to srv
+      if (TCP_SEND > 0 )  tcpresult = frame_tcpreq (tst); //send to srv
       
       if (DEBUG == 3) printf ("\n\r SEND TST^[%s] \n\r", tst);
       printf ("Status of TCP SEND: [%i]\n\r", tcpresult);
       printf
 	(" ++++++++++++++++++++++++==>   SPEEDTEST Send to TCPCache Time: [ %ld ] ms. \n\r",	 speedtest_stop ());
-      break;//debug
+      //break;//debug
     }
   socket_close ();
 

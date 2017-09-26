@@ -80,6 +80,11 @@ int virt_mb_filldev( char *sName, int mb_id, int mb_reg, int inExState){ //fill 
 			uniq_test=0;
 			
 			Device_Array[i].MB_reg_counter[mb_reg] = 1; //mark for this DEV_ID register as used
+			if (Device_Array[i].ExState == 1) Device_Array[i].Rd=1;  //mark device to read
+			if (Device_Array[i].ExState == 2){
+			     Device_Array[i].Wr=1;  //mark device  to write
+			     printf(">>>>>> WR Name[%s] EX=%i\n\r",sName,inExState);
+			    }
 			
 			break;
 		} else uniq_test++; //increment checked position
@@ -92,6 +97,13 @@ int virt_mb_filldev( char *sName, int mb_id, int mb_reg, int inExState){ //fill 
 		                strcpy(Device_Array[i].Name,sName); //fill the name
 				Device_Array[i].MB_Id = mb_id;
 				Device_Array[i].ExState = inExState; //very bad idea
+				if (Device_Array[i].ExState == 1) Device_Array[i].Rd=1;  //mark device to read
+				if (Device_Array[i].ExState == 2) {
+				      Device_Array[i].Wr=1;  //mark device  to write
+				      printf(">>>>>>WR Name[%s] EX=%i\n\r",sName,inExState);
+				     }
+				Device_Array[i].MB_reg_counter[mb_reg] = 1; //mark for this DEV_ID register as used  >>>>>>> fix missed zerro index!
+				
 				break; // device copied to array DONE
 			}
 		}
@@ -162,6 +174,7 @@ register int t;
          printf("[Virt_Device Name: %s] ", Device_Array[t].Name);
          printf("[Virt_MB ID: %i] \n\r", Device_Array[t].MB_Id);
          printf("[Ex: %i] \n\r", Device_Array[t].ExState);
+         printf("[Rd: %i]  [Wr: %i]\n\r",Device_Array[t].Rd, Device_Array[t].Wr);
            int z=0;
 	   //calculate used registers
 	   for(z=0; z < VirtDevRegs; z++) { // numbers of virtual registers in struct Device_Array
