@@ -330,7 +330,7 @@ void* connection_handler (void *args)
 					xx++;
 					found++;
 				}
-			 if (DEBUG == 3) printf ("#%i  <<---- R-SignalsName [%s]  Val{%i} Ex{%i}  \n\r",cnt,arg->SA_ptr[cnt].Name, arg->SA_ptr[cnt].Value[0] ,arg->SA_ptr[cnt].ExState); //debug
+			 if (DEBUG == 3) printf ("#%i  <<---- R-SignalsName [%s]  Val{%i} Ex{%i}  \n\r",cnt,arg->SA_ptr[cnt].Name, arg->SA_ptr[cnt].Value[1] ,arg->SA_ptr[cnt].ExState); //debug
 			}
 			pthread_mutex_unlock(&mutex); //unlock mutex
 			if (found == 0) {
@@ -487,10 +487,15 @@ void* connection_handler (void *args)
 			      
 			      //pr++; // increment start index position of cycle for start next step exclude previus step!!!
 			    }
-			 if (DEBUG == 3) printf ("#%i --- >> WR-SignalsName [%s] Val{%i} Ex{%i} \n\r",cnt,arg->SA_ptr[cnt].Name, arg->SA_ptr[cnt].Value[0] ,arg->SA_ptr[cnt].ExState); //debug
+			 if (DEBUG == 3) printf ("#%i thread--- >> WR-SignalsName [%s] Val{%i} Ex{%i} \n\r",cnt,arg->SA_ptr[cnt].Name, arg->SA_ptr[cnt].Value[1] ,arg->SA_ptr[cnt].ExState); //debug
+			 if (DEBUG == 3) printf ("#%i SA--- >> WR-SignalsName [%s] Val{%i} Ex{%i} \n\r",cnt,Signal_Array[cnt].Name, Signal_Array[cnt].Value[1] ,Signal_Array[cnt].ExState); //debug
+
 			 if (DEBUG == 2){
-			   if (arg->SA_ptr[cnt].ExState == 2)
-			    printf ("#%i --- >> WR-SignalsName [%s] Val{%i} Ex{%i} \n\r",cnt,arg->SA_ptr[cnt].Name, arg->SA_ptr[cnt].Value[0] ,arg->SA_ptr[cnt].ExState); //debug
+			    if (arg->SA_ptr[cnt].ExState == 2){
+			        printf ("#%i IN THRead --- >> WR-SignalsName [%s] Val{%i} Ex{%i} \n\r",cnt,arg->SA_ptr[cnt].Name, arg->SA_ptr[cnt].Value[1] ,arg->SA_ptr[cnt].ExState); //debug
+			        printf ("#%i SA--- >> WR-SignalsName [%s] Val{%i} Ex{%i} \n\r",cnt,Signal_Array[cnt].Name, Signal_Array[cnt].Value[1] ,Signal_Array[cnt].ExState); //debug
+			        }
+			    
 			   }
 
 			}

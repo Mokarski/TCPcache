@@ -228,8 +228,7 @@ int virtdev_to_signals (void)
 
 	      if (strstr (Signal_Array[x].Val_Type, "int") != NULL)
 		{		// if value int
-		  Signal_Array[x].Value[1] =
-		    Device_Array[c].MB_Registers[Signal_Array[x].MB_Reg_Num];
+		  Signal_Array[x].Value[1] = Device_Array[c].MB_Registers[Signal_Array[x].MB_Reg_Num];
 		  Signal_Array[x].ExState = Device_Array[c].ExState; // for write device connecton state
 		  //    printf("INT SIGNAL [Name: %s] [Value:%i] \n\r",Signal_Array[x].Name, Signal_Array[x].Value[1]); //DEBUG
 		}
@@ -279,7 +278,7 @@ int signals_to_virtdev (void)
 		  
 		  Device_Array[c].Wr = Signal_Array[x].ExState; // for write device marker
 		  int reg;
-		  reg =  Device_Array[c].MB_Registers[Signal_Array[x].MB_Reg_Num]; //take before readed state		  
+		  reg =  Device_Array[c].WR_MB_Registers[Signal_Array[x].MB_Reg_Num]; //take before write register state		  
                   Device_Array[c].WR_MB_Registers[Signal_Array[x].MB_Reg_Num] = bit_mask(Signal_Array[x].Value[1],Signal_Array[x].Bit_Pos,reg);
                   
 		  //      printf(">> WR BIT SIGNAL [Name: %s] [Value:%i] \n\r",Signal_Array[x].Name, Signal_Array[x].Value[1]);     //DEBUG  
@@ -500,7 +499,7 @@ if (DEBUG == 1)   printf ("MAX_Signals [%i] \n", MAX_Signals);
       printf ("Status of TCP SEND: [%i]\n\r", tcpresult);
       printf
 	(" ++++++++++++++++++++++++==>   SPEEDTEST Send to TCPCache Time: [ %ld ] ms. \n\r",	 speedtest_stop ());
-      //break;//debug
+     break;//debug
     }
   socket_close ();
 

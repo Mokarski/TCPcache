@@ -15,6 +15,18 @@
 #include <unistd.h>
 #define  DEBUG 1
 
+int Set_Signal_Param (int Signal_Array_id, char *SearchedName, int Ex ,int val){
+
+    if ( strstr(Signal_Array[Signal_Array_id].Name,SearchedName) != NULL)
+       {
+        Signal_Array[Signal_Array_id].ExState = Ex;
+        Signal_Array[Signal_Array_id].Value[1] = val; 
+        return 1;
+       }
+return  0;
+}
+
+
 int main(int argc , char *argv[])
 {
 
@@ -101,68 +113,26 @@ while (1){
 	        int wr=0;
 	                printf("\n\r ================================ *Value OR ExState* ====================================\n\r");	        
 	        for (z=0; z < MAX_Signals; z++) {
-//////	            printf(" \n\r |Signal FIELDS BEFORE parser: Name{%s} Val0[%i]  Val1[%i]| \n\r",Signal_Array[z].Name, Signal_Array[z].Value[0] , Signal_Array[z].Value[1]); //DEBUG
-	            int test=0;
-	            //*****************************************
-	            //test =  sDeSerial_by_num (z); // explode by :
-	            char buffer[350]="";
-	            strcpy (buffer, Signal_Array[z].Name);
-	            test = unpack_signal(buffer  ,z); //from buffer to signal with number Z
-	            
-	            if ( strstr(Signal_Array[z].Name,"485.rsrs.rm_u2_on0") != NULL ) 
-	               {
-	                id =z; //save id rm_modbus
-	                printf (">>RM HYDRO ID - 485.rsrs.rm_u2_on0 = {%s} id = [%i] \n\r",Signal_Array[z].Name,id);
-	               }
-	               
-	            if ( strstr(Signal_Array[z].Name,"485.kb.kei") != NULL ) 
-	               {
-	                 if (DEBUG == 1) printf ("before set Ex: [#%i]  Name:[%s]   Val:[%i]     Ex[%i] \n\r",z,Signal_Array[z].Name,Signal_Array[z].Value[1],Signal_Array[z].ExState);	                    
-	                 if (Signal_Array[z].ExState == 0 ) Signal_Array[z].ExState = 1; //Set Flag to signal as RAED from modbus DEVICES
-	                 if (Signal_Array[z].ExState == 3 ) Signal_Array[z].ExState = 1; //Set Flag to signal as RAED from modbus DEVICES
-	                 if (Signal_Array[z].ExState == 4 ) Signal_Array[z].ExState = 0; //Set Flag to signal as RAED from modbus DEVICES 
-	               }
-	            
-	            if ( strstr(Signal_Array[z].Name,"485.kb.kei1.mode2") != NULL ) 
-	               {
-	                 
-	                  if (DEBUG == 2) printf (">>MODE2 Ex: [#%i]  Name:[%s]   Val:[%i]     Ex[%i] \n\r",z,Signal_Array[z].Name,Signal_Array[z].Value[1],Signal_Array[z].ExState);	                    
-	                 if ( Signal_Array[z].Value[1] == 1) {	                     
-	                       //Signal_Array[id].ExState = 2; //Set Flag to signal as write from modbus DEVICES
-	                        //printf (">>>>>>>>> SetWR  [#%i]  Name:[%s]   Val:[%i]     Ex[%i] \n\r",id,Signal_Array[id].Name,Signal_Array[id].Value[1],Signal_Array[id].ExState);	                    
-	                        wr=1;
-	                    } 
-	                    
-	                    if ( Signal_Array[z].Value[1] == 0) {	                     
-	                       //Signal_Array[id].ExState = 2; //Set Flag to signal as write from modbus DEVICES
-	                        //printf (">>>>>>>>> SetWR  [#%i]  Name:[%s]   Val:[%i]     Ex[%i] \n\r",id,Signal_Array[id].Name,Signal_Array[id].Value[1],Signal_Array[id].ExState);	                    
-	                        wr=0;
-	                    } 
-	               }
-	               
-	                 if ( (wr == 1) && (id !=-1) ){	                     
-	                       Signal_Array[id].ExState = 2; //Set Flag to signal as write from modbus DEVICES
-	                       Signal_Array[id].Value[1] = 1;
-	                        if (DEBUG == 2) printf (">>>>>>>>> SetWR  [#%i]  Name:[%s]   Val:[%i]     Ex[%i] \n\r",id,Signal_Array[id].Name,Signal_Array[id].Value[1],Signal_Array[id].ExState);	                    
-	                    }
-	                    
-	                    /*
-	                     if ( (wr == 0) && (id !=-1) ){	                     
-	                       Signal_Array[id].ExState = 2; //Set Flag to signal as write from modbus DEVICES
-	                       Signal_Array[id].Value[1] = 0;
-	                        printf (">>>>>>>>> SetWR  [#%i]  Name:[%s]   Val:[%i]     Ex[%i] \n\r",id,Signal_Array[id].Name,Signal_Array[id].Value[1],Signal_Array[id].ExState);	                    
-	                    }
-	                    */
-	                    
-//////	             printf ("\n\r #%i RESTORED SIGNAL -  Name:[%s] Val:[%i] Ex[%i] \n\r",z,Signal_Array[z].Name,Signal_Array[z].Value[1],Signal_Array[z].ExState);  //DEBUG	                    
-	            
+//////	              printf(" \n\r |Signal FIELDS BEFORE parser: Name{%s} Val0[%i]  Val1[%i]| \n\r",Signal_Array[z].Name, Signal_Array[z].Value[0] , Signal_Array[z].Value[1]); //DEBUG
+	              int test=0;	            
+	              char buffer[350]="";
+	              
+	              strcpy (buffer, Signal_Array[z].Name);
+	              test = unpack_signal(buffer  ,z); //from buffer to signal with number Z
+	              
+	             if (DEBUG == 1)  printf ("FROM SRV ->> [#%i]  Name:[%s]   Val:[%i]     Ex[%i] \n\r",z,Signal_Array[z].Name,Signal_Array[z].Value[1],Signal_Array[z].ExState);	                    
+	             if(Signal_Array[z].ExState == 0 ) Signal_Array[z].ExState =1; //if not used set to read
+	             if(Signal_Array[z].ExState == 3 ) Signal_Array[z].ExState =0; //if complete request
+	             if(Signal_Array[z].ExState == 4 ) Signal_Array[z].ExState =1; //if error device
+	             
+	             //int Set_Signal_Param (int Signal_Array_id, char SearchedName, int Ex ,int val)
+	             Set_Signal_Param (z, "485.rsrs.rm_u2_on", 2,1); //rm block 2 ALL On
+	             
 	             if ( (Signal_Array[z].Value[1] > 0) || (Signal_Array[z].ExState > 0 ) ) {
 
-	                   if (DEBUG == 1)  printf ("SA [#%i]  Name:[%s]   Val:[%i]     Ex[%i] \n\r",z,Signal_Array[z].Name,Signal_Array[z].Value[1],Signal_Array[z].ExState);	                    
+	                   if (DEBUG == 1)  printf ("<<- to SRV SA [#%i]  Name:[%s]   Val:[%i]     Ex[%i] \n\r",z,Signal_Array[z].Name,Signal_Array[z].Value[1],Signal_Array[z].ExState);	                    
 
-	                }
-	            
-
+	                }	            
     		    }
 	                printf(" ================================ *** ====================================\n\r");    		    
                  
