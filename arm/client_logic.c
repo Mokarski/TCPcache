@@ -117,9 +117,10 @@ while (1){
 	               
 	            if ( strstr(Signal_Array[z].Name,"485.kb.kei") != NULL ) 
 	               {
-	                  if (DEBUG == 1) printf ("before set Ex: [#%i]  Name:[%s]   Val:[%i]     Ex[%i] \n\r",z,Signal_Array[z].Name,Signal_Array[z].Value[1],Signal_Array[z].ExState);	                    
+	                 if (DEBUG == 1) printf ("before set Ex: [#%i]  Name:[%s]   Val:[%i]     Ex[%i] \n\r",z,Signal_Array[z].Name,Signal_Array[z].Value[1],Signal_Array[z].ExState);	                    
 	                 if (Signal_Array[z].ExState == 0 ) Signal_Array[z].ExState = 1; //Set Flag to signal as RAED from modbus DEVICES
-	                 if (Signal_Array[z].ExState == 4 ) Signal_Array[z].ExState = 0; //Set Flag to signal as RAED from modbus DEVICES
+	                 if (Signal_Array[z].ExState == 3 ) Signal_Array[z].ExState = 1; //Set Flag to signal as RAED from modbus DEVICES
+	                 if (Signal_Array[z].ExState == 4 ) Signal_Array[z].ExState = 0; //Set Flag to signal as RAED from modbus DEVICES 
 	               }
 	            
 	            if ( strstr(Signal_Array[z].Name,"485.kb.kei1.mode2") != NULL ) 

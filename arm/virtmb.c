@@ -75,13 +75,15 @@ int virt_mb_filldev( char *sName, int mb_id, int mb_reg, int inExState){ //fill 
 	int i=0;
 	int uniq_test=0;
 	//int reg_counter[VirtDevRegs]; //temporary array for count number of regs
+	
+	if (inExState == 2) printf("MB_FILL_DEVICES EX[%i] \n\r",inExState);
 	for (i=0; i < VirtDev; i++){
 		if ( Device_Array[i].MB_Id == mb_id ) {
 			uniq_test=0;
-			
+			Device_Array[i].ExState = inExState; //very bad idea
 			Device_Array[i].MB_reg_counter[mb_reg] = 1; //mark for this DEV_ID register as used
-			if (Device_Array[i].ExState == 1) Device_Array[i].Rd=1;  //mark device to read
-			if (Device_Array[i].ExState == 2){
+			if (inExState == 1) Device_Array[i].Rd=1;  //mark device to read
+			if (inExState == 2){
 			     Device_Array[i].Wr=1;  //mark device  to write
 			     printf(">>>>>> WR Name[%s] EX=%i\n\r",sName,inExState);
 			    }
@@ -97,8 +99,8 @@ int virt_mb_filldev( char *sName, int mb_id, int mb_reg, int inExState){ //fill 
 		                strcpy(Device_Array[i].Name,sName); //fill the name
 				Device_Array[i].MB_Id = mb_id;
 				Device_Array[i].ExState = inExState; //very bad idea
-				if (Device_Array[i].ExState == 1) Device_Array[i].Rd=1;  //mark device to read
-				if (Device_Array[i].ExState == 2) {
+				if (inExState == 1) Device_Array[i].Rd=1;  //mark device to read
+				if (inExState == 2) {
 				      Device_Array[i].Wr=1;  //mark device  to write
 				      printf(">>>>>>WR Name[%s] EX=%i\n\r",sName,inExState);
 				     }

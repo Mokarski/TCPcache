@@ -33,7 +33,7 @@ virt_mb_ReadtoCache (int dIndex, int reg_count)
     {
       fprintf (stderr, "Unable to create the libmodbus context\n");
       ret=-1;
-      return ret;
+      return 4;
     }
   struct timeval old_response_timeout;
   struct timeval response_timeout;
@@ -81,7 +81,7 @@ virt_mb_ReadtoCache (int dIndex, int reg_count)
       fprintf (stderr, "MB_READ: %s\n", modbus_strerror (errno));
       ret=4;
       return ret;
-    }
+    } else ret = 3;
 
 
   //strcpy(Device_Array[dIndex].Name,Name);
@@ -115,13 +115,15 @@ virt_mb_CachetoDev (int dIndex, int reg_count)
   int rc;
   int i;
   int fl;
+  int ret;
 
   ctx = modbus_new_rtu ("/dev/ttySP0", 115200, 'N', 8, 1);
 
   if (ctx == NULL)
     {
       fprintf (stderr, "Unable to create the libmodbus context\n");
-      return -1;
+      return 4;
+      ret =4;
     }
   struct timeval old_response_timeout;
   struct timeval response_timeout;
@@ -143,19 +145,26 @@ virt_mb_CachetoDev (int dIndex, int reg_count)
 
   int ID;
   ID = Device_Array[dIndex].MB_Id;
-  printf ("WR ID from virtdev list %i \n\r", ID);
+  printf ("WR ID[%i] from virtdev list, regs to write [%i] \n\r", ID, reg_count);
   modbus_set_slave (ctx, ID);
   connected = modbus_connect (ctx);
 
-  if (connected == -1)
-    printf ("WR - Connection failed %i\n", ID);
-  if (connected == 0)
-    printf ("WR - connected %i\n", ID);
+  if (connected == -1){
+      printf ("WR - Connection failed %i\n", ID);
+      ret=4;
+     }
+    
+  if (connected == 0){
+      printf ("WR - connected %i\n", ID);
+      ret=4;
+     }
+     
   int cn = 0;
 
   int n;
   for (n=0; n == reg_count; n++ ){ //copy virt dev registers to tab_reg
-      tab_reg[n] = Device_Array[dIndex].WR_MB_Registers[n];
+      tab_reg[n] = Device_Array[dIndex].WR_MB_Registers[n] | Device_Array[dIndex].MB_Registers[n];
+      printf(">>>> WRite REGS[%i] = %i Read REG=%i Or REG= %i \n\r ",n,Device_Array[dIndex].WR_MB_Registers[n],Device_Array[dIndex].MB_Registers[n], Device_Array[dIndex].WR_MB_Registers[n]|Device_Array[dIndex].MB_Registers[n]);
   }
 
     rc = modbus_write_registers (ctx, 0, reg_count, tab_reg);
@@ -165,8 +174,9 @@ virt_mb_CachetoDev (int dIndex, int reg_count)
     {
       printf ("WR [MB_ID #%i]  Connection failed !\n", ID);
       fprintf (stderr, "WR MB_READ: %s\n", modbus_strerror (errno));
-      return -1;
-    }
+      ret=4;
+      return ret;
+    } else ret=3; //3 - executed OK!
 
 
   //strcpy(Device_Array[dIndex].Name,Name);
@@ -187,7 +197,7 @@ virt_mb_CachetoDev (int dIndex, int reg_count)
   modbus_free (ctx);		//close COM ?
 
 
-  return tab_reg[0];
+  return ret;
 }
 
 
@@ -205,8 +215,7 @@ CheckBit (uint sigReg, int iBit)
   return result;
 }
 
-int
-virtdev_to_signals (void)
+int virtdev_to_signals (void)
 {				//from virtual devices to signals
   int c, x;
   for (c = 0; c < VirtDev; c++)
@@ -235,6 +244,45 @@ virtdev_to_signals (void)
 		  Signal_Array[x].ExState = Device_Array[c].ExState; //for write ExState back to Signals.ExState
 		  Signal_Array[x].Value[1] = CheckBit (reg, Signal_Array[x].Bit_Pos);	//register and bit position
 		  //      printf("BIT SIGNAL [Name: %s] [Value:%i] \n\r",Signal_Array[x].Name, Signal_Array[x].Value[1]);     //DEBUG  
+		}
+	    }
+	}
+    }
+
+  return 0;
+}
+
+int signals_to_virtdev (void)
+{				//from virtual devices to signals
+  int c, x;
+  for (c = 0; c < VirtDev; c++)
+    {				// cycle for divices 
+
+      for (x = 0; x < MAX_Signals; x++)
+	{			//cycle for signals
+	  if ( (Signal_Array[x].MB_Id == Device_Array[c].MB_Id) && (Signal_Array[x].ExState ==2 ) ) //ExState = 2 signal to write
+	    {			// if founded modbus id = virtual modbus ID
+
+	      if (strstr (Signal_Array[x].Val_Type, "int") != NULL)
+		{		// if value int
+
+		  Device_Array[c].WR_MB_Registers[Signal_Array[x].MB_Reg_Num] = Signal_Array[x].Value[1];
+		  Device_Array[c].Wr = Signal_Array[x].ExState; // for write device marker
+		  //    printf("INT SIGNAL [Name: %s] [Value:%i] \n\r",Signal_Array[x].Name, Signal_Array[x].Value[1]); //DEBUG
+		}
+
+	      if (strstr (Signal_Array[x].Val_Type, "bit") != NULL)
+		{		// if value bit
+		  //get register from virt
+		  //check bit_pos and state of bit
+		  //return result to Signal.Value
+		  
+		  Device_Array[c].Wr = Signal_Array[x].ExState; // for write device marker
+		  int reg;
+		  reg =  Device_Array[c].MB_Registers[Signal_Array[x].MB_Reg_Num]; //take before readed state		  
+                  Device_Array[c].WR_MB_Registers[Signal_Array[x].MB_Reg_Num] = bit_mask(Signal_Array[x].Value[1],Signal_Array[x].Bit_Pos,reg);
+                  
+		  //      printf(">> WR BIT SIGNAL [Name: %s] [Value:%i] \n\r",Signal_Array[x].Name, Signal_Array[x].Value[1]);     //DEBUG  
 		}
 	    }
 	}
@@ -294,7 +342,7 @@ if (DEBUG == 1)   printf ("MAX_Signals [%i] \n", MAX_Signals);
       speedtest_start ();	//time start
       int z = 0;
       
-      for (z = 0; z < MAX_Signals; z++)
+      for (z = 0; z < MAX_Signals; z++) //create virt devices and unpack signals to struct Signal_Array[]
 	{
 	
 	  char buffer[350] = "";
@@ -317,14 +365,14 @@ if (DEBUG == 1)   printf ("MAX_Signals [%i] \n", MAX_Signals);
 	  if ( Signal_Array[z].ExState == 0 ) {	           //debug
 	            //    TCP_SEND = 0;
 	                if ( DEBUG == 1 )  
-	                     if ( strstr (Signal_Array[z].Name, "485.kb.kei") != NULL) Signal_Array[z].ExState =1; //for keyboard only
+	                     //if ( strstr (Signal_Array[z].Name, "485.kb.kei") != NULL) Signal_Array[z].ExState =1; //for keyboard only
 	                     printf ("[%i]From_SRV EX=0 -->> Name:[%s] Value:[%i] ExState:[%i]\n\r ", z,Signal_Array[z].Name, Signal_Array[z].Value[1], Signal_Array[z].ExState);
 	               }
 	               
 	  if ( Signal_Array[z].ExState  == 1 ) {	           //debug
 	            //    TCP_SEND = 0;
 	                if ( DEBUG == 1 )  
-	                     if ( strstr (Signal_Array[z].Name, "485.kb.kei") != NULL) Signal_Array[z].ExState =1; //for keyboard only
+	                     //if ( strstr (Signal_Array[z].Name, "485.kb.kei") != NULL) Signal_Array[z].ExState =1; //for keyboard only
 	                     printf ("[%i]From_SRV EX=1  -->> Name:[%s] Value:[%i] ExState:[%i]\n\r ", z,Signal_Array[z].Name, Signal_Array[z].Value[1], Signal_Array[z].ExState);
 	               }
 	       
@@ -365,7 +413,7 @@ if (DEBUG == 1)   printf ("MAX_Signals [%i] \n", MAX_Signals);
       printf (" ==>   SPEEDTEST Deserial signals: [ %ld ] ms. \n\r", speedtest_stop ());
 	      
 
-
+      signals_to_virtdev(); //signals to write put bit to virt device register
       speedtest_start ();	//time start     
       //************************************************************************************ MODBUS CODES
       int c = 0;
@@ -387,8 +435,8 @@ if (DEBUG == 1)   printf ("MAX_Signals [%i] \n", MAX_Signals);
 	      if ( DEBUG == 1 ) printf ("READ FROM DEVICE ID[%i] Total_REGS[%i] \n\r",Device_Array[c].MB_Id,total_dev_regs); // if signals empty 
 
               if (Device_Array[c].Wr == 1){ // separate write and read registers!!!
-                  printf(" ===------>>> Have signal to write! \n\r");
-                  virt_mb_CachetoDev (c, total_dev_regs);	// Write to Modbus real devices
+                  printf(" ====================================================------>>> Have signal to write! \n\r");
+                  Device_Array[c].ExState = virt_mb_CachetoDev (c, total_dev_regs);	// Write to Modbus real devices
                  }
 	    }
 	     //else
