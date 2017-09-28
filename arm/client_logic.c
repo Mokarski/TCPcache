@@ -15,6 +15,8 @@
 #include <unistd.h>
 #define  DEBUG 1
 
+//char SignalHash[MAX_Signals][MAX_Signals]; //array for store index of Signals
+
 int Set_Signal_Param (int Signal_Array_id, char *SearchedName, int Ex ,int val){
 
     if ( strstr(Signal_Array[Signal_Array_id].Name,SearchedName) != NULL)
@@ -26,6 +28,15 @@ int Set_Signal_Param (int Signal_Array_id, char *SearchedName, int Ex ,int val){
 return  0;
 }
 
+int FillSignalIndex(void){ //fill the id of signals in cyrrent signals list;
+
+  int n=0;
+  for (n=; n < MAX_Signals; n++){
+  Signal_Array[n].Srv_id_num = n;
+  SignalHash[n][n]
+  }
+return 0;
+}
 
 int main(int argc , char *argv[])
 {
@@ -127,16 +138,17 @@ while (1){
 	             
 	             //int Set_Signal_Param (int Signal_Array_id, char SearchedName, int Ex ,int val)
 	             Set_Signal_Param (z, "485.rsrs.rm_u2_on", 2,1); //rm block 2 ALL On
-	             Set_Signal_Param (z, "485.rsrs.rm_u1_on", 2,1); //rm block 2 ALL On
+	             Set_Signal_Param (z, "485.rsrs.rm_u1_on", 2,1); //rm block 1 ALL On
 	             Set_Signal_Param (z, "485.rsrs2.state_sound1_vol",2,0); //volume1 0
 	             Set_Signal_Param (z, "485.rsrs2.state_sound2_vol",2,0); //volume2 0
 	             Set_Signal_Param (z, "485.rsrs2.state_sound1_on",2,1); //sound 1 on
 	             Set_Signal_Param (z, "485.rsrs2.state_sound2_on",2,1); //sound 2 on
-	             
+	             Set_Signal_Param (z, "485.rsrs2.state_sound1_led",2,1); //sound 1 led on
+	             Set_Signal_Param (z, "485.rsrs2.state_sound2_led",2,1); //sound 2 led on
 	             Set_Signal_Param (z, "485.rl.relay1",2,1); //enable rl1
-	             Set_Signal_Param (z, " 485.rl.relay2",2,1); //enable rl2
-	             Set_Signal_Param (z, " 485.rl.relay3",2,1); //enable rl3
-	             Set_Signal_Param (z, " 485.rl.relay4",2,1); //enable rl4
+	             Set_Signal_Param (z, "485.rl.relay2",2,1); //enable rl2
+	             Set_Signal_Param (z, "485.rl.relay3",2,1); //enable rl3
+	             Set_Signal_Param (z, "485.rl.relay4",2,1); //enable rl4
 	             
 	             if ( (Signal_Array[z].Value[1] > 0) || (Signal_Array[z].ExState > 0 ) ) {
 
