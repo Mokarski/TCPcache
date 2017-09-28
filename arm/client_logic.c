@@ -127,7 +127,7 @@ while (1){
 	             
 	             //int Set_Signal_Param (int Signal_Array_id, char SearchedName, int Ex ,int val)
 	             Set_Signal_Param (z, "485.rsrs.rm_u2_on", 2,1); //rm block 2 ALL On
-	             
+	             Set_Signal_Param (z, "485.rsrs.rm_u1_on", 2,1); //rm block 2 ALL On
 	             if ( (Signal_Array[z].Value[1] > 0) || (Signal_Array[z].ExState > 0 ) ) {
 
 	                   if (DEBUG == 1)  printf ("<<- to SRV SA [#%i]  Name:[%s]   Val:[%i]     Ex[%i] \n\r",z,Signal_Array[z].Name,Signal_Array[z].Value[1],Signal_Array[z].ExState);	                    

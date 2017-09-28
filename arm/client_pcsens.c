@@ -8,7 +8,7 @@
 #include <stdlib.h>
 #include "/home/opc/Kombain/test/include/modbus/modbus.h"
 
-#define DEBUG 1 // may be set to 1,2,3
+#define DEBUG 1 // may be set to 1,2,3,4
 #include "network.h"
 #include "signals.h"
 #include "virtmb.h"
@@ -162,11 +162,13 @@ virt_mb_CachetoDev (int dIndex, int reg_count)
   int cn = 0;
 
   int n;
-  for (n=0; n == reg_count; n++ ){ //copy virt dev registers to tab_reg
-      tab_reg[n] = Device_Array[dIndex].WR_MB_Registers[n] | Device_Array[dIndex].MB_Registers[n];
-      printf(">>>> WRite REGS[%i] = %i Read REG=%i Or REG= %i \n\r ",n,Device_Array[dIndex].WR_MB_Registers[n],Device_Array[dIndex].MB_Registers[n], Device_Array[dIndex].WR_MB_Registers[n]|Device_Array[dIndex].MB_Registers[n]);
+  for (n=0; n < reg_count; n++ ){ //copy virt dev registers to tab_reg
+      //tab_reg[n] = Device_Array[dIndex].WR_MB_Registers[n] | Device_Array[dIndex].MB_Registers[n];
+      tab_reg[n] = Device_Array[dIndex].WR_MB_Registers[n];
+      printf (">>>>>>>>>>>>>>>>>>>>>>>   WR----REG[%i] = %i \n\r",n,Device_Array[dIndex].WR_MB_Registers[n]);
+      //printf("=========================>>>> WRite REGS[%i] = %i Read REG=%i Or REG= %i \n\r ",n,Device_Array[dIndex].WR_MB_Registers[n],Device_Array[dIndex].MB_Registers[n], Device_Array[dIndex].WR_MB_Registers[n]|Device_Array[dIndex].MB_Registers[n]);
   }
-
+ 
     rc = modbus_write_registers (ctx, 0, reg_count, tab_reg);
 //  rc = modbus_write_registers (ctx, 0, reg_count, Device_Array[dIndex].WR_MB_Registers);
 
@@ -433,8 +435,9 @@ if (DEBUG == 1)   printf ("MAX_Signals [%i] \n", MAX_Signals);
 	      
 	      if ( DEBUG == 1 ) printf ("READ FROM DEVICE ID[%i] Total_REGS[%i] \n\r",Device_Array[c].MB_Id,total_dev_regs); // if signals empty 
 
-              if (Device_Array[c].Wr == 1){ // separate write and read registers!!!
-                  printf(" ====================================================------>>> Have signal to write! \n\r");
+              if (Device_Array[c].Wr == 2){ // separate write and read registers!!!
+                  if ( DEBUG == 1 ) printf(" ====================================================------>>> Have signal to write! \n\r");
+                  if ( DEBUG == 1 ) printf (">>>> WRITE TO  DEVICE ID[%i] Total_REGS[%i] \n\r",Device_Array[c].MB_Id,total_dev_regs); // if signals empty 
                   Device_Array[c].ExState = virt_mb_CachetoDev (c, total_dev_regs);	// Write to Modbus real devices
                  }
 	    }
@@ -481,6 +484,9 @@ if (DEBUG == 1)   printf ("MAX_Signals [%i] \n", MAX_Signals);
 	  if  (Signal_Array[x].Value[1] > 0) 
 	         if ( DEBUG == 1 )  printf ("[%i]TO_SRV  <<-- Name:[%s] Value:[%i] ExState:[%i]\n\r ", x,Signal_Array[x].Name, Signal_Array[x].Value[1], Signal_Array[x].ExState);
 	         
+	if  (Signal_Array[x].Value[1] > 0) 
+	         if ( DEBUG == 4 )  printf ("[%i]TO_SRV  <<-- Name:[%s] Value:[%i] ExState:[%i]\n\r ", x,Signal_Array[x].Name, Signal_Array[x].Value[1], Signal_Array[x].ExState);
+	         
 	  if (strlen (Signal_Array[x].Name) > 1)
 	    {			//write if Name not empty
  //          socket_init();
@@ -499,7 +505,7 @@ if (DEBUG == 1)   printf ("MAX_Signals [%i] \n", MAX_Signals);
       printf ("Status of TCP SEND: [%i]\n\r", tcpresult);
       printf
 	(" ++++++++++++++++++++++++==>   SPEEDTEST Send to TCPCache Time: [ %ld ] ms. \n\r",	 speedtest_stop ());
-     break;//debug
+    // break;//debug
     }
   socket_close ();
 
