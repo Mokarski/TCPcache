@@ -3,7 +3,7 @@
 
 //#define MAX 100
 #define STR_LEN_TXT 100
-#define MAX_Signals 355
+#define MAX_Signals 400
 
 //char packed_txt_string[40000];
 

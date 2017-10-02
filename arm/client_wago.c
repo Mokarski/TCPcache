@@ -27,7 +27,8 @@ virt_mb_ReadtoCache (int dIndex, int reg_count)
   int i;
   int fl;
   int ret=0;
-  ctx = modbus_new_rtu ("/dev/ttySP0", 115200, 'N', 8, 1);
+  //ctx = modbus_new_rtu ("/dev/ttySP0", 115200, 'N', 8, 1);
+   ctx = modbus_new_tcp("192.168.1.150", 502);
   if ( DEBUG > 0 ) printf ("\n \r >>>> READ real device [%i] from position [0] Number register to read [%i] Rd[%i] Wr[%i]\n\r",Device_Array[dIndex].MB_Id,reg_count, Device_Array[dIndex].Rd, Device_Array[dIndex].Wr);
   if (ctx == NULL)
     {
@@ -117,8 +118,8 @@ virt_mb_CachetoDev (int dIndex, int reg_count)
   int fl;
   int ret;
 
-  ctx = modbus_new_rtu ("/dev/ttySP0", 115200, 'N', 8, 1);
-
+  //ctx = modbus_new_rtu ("/dev/ttySP0", 115200, 'N', 8, 1);
+    ctx = modbus_new_tcp("192.168.1.150", 502);
   if (ctx == NULL)
     {
       fprintf (stderr, "Unable to create the libmodbus context\n");
@@ -317,7 +318,7 @@ if (DEBUG == 1)   printf ("MAX_Signals [%i] \n", MAX_Signals);
       strcpy (signal_parser_buf, "");	//erase buffer for next iteration
       //======================== read all 485 signals from server create signals and virtual devices ===================
       strcpy (message, "");
-      frame_pack ("rd", "485.", message);
+      frame_pack ("rd", "wago.", message);
       tcpresult = frame_tcpreq (message);
       printf ("Status of TCP SEND: [%i]\n\r", tcpresult);
       if (tcpresult > 1)

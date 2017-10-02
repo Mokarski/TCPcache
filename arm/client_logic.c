@@ -13,6 +13,7 @@
 #include "speedtest.h"
 #include <errno.h>
 #include <unistd.h>
+#include "hash.h"
 #define  DEBUG 1
 
 //char SignalHash[MAX_Signals][MAX_Signals]; //array for store index of Signals
@@ -31,9 +32,23 @@ return  0;
 int FillSignalIndex(void){ //fill the id of signals in cyrrent signals list;
 
   int n=0;
-  for (n=; n < MAX_Signals; n++){
-  Signal_Array[n].Srv_id_num = n;
-  SignalHash[n][n]
+  for (n=0; n < MAX_Signals; n++){
+  Signal_Array[n].Srv_id_num = n;  
+  }
+return 0;
+}
+
+int HashTable[4000]; //key table HASH = iindex of array and content = id signals
+int FillHash(void){ //fill the id of signals in cyrrent signals list;
+
+  int n=0;
+  int h;
+  for (n=0; n < MAX_Signals; n++){
+  
+  h=Hash_id(Signal_Array[n].Name );
+  
+  HashTable[h]=n;
+  printf("NAME[%s] HASH[%i] id[%i] \n\r",Signal_Array[n].Name ,h,n);
   }
 return 0;
 }
@@ -122,6 +137,9 @@ while (1){
 	        int z=0;		
 	        int id=-1;
 	        int wr=0;
+	        
+	        //FillSignalIndex(); //fill the index of loaded  signals
+
 	                printf("\n\r ================================ *Value OR ExState* ====================================\n\r");	        
 	        for (z=0; z < MAX_Signals; z++) {
 //////	              printf(" \n\r |Signal FIELDS BEFORE parser: Name{%s} Val0[%i]  Val1[%i]| \n\r",Signal_Array[z].Name, Signal_Array[z].Value[0] , Signal_Array[z].Value[1]); //DEBUG
@@ -132,36 +150,17 @@ while (1){
 	              test = unpack_signal(buffer  ,z); //from buffer to signal with number Z
 	              
 	             if (DEBUG == 1)  printf ("FROM SRV ->> [#%i]  Name:[%s]   Val:[%i]     Ex[%i] \n\r",z,Signal_Array[z].Name,Signal_Array[z].Value[1],Signal_Array[z].ExState);	                    
-	             if(Signal_Array[z].ExState == 0 ) Signal_Array[z].ExState =1; //if not used set to read
-	             if(Signal_Array[z].ExState == 3 ) Signal_Array[z].ExState =0; //if complete request
-	             if(Signal_Array[z].ExState == 4 ) Signal_Array[z].ExState =1; //if error device
-	             
-	             //int Set_Signal_Param (int Signal_Array_id, char SearchedName, int Ex ,int val)
-	             Set_Signal_Param (z, "485.rsrs.rm_u2_on", 2,1); //rm block 2 ALL On
-	             Set_Signal_Param (z, "485.rsrs.rm_u1_on", 2,1); //rm block 1 ALL On
-	             Set_Signal_Param (z, "485.rsrs2.state_sound1_vol",2,0); //volume1 0
-	             Set_Signal_Param (z, "485.rsrs2.state_sound2_vol",2,0); //volume2 0
-	             Set_Signal_Param (z, "485.rsrs2.state_sound1_on",2,1); //sound 1 on
-	             Set_Signal_Param (z, "485.rsrs2.state_sound2_on",2,1); //sound 2 on
-	             Set_Signal_Param (z, "485.rsrs2.state_sound1_led",2,1); //sound 1 led on
-	             Set_Signal_Param (z, "485.rsrs2.state_sound2_led",2,1); //sound 2 led on
-	             Set_Signal_Param (z, "485.rl.relay1",2,1); //enable rl1
-	             Set_Signal_Param (z, "485.rl.relay2",2,1); //enable rl2
-	             Set_Signal_Param (z, "485.rl.relay3",2,1); //enable rl3
-	             Set_Signal_Param (z, "485.rl.relay4",2,1); //enable rl4
-	             
-	             if ( (Signal_Array[z].Value[1] > 0) || (Signal_Array[z].ExState > 0 ) ) {
-
-	                   if (DEBUG == 1)  printf ("<<- to SRV SA [#%i]  Name:[%s]   Val:[%i]     Ex[%i] \n\r",z,Signal_Array[z].Name,Signal_Array[z].Value[1],Signal_Array[z].ExState);	                    
-
-	                }	            
+	
     		    }
 	                printf(" ================================ *** ====================================\n\r");    		    
                  
-		  printf(" ==>   SPEEDTEST Deserial signals signals: [ %ld ] ms. \n\r", speedtest_stop());     
+		      printf(" ==>   SPEEDTEST Deserial signals signals: [ %ld ] ms. \n\r", speedtest_stop());     
 
-         
-         
+         	        printf("=================== ==>  Calculate all HASH TIME START ============================= \n\r", speedtest_stop());         
+	        speedtest_start(); //time start
+	        FillHash(); //fill the array of hash
+	        printf("=================== ==>  Calculate all HASH TIME: [ %ld ] ms. \n\r", speedtest_stop());         
+         break;
                      //=========  SEND all 485 signals to TCPCache =======
 
       speedtest_start ();       //time start
