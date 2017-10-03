@@ -147,7 +147,7 @@ virt_mb_CachetoDev (int dIndex, int reg_count)
   int ID;
   ID = Device_Array[dIndex].MB_Id;
   printf ("WR ID[%i] from virtdev list, regs to write [%i] \n\r", ID, reg_count);
-  modbus_set_slave (ctx, ID);
+//  modbus_set_slave (ctx, ID);
   connected = modbus_connect (ctx);
 
   if (connected == -1){
@@ -169,14 +169,24 @@ virt_mb_CachetoDev (int dIndex, int reg_count)
       printf (">>>>>>>>>>>>>>>>>>>>>>>   WR----REG[%i] = %i \n\r",n,Device_Array[dIndex].WR_MB_Registers[n]);
       //printf("=========================>>>> WRite REGS[%i] = %i Read REG=%i Or REG= %i \n\r ",n,Device_Array[dIndex].WR_MB_Registers[n],Device_Array[dIndex].MB_Registers[n], Device_Array[dIndex].WR_MB_Registers[n]|Device_Array[dIndex].MB_Registers[n]);
   }
- 
-    rc = modbus_write_registers (ctx, 0, reg_count, tab_reg);
+  
+  n=0;
+  for (n=0; n < VirtDevRegs; n++ ){
+            
+       if ( Device_Array[dIndex].WR_MB_reg_counter[n] == 1 ){
+           uint16_t tab_reg2[1];
+           tab_reg2[0] = Device_Array[dIndex].WR_MB_Registers[n];
+           printf (">>>>>>>>>> tabreg2[0]=%i \n\r",tab_reg2[0]);
+           rc = modbus_write_registers (ctx, n, 1, tab_reg2); //write in device by register
+           }
+      }
+
 //  rc = modbus_write_registers (ctx, 0, reg_count, Device_Array[dIndex].WR_MB_Registers);
 
   if (rc == -1)
     {
       printf ("WR [MB_ID #%i]  Connection failed !\n", ID);
-      fprintf (stderr, "WR MB_READ: %s\n", modbus_strerror (errno));
+      fprintf (stderr, "WR MB_WRITE: %s\n", modbus_strerror (errno));
       ret=4;
       return ret;
     } else ret=3; //3 - executed OK!
@@ -184,15 +194,16 @@ virt_mb_CachetoDev (int dIndex, int reg_count)
 
   //strcpy(Device_Array[dIndex].Name,Name);
   //Device_Array[dIndex].MB_Id=ID;                                 //Modbus device ID
-  int cx = 0;
-  for (cx = 0; cx < reg_count; cx++)
-    {
-      Device_Array[dIndex].MB_Registers[cx] = tab_reg[cx];	//Mb register number
-    }
+
+//  int cx = 0; //copy from device registers to virtual registers
+//  for (cx = 0; cx < reg_count; cx++)
+//    {
+//      Device_Array[dIndex].MB_Registers[cx] = tab_reg[cx];	//Mb register number
+//    }
 
 
 
-  usleep (5 * 1000);		//delay for Mod bus restore functional     
+  usleep (25 * 1000);		//delay for Mod bus restore functional     
 
   modbus_flush (ctx);
 

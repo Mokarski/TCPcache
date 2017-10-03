@@ -140,7 +140,7 @@ while (1){
 	        
 	        //FillSignalIndex(); //fill the index of loaded  signals
 
-	                printf("\n\r ================================ *Value OR ExState* ====================================\n\r");	        
+	                printf("\n\r ================================ *UNPACK signals* ====================================\n\r");	        
 	        for (z=0; z < MAX_Signals; z++) {
 //////	              printf(" \n\r |Signal FIELDS BEFORE parser: Name{%s} Val0[%i]  Val1[%i]| \n\r",Signal_Array[z].Name, Signal_Array[z].Value[0] , Signal_Array[z].Value[1]); //DEBUG
 	              int test=0;	            
@@ -158,10 +158,30 @@ while (1){
 
          	        printf("=================== ==>  Calculate all HASH TIME START ============================= \n\r", speedtest_stop());         
 	        speedtest_start(); //time start
-	        FillHash(); //fill the array of hash
+	        //FillHash(); //fill the array of hash
+	        for (z=0; z < MAX_Signals; z++) {
+	             //Set_Signal_Param (int Signal_Array_id, char *SearchedName, int Ex ,int val)
+	               if ( strstr(Signal_Array[z].Name,"wago.") != NULL ) Set_Signal_Param (z, "wago.", 1 ,0);
+	               if ( strstr(Signal_Array[z].Name,"485.") != NULL ) Set_Signal_Param (z, "485.", 1 ,0);
+
+	               if ( strstr(Signal_Array[z].Name,"wago.oc_mdo") != NULL ) Set_Signal_Param (z, "wago.oc_mdo", 2 ,1);
+	               
+	               /*
+	               if ( strstr(Signal_Array[z].Name,"wago.oc_mdo") != NULL ){ 
+	                  if (Signal_Array[z].ExState == 0) Set_Signal_Param (z, "wago.oc_mdo", 2 ,1);	               
+	                  }
+	                   
+	               if ( strstr(Signal_Array[z].Name,"wago.oc_mdo") != NULL ){ 
+	                  if (Signal_Array[z].ExState == 3) Set_Signal_Param (z, "wago.oc_mdo", 2 ,0);	               
+	                  }
+	                 */
+	                  
+	                if (DEBUG == 1)  printf (" <<-- TO SRV  [#%i]  Name:[%s]   Val:[%i]     Ex[%i] \n\r",z,Signal_Array[z].Name,Signal_Array[z].Value[1],Signal_Array[z].ExState);	                    	                
+	              }
+	            
 	        printf("=================== ==>  Calculate all HASH TIME: [ %ld ] ms. \n\r", speedtest_stop());         
-         break;
-                     //=========  SEND all 485 signals to TCPCache =======
+         //break; //debug
+                     //=========  SEND all signals to TCPCache =======
 
       speedtest_start ();       //time start
       int x = 0;

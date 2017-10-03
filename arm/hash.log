@@ -1,1 +1,677 @@
- 168485361  1314804179  -1812927088  25975850  2079893085  872088494  793675025  -490320128  -1011309243  1299600844  2087652010  -1211658065  -1857385168  1356805086  -126828407  1327711993  -984126140  -1816983597  -811068518  -269917745  1321629487  1297651021  1394307784  -1901206863  212504253  -800869038  -1476451232  -1247284539  -1241386784  132355029  874207214  -1087385693  -641478198  390243822  -891767494  -607343605  -981248148  -352261823  370629550  1856040348  1462335975  176196873  -353442337  -735712488  -207206224  590376357  1550432719  -800065906  1588851429  -297151524  -265921183  1312190744  33678474  -1266033645  1079838963  1864933833  -1676043518  -1734387800  585851299  -494661029  490314937  -405959341  2091428066  -951937546  -1235185275  381483792  1760139322  -331688431  -1436930297  1270324089  -498020020  130972290  62822016  1602277994  -312152961  -1804920628  1924449877  -1155126792  2092652872  1949775602  1560971971  897307662  1838394535  -550368468  1066300599  1496054113  -892888082  866787535  -699300171  -1735589850  722338905  1792231699  1310827240  -55024314  -1057205122  -2067918221  624898619  -899069186  887411309  -1609976098  -307067581  -282842257  -1899511324  489251679  -451835194  211829115  -1211816468  -1525577018  -1887149226  -584240709  -608271256  2118282844  163822680  -729008322  1050215668  1074440992  -542228075  1846534928  905448055  1617368235  145466781  -120037898  1665624106  -192324316  1174023132  -394390064  1946117068  1053286066  1716950375  245048921  -72332957  1725246932  -1266811847  -1290842394  1435711706  -518748458  -1411579460  -747915151  2075150691  1809646012  1900889012  -1091169767  -1066944443  1611353786  -294850507  -1235937380  -1544883713  -1520658389  1157639840  -748564453  -1689651326  -1025987017  1845334696  1531574146  -977731146  1507543599  906705263  -661707933  1678799199  785968197  1449632506  25986923  373309854  681609058  -1812636294  1276034852  -1447459532  531811849  1242834185  1968388235  1507789021  -1120485923  -1763539360  -1021730521  361977889  2001093248  -19805809  -400072116  2047196576  -1713131341  -1853468883  1457932929  -182583067  -1055899877  -1445223084  -768992034  726412727  -872126599  -2094603872  1435768548  1239279226  -1822597865  151542705  -2069407077  -255268972  1200021586  1358907661  2037427751  -1962260923  828191884  984477480  -866068584  468805198  -2125493320  -1480078277  -1662578690  -1910297111  1159153184  -545536324  -167760042  1360348377  1890452943  -1592647492  353236130  2040042388  1491786200  -912533092  533883266  123054366  650905304  1283179144  -639578649  1449189708  367952777  1318833961  -1192993192  242843734  -2002600495  -932720183  1766367625  -439711086  262193443  1277647121  535640102  -687085695  -304542569  -933583921  -62129487  717135742  -1709542701  -927182166  -1186301042  1757081626  1956723748  -1352605989  -1012994391  -1198819318  -524784442  1774670411  -620958092  -495138737  2026713096  -1819487563  497480280  -1942248530  1557923462  1282619239  199573904  -82570828  -1082510731  388396927  899825238  -725895547  -1541799136  -106103723  -2046247412  1838805088  897718215  -1604126211  684707690  48473219  -332211988  1887428495  -568825181  1272956888  2037345023  1739209703  445147952  -976094195  435087841  740607219  -398259618  -610528107  -254638068  -894987537 
+485.ad1.adc1_raw_value 31234 
+31234 
+485.ad1.adc1_phys_value 42599 
+42599 
+485.ad1.adc2_raw_value 760 
+760 
+485.ad1.adc2_phys_value 41976 
+41976 
+485.ad1.adc3_raw_value 55985 
+55985 
+485.ad1.adc3_phys_value 41101 
+41101 
+485.ad1.adc4_raw_value 62220 
+62220 
+485.ad1.adc4_phys_value 43206 
+43206 
+485.ad2.adc1_raw_value 37455 
+37455 
+485.ad2.adc1_phys_value 38721 
+38721 
+485.ad2.adc2_raw_value 60085 
+60085 
+485.ad2.adc2_phys_value 37598 
+37598 
+485.ad2.adc3_raw_value 13052 
+13052 
+485.ad2.adc3_phys_value 37291 
+37291 
+485.ad2.adc4_raw_value 6977 
+6977 
+485.ad2.adc4_phys_value 39392 
+39392 
+485.ad3.adc1_raw_value 14955 
+14955 
+485.ad3.adc1_phys_value 34723 
+34723 
+485.ad3.adc2_raw_value 17041 
+17041 
+485.ad3.adc2_phys_value 33340 
+33340 
+485.ad3.adc3_raw_value 39640 
+39640 
+485.ad3.adc3_phys_value 33097 
+33097 
+485.ad3.adc4_raw_value 45925 
+45925 
+485.ad3.adc4_phys_value 35074 
+35074 
+485.rl.relay1 21767 
+21767 
+485.rl.relay2 25956 
+25956 
+485.rl.relay3 30021 
+30021 
+485.rl.relay4 1442 
+1442 
+485.kb.kbl.led_contrast 16203 
+16203 
+485.kb.kbl.stop_oil_pump 42022 
+42022 
+485.kb.kbl.start_check 25955 
+25955 
+485.kb.kbl.start_oil_pump 32178 
+32178 
+485.kb.kbl.stop_check 36904 
+36904 
+485.kb.kbl.start_reloader 63564 
+63564 
+485.kb.kbl.start_conveyor 29195 
+29195 
+485.kb.kbl.stop_conveyor 43935 
+43935 
+485.kb.kbl.stop_reloader 8664 
+8664 
+485.kb.kbl.start_stars 18967 
+18967 
+485.kb.kbl.start_oil_station 44360 
+44360 
+485.kb.kbl.start_hydratation 17160 
+17160 
+485.kb.kbl.stop_stars 48988 
+48988 
+485.kb.kbl.start_exec_dev 53871 
+53871 
+485.kb.kbl.stop_oil_station 33378 
+33378 
+485.kb.kbl.stop_hydratation 27682 
+27682 
+485.kb.kbl.stop_exec_dev 3067 
+3067 
+485.kb.key.stop_oil_pump 46973 
+46973 
+485.kb.key.start_check 17183 
+17183 
+485.kb.key.start_oil_pump 1248 
+1248 
+485.kb.key.stop_check 25553 
+25553 
+485.kb.key.start_reloader 33054 
+33054 
+485.kb.key.start_conveyor 2905 
+2905 
+485.kb.key.stop_conveyor 47300 
+47300 
+485.kb.key.stop_reloader 12931 
+12931 
+485.kb.key.start_stars 27755 
+27755 
+485.kb.key.start_oil_station 33548 
+33548 
+485.kb.key.start_hydratation 27980 
+27980 
+485.kb.key.stop_stars 19621 
+19621 
+485.kb.key.start_exec_dev 43837 
+43837 
+485.kb.key.stop_oil_station 18964 
+18964 
+485.kb.key.stop_hydratation 42068 
+42068 
+485.kb.key.stop_exec_dev 6304 
+6304 
+485.kb.kei1.mode2 6609 
+6609 
+485.kb.kei1.mode1 10674 
+10674 
+485.kb.kei1.post_conveyor 29854 
+29854 
+485.kb.kei1.control2 52332 
+52332 
+485.kb.kei1.control1 64527 
+64527 
+485.kb.kei1.stop_alarm 56216 
+56216 
+485.kb.kei1.sound_alarm 33731 
+33731 
+485.kb.kei1.conveyor_left 5230 
+5230 
+485.kb.kei1.conveyor_up 20647 
+20647 
+485.kb.kei1.stop_all 61400 
+61400 
+485.kb.kei1.start_all 59530 
+59530 
+485.kb.kei1.power 28166 
+28166 
+485.kb.kei1.conveyor_down 54613 
+54613 
+485.kb.kei1.sourcer_down 801 
+801 
+485.kb.kei1.sourcer_up 53453 
+53453 
+485.kb.kei1.combain_support_down 43838 
+43838 
+485.kb.kei2.combain_support_up 9100 
+9100 
+485.kb.kei2.conveyor_right 7941 
+7941 
+485.kb.kei2.telescope_up 21678 
+21678 
+485.kb.kei2.reserve5 6603 
+6603 
+485.kb.kei2.reserve4 2538 
+2538 
+485.kb.kei2.reserve3 30989 
+30989 
+485.kb.kei2.reserve2 26924 
+26924 
+485.kb.kei2.reserve1 22863 
+22863 
+485.kb.kei2.left_truck_back 60311 
+60311 
+485.kb.kei2.left_truck_forward 33797 
+33797 
+485.kb.kei2.right_truck_back 49050 
+49050 
+485.kb.kei2.right_truck_forward 28759 
+28759 
+485.kb.kei2.acceleration 28884 
+28884 
+485.kb.kei2.exec_dev_left 19980 
+19980 
+485.kb.kei2.exec_dev_down 36663 
+36663 
+485.kb.kei2.exec_dev_right 28407 
+28407 
+485.kb.kei3.exec_dev_up 40979 
+40979 
+485.kb.kei3.reserve_down 8730 
+8730 
+485.kb.kei3.reserve_up 1832 
+1832 
+485.kb.kei3.telescope_down 8348 
+8348 
+485.rsrs.connect 57577 
+57577 
+485.rsrs.rm_u1_on0 8463 
+8463 
+485.rsrs.rm_u1_on1 12590 
+12590 
+485.rsrs.rm_u1_on2 333 
+333 
+485.rsrs.rm_u1_on3 4460 
+4460 
+485.rsrs.rm_u1_on4 24971 
+24971 
+485.rsrs.rm_u1_on5 29098 
+29098 
+485.rsrs.rm_u1_on6 16841 
+16841 
+485.rsrs.rm_u1_on7 20968 
+20968 
+485.rsrs.rm_u1_on8 40967 
+40967 
+485.rsrs.rm_u1_on9 45094 
+45094 
+485.rsrs.rm_u1_on10 15905 
+15905 
+485.rsrs.rm_u1_on11 11776 
+11776 
+485.rsrs.rm_u1_on12 7779 
+7779 
+485.rsrs.rm_u1_on13 3650 
+3650 
+485.rsrs.rm_u1_on14 32421 
+32421 
+485.rsrs.rm_u1_on15 28292 
+28292 
+485.rsrs.rm_u1_test0 33969 
+33969 
+485.rsrs.rm_u1_test1 38032 
+38032 
+485.rsrs.rm_u1_test2 42227 
+42227 
+485.rsrs.rm_u1_test3 46290 
+46290 
+485.rsrs.rm_u1_test4 50229 
+50229 
+485.rsrs.rm_u1_test5 54292 
+54292 
+485.rsrs.rm_u1_test6 58487 
+58487 
+485.rsrs.rm_u1_test7 62550 
+62550 
+485.rsrs.rm_u1_test8 1465 
+1465 
+485.rsrs.rm_u1_test9 5528 
+5528 
+485.rsrs.rm_u1_test10 25966 
+25966 
+485.rsrs.rm_u1_test11 30031 
+30031 
+485.rsrs.rm_u1_test12 17708 
+17708 
+485.rsrs.rm_u1_test13 21773 
+21773 
+485.rsrs.rm_u1_test14 9706 
+9706 
+485.rsrs.rm_u1_test15 13771 
+13771 
+485.rsrs.rm_u2_on0 53213 
+53213 
+485.rsrs.rm_u2_on1 57340 
+57340 
+485.rsrs.rm_u2_on2 61343 
+61343 
+485.rsrs.rm_u2_on3 65470 
+65470 
+485.rsrs.rm_u2_on4 36697 
+36697 
+485.rsrs.rm_u2_on5 40824 
+40824 
+485.rsrs.rm_u2_on6 44827 
+44827 
+485.rsrs.rm_u2_on7 48954 
+48954 
+485.rsrs.rm_u2_on8 20181 
+20181 
+485.rsrs.rm_u2_on9 24308 
+24308 
+485.rsrs.rm_u2_on10 61633 
+61633 
+485.rsrs.rm_u2_on11 57568 
+57568 
+485.rsrs.rm_u2_on12 53379 
+53379 
+485.rsrs.rm_u2_on13 49314 
+49314 
+485.rsrs.rm_u2_on14 45125 
+45125 
+485.rsrs.rm_u2_on15 41060 
+41060 
+485.rsrs.rm_u2_test0 23603 
+23603 
+485.rsrs.rm_u2_test1 19474 
+19474 
+485.rsrs.rm_u2_test2 31857 
+31857 
+485.rsrs.rm_u2_test3 27728 
+27728 
+485.rsrs.rm_u2_test4 7351 
+7351 
+485.rsrs.rm_u2_test5 3222 
+3222 
+485.rsrs.rm_u2_test6 15605 
+15605 
+485.rsrs.rm_u2_test7 11476 
+11476 
+485.rsrs.rm_u2_test8 56635 
+56635 
+485.rsrs.rm_u2_test9 52506 
+52506 
+485.rsrs.rm_u2_test10 44315 
+44315 
+485.rsrs.rm_u2_test11 48442 
+48442 
+485.rsrs.rm_u2_test12 36185 
+36185 
+485.rsrs.rm_u2_test13 40312 
+40312 
+485.rsrs.rm_u2_test14 60831 
+60831 
+485.rsrs.rm_u2_test15 64958 
+64958 
+485.rpdu485.connect 25777 
+25777 
+485.rpdu485.kbl.oil_station_green 20232 
+20232 
+485.rpdu485.kbl.reloader_green 43579 
+43579 
+485.rpdu485.kbl.conveyor_green 36517 
+36517 
+485.rpdu485.kbl.loader_green 41674 
+41674 
+485.rpdu485.kbl.loader_red 13188 
+13188 
+485.rpdu485.kbl.exec_dev_green 65367 
+65367 
+485.rpdu485.kbl.support_green 49681 
+49681 
+485.rpdu485.kbl.sourcer_green 20766 
+20766 
+485.rpdu485.kbl.reserve_green 4996 
+4996 
+485.rpdu485.kbl.reserve_red 30474 
+30474 
+485.rpdu485.kbl.acceleration_green 14364 
+14364 
+485.rpdu485.kbl.acceleration_red 50188 
+50188 
+485.rpdu485.kbl.telescope_green 55771 
+55771 
+485.rpdu485.kbl.alarm_red 9191 
+9191 
+485.rpdu485.kei.oil_station_up 6940 
+6940 
+485.rpdu485.kei.oil_station_down 4819 
+4819 
+485.rpdu485.kei.reloader_up 63664 
+63664 
+485.rpdu485.kei.reloader_down 9044 
+9044 
+485.rpdu485.kei.conveyor_up 36976 
+36976 
+485.rpdu485.kei.conveyor_down 30875 
+30875 
+485.rpdu485.kei.loader_up 14901 
+14901 
+485.rpdu485.kei.loader_down 37455 
+37455 
+485.rpdu485.kei.exec_dev_up 59906 
+59906 
+485.rpdu485.kei.exec_dev_down 49628 
+49628 
+485.rpdu485.kei.support_up 16308 
+16308 
+485.rpdu485.kei.support_down 60435 
+60435 
+485.rpdu485.kei.sourcer_up 58491 
+58491 
+485.rpdu485.kei.sourcer_down 3437 
+3437 
+485.rpdu485.kei.reserve_up 13684 
+13684 
+485.rpdu485.kei.reserve_down 55956 
+55956 
+485.rpdu485.kei.start_all 39376 
+39376 
+485.rpdu485.kei.stop_all 62474 
+62474 
+485.rpdu485.sound_beepl 15674 
+15674 
+485.rpdu485.kei.stop_loader 42223 
+42223 
+485.rpdu485.kei.acceleration_up 39081 
+39081 
+485.rpdu485.kei.acceleration_down 43878 
+43878 
+485.rpdu485.kei.telescope_up 55105 
+55105 
+485.rpdu485.kei.telescope_down 51890 
+51890 
+485.rpdu485.kei.joy_forward 59783 
+59783 
+485.rpdu485.kei.joy_back 25469 
+25469 
+485.rpdu485.kei.joy_left 460 
+460 
+485.rpdu485.kei.joy_right 6108 
+6108 
+485.rpdu485.kei.joy_conv_up 31843 
+31843 
+485.rpdu485.kei.joy_conv_down 3862 
+3862 
+485.rpdu485.kei.joy_conv_left 52781 
+52781 
+485.rpdu485.kei.joy_conv_right 56959 
+56959 
+485.rpdu485.kei.joy_exec_dev_up 8532 
+8532 
+485.rpdu485.kei.joy_exec_dev_down 12609 
+12609 
+485.rpdu485.kei.joy_exec_dev_right 24290 
+24290 
+485.rpdu485.kei.joy_exec_dev_left 61562 
+61562 
+485.rpdu485.kei.crit_stop 59107 
+59107 
+485.rpdu485с.connect 17161 
+17161 
+485.rpdu485с.kbl.oil_station_green 10215 
+10215 
+485.rpdu485с.kbl.reloader_green 10776 
+10776 
+485.rpdu485с.kbl.conveyor_green 3718 
+3718 
+485.rpdu485с.kbl.loader_green 4378 
+4378 
+485.rpdu485с.kbl.loader_red 45784 
+45784 
+485.rpdu485с.kbl.exec_dev_green 32628 
+32628 
+485.rpdu485с.kbl.support_green 34217 
+34217 
+485.rpdu485с.kbl.sourcer_green 5798 
+5798 
+485.rpdu485с.kbl.reserve_green 21564 
+21564 
+485.rpdu485с.kbl.reserve_red 43683 
+43683 
+485.rpdu485с.kbl.acceleration_green 15026 
+15026 
+485.rpdu485с.kbl.acceleration_red 52117 
+52117 
+485.rpdu485с.kbl.telescope_green 27475 
+27475 
+485.rpdu485с.kbl.alarm_red 62141 
+62141 
+485.rpdu485с.kei.oil_station_up 39743 
+39743 
+485.rpdu485с.kei.oil_station_down 7498 
+7498 
+485.rpdu485с.kei.reloader_up 9497 
+9497 
+485.rpdu485с.kei.reloader_down 25836 
+25836 
+485.rpdu485с.kei.conveyor_up 19929 
+19929 
+485.rpdu485с.kei.conveyor_down 16163 
+16163 
+485.rpdu485с.kei.loader_up 60271 
+60271 
+485.rpdu485с.kei.loader_down 20454 
+20454 
+485.rpdu485с.kei.exec_dev_up 14251 
+14251 
+485.rpdu485с.kei.exec_dev_down 34404 
+34404 
+485.rpdu485с.kei.support_up 48872 
+48872 
+485.rpdu485с.kei.support_down 24515 
+24515 
+485.rpdu485с.kei.sourcer_up 25895 
+25895 
+485.rpdu485с.kei.sourcer_down 48829 
+48829 
+485.rpdu485с.kei.reserve_up 46120 
+46120 
+485.rpdu485с.kei.reserve_down 26948 
+26948 
+485.rpdu485с.kei.start_all 18570 
+18570 
+485.rpdu485с.kei.stop_all 61304 
+61304 
+485.rpdu485с.sound_beepl 3079 
+3079 
+485.rpdu485с.kei.stop_loader 31046 
+31046 
+485.rpdu485с.kei.acceleration_up 10785 
+10785 
+485.rpdu485с.kei.acceleration_down 50057 
+50057 
+485.rpdu485с.kei.telescope_up 25745 
+25745 
+485.rpdu485с.kei.telescope_down 19089 
+19089 
+485.rpdu485с.kei.joy_forward 13358 
+13358 
+485.rpdu485с.kei.joy_back 30735 
+30735 
+485.rpdu485с.kei.joy_left 6846 
+6846 
+485.rpdu485с.kei.joy_right 50822 
+50822 
+485.rpdu485с.kei.joy_conv_up 41418 
+41418 
+485.rpdu485с.kei.joy_conv_down 18606 
+18606 
+485.rpdu485с.kei.joy_conv_left 35221 
+35221 
+485.rpdu485с.kei.joy_conv_right 24156 
+24156 
+485.rpdu485с.kei.joy_exec_dev_up 37852 
+37852 
+485.rpdu485с.kei.joy_exec_dev_down 22958 
+22958 
+485.rpdu485с.kei.joy_exec_dev_right 23628 
+23628 
+485.rpdu485с.kei.joy_exec_dev_left 39061 
+39061 
+485.rpdu485с.kei.crit_stop 14265 
+14265 
+485.rsrs2.state_sound1 36088 
+36088 
+485.rsrs2.state_sound2 48283 
+48283 
+485.rsrs2.state_sound1_on 12496 
+12496 
+485.rsrs2.state_sound1_vol 42426 
+42426 
+485.rsrs2.state_sound1_led 20443 
+20443 
+485.rsrs2.state_sound1_rl 26045 
+26045 
+485.rsrs2.state_sound2_on 43788 
+43788 
+485.rsrs2.state_sound2_vol 19304 
+19304 
+485.rsrs2.state_sound2_led 41225 
+41225 
+485.rsrs2.state_sound2_rl 65121 
+65121 
+485.prog.alarm_gribok 28103 
+28103 
+485.pukonv485c.kei.stop_alarm 35942 
+35942 
+485.pukonv485c.kei.stop_alarm_all 21794 
+21794 
+485.pukonv485c.kei.stop_loader 45098 
+45098 
+485.pukonv485c.kei.beep 18030 
+18030 
+485.pukonv485c.kei.joy_left_conv 9074 
+9074 
+485.pukonv485c.kei.joy_down_conv 34925 
+34925 
+485.pukonv485c.kei.joy_up_conv 23240 
+23240 
+485.pukonv485c.kei.joy_right_conv 49494 
+49494 
+wago.oc_mdi0.oc_w_k0 47426 
+47426 
+wago.oc_mdi1.oc_w_k1 16960 
+16960 
+wago.oc_mdi1.oc_w_k2 29219 
+29219 
+wago.oc_mdi1.oc_w_k3 25090 
+25090 
+wago.oc_mdi1.oc_w_k4 4837 
+4837 
+wago.oc_mdi1.oc_w_k5 708 
+708 
+wago.oc_mdi1.oc_w_k6 12967 
+12967 
+wago.oc_mdi1.oc_w_qf1 7550 
+7550 
+wago.oc_mdo2.bki_w_m1 50120 
+50120 
+wago.oc_mdo2.bki_w_m2 62379 
+62379 
+wago.oc_mdo2.bki_w_m3_m4 29804 
+29804 
+wago.oc_mdo2.bki_w_m5 33612 
+33612 
+wago.oc_mdo2.bki_w_m6 45871 
+45871 
+wago.oc_mdo2.bki_w_m7 41742 
+41742 
+wago.oc_mdo1.ka1_1 1852 
+1852 
+wago.oc_mdo1.ka2_1 24172 
+24172 
+wago.oc_mdo1.ka3_1 26972 
+26972 
+wago.oc_mdo1.ka4_1 60620 
+60620 
+wago.oc_mdo1.ka5_1 56316 
+56316 
+wago.oc_mdo1.ka6_1 33452 
+33452 
+wago.oc_mdo1.ka7_1 46492 
+46492 
+wago.oc_mdo1.ka8_1 39341 
+39341 
+wago.oc_mui1.phase_a 10611 
+10611 
+wago.oc_mui1.phase_b 6416 
+6416 
+wago.oc_mui1.phase_c 2353 
+2353 
+wago.oc_mui2.current_m1a 64810 
+64810 
+wago.oc_mui2.current_m1b 52553 
+52553 
+wago.oc_mui2.current_m1c 56680 
+56680 
+wago.oc_mui3.current_m2a 60698 
+60698 
+wago.oc_mui3.current_m2b 56697 
+56697 
+wago.oc_mui3.current_m2c 52568 
+52568 
+wago.oc_mui4.current_m3a 5155 
+5155 
+wago.oc_mui4.current_m3b 9280 
+9280 
+wago.oc_mui4.current_m3c 13409 
+13409 
+wago.oc_mui5.current_m4a 51415 
+51415 
+wago.oc_mui5.current_m4b 63668 
+63668 
+wago.oc_mui5.current_m4c 59541 
+59541 
+wago.oc_mui6.current_m5a 13379 
+13379 
+wago.oc_mui6.current_m5b 1056 
+1056 
+wago.oc_mui6.current_m5c 5121 
+5121 
+wago.oc_mui7.current_m6a 9331 
+9331 
+wago.oc_mui7.current_m6b 5136 
+5136 
+wago.oc_mui7.current_m6c 1073 
+1073 
+wago.oc_mui8.current_m7a 54800 
+54800 
+wago.oc_mui8.current_m7b 58995 
+58995 
+wago.oc_mui8.current_m7c 63058 
+63058 
+wago.oc_mdi2.ts_m1 11140 
+11140 
+wago.oc_mdi2.ts_m2 7143 
+7143 
+wago.oc_mdi2.ts_m3 3014 
+3014 
+wago.oc_mdi2.ts_m4 31521 
+31521 
+wago.oc_mdi2.ts_m5 27392 
+27392 
+wago.oc_mdi2.ts_m6 23395 
+23395 
+wago.oc_mdi2.ts_m7 19266 
+19266 
+

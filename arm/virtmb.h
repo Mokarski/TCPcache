@@ -1,8 +1,8 @@
 #ifndef _VIRTMB_H
 #define _VIRTMB_H
 
-#define VirtDev 13      //numbers of virtual modbus devices
-#define VirtDevRegs 10  //number of virtual mb registers
+#define VirtDev 66      //numbers of virtual modbus devices
+#define VirtDevRegs 40  //number of virtual mb registers
 //   for cache read all devices registers //
 
 struct Mb_Device {
@@ -17,8 +17,7 @@ struct Mb_Device {
  int  Wr;
  int  Off;               //Signal not used if OFF = 1;
  int EventTrigger;          //signal has trigger state
- int For_Remove;        // mar for remove from tasks
-       
+ int For_Remove;        // mar for remove from tasks       
        } Mb_Device_Cache;
 
 struct Mb_Device Device_Array [VirtDev]; //number of virtual devices

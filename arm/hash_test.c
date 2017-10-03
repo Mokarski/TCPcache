@@ -3,17 +3,7 @@
 #include <stdlib.h>
 
 
-
-
-
-
-
-
-
-
-
-static const unsigned char sTable[256] =
-{
+static const unsigned char sTable[256] ={
   0xa3,0xd7,0x09,0x83,0xf8,0x48,0xf6,0xf4,0xb3,0x21,0x15,0x78,0x99,0xb1,0xaf,0xf9,
   0xe7,0x2d,0x4d,0x8a,0xce,0x4c,0xca,0x2e,0x52,0x95,0xd9,0x1e,0x4e,0x38,0x44,0x28,
   0x0a,0xdf,0x02,0xa0,0x17,0xf1,0x60,0x68,0x12,0xb7,0x7a,0xc3,0xe9,0xfa,0x3d,0x53,
@@ -55,6 +45,19 @@ unsigned int  Str2Hash (unsigned char *str, unsigned int len)
   }
 
 
+unsigned int SimpleHash (unsigned char *str, unsigned int len)
+{
+  unsigned int seed = 131313; 
+  unsigned int hash = 0;
+  unsigned int i = 0;
+       
+         for (i = 0; i < len; str++, i++)
+             {
+                   hash = (hash * seed) + *str + i;
+             }
+ return hash;
+}
+
 
 /*
 typedef unsigned int HashIndexType;
@@ -73,7 +76,8 @@ typedef unsigned short int HashIndexType;
       static const int S = 6;
       return (HashIndexType)(K * Key) >> S;
       }
-    unsigned int xor_tbl[256] = { 0, 94, 188, 226, 97, 63, 221, 131, 194, 156, 126, 32, 163, 253, 31, 65,
+      
+unsigned int xor_tbl[256] = { 0, 94, 188, 226, 97, 63, 221, 131, 194, 156, 126, 32, 163, 253, 31, 65,
                                   157, 195, 33, 127, 252, 162, 64, 30, 95, 1, 227, 189, 62, 96, 130, 220,
                                   35, 125, 159, 193, 66, 28, 254, 160, 225, 191, 93, 3, 128, 222, 60, 98,
                                   190, 224, 2, 92, 223, 129, 99, 61, 124, 34, 192, 158, 29, 67, 161, 255,
@@ -93,43 +97,131 @@ typedef unsigned short int HashIndexType;
               
 int Hash_id(char *test){
 int i=0;
-unsigned int unic[25] = {331,12,223,554,225,886,227,558,339,2210,1111,2212,18,1344,15,146,7,2218,419,240,2921,4422,23,1350,5}; 
 int size = strlen(test);
 //printf ("SIZE [%i]\n\r",size);
 int symbol=0;
 int sum=0xffff;
 int sum2=0;
-int hash=0;
+unsigned int hash=0;
 int cnt=0;
-int CORRECTOR=256;
-  // printf ("\n\r ------- \n\r");
-for (i=0; i < size+1; i++){
+
+for (i=0; i < size+1; i++)
+    {
      symbol = ((int)test[i]); //get ascii code of cyrrent symbol
-     if (( symbol > 0 ) && (symbol < 256)){
-         sum=sum+xor_tbl[symbol]; // replace ascii_code from table crc codes
-         }
-     if  (cnt > 1){
+     if (( symbol > 0 ) && (symbol < 256))
+         {
+           sum=sum+xor_tbl[symbol]; // replace ascii_code from table crc codes
+          }
+          
+     if  (cnt > 1)
+         {
           cnt=0;
-          sum=sum^xor_tbl[symbol]; // replace ascii_code from table crc codes
+          //sum=sum^xor_tbl[symbol]; // replace ascii_code from table crc codes
+          sum=sum+sTable[symbol]; // replace ascii_code from table crc codes
          }
      cnt++;
     }
 
    hash=sum;
-   
-   printf (" %i \n\r",hash); //hash result
-  // printf ("\n\r ------- \n\r");
-  // printf ("Str: [%s] \n\r",test);
 return hash;
 }
 
+//////////////////
+
+/*
+  Name  : CRC-16 CCITT
+    Poly  : 0x1021    x^16 + x^12 + x^5 + 1
+      Init  : 0xFFFF
+        Revert: false
+          XorOut: 0x0000
+            Check : 0x29B1 ("123456789")
+              MaxLen: 4095 байт (32767 бит) - обнаружение
+                  одинарных, двойных, тройных и всех нечетных ошибок
+                  */
+unsigned short Crc16(unsigned char *pcBlock, unsigned short len)
+      {
+          unsigned short crc = 0xFFFF;
+          unsigned char i;
+                          
+          while (len--)
+                {
+                  crc ^= *pcBlock++ << 8;
+                                          
+                  for (i = 0; i < 8; i++)
+                      crc = crc & 0x8000 ? (crc << 1) ^ 0x1021 : crc << 1;
+                }
+  return crc;
+}
+
+///////////////////
+
+/*
+
+int Hash_id2(char *test){
+int i=0;
+int size = strlen(test);
+int symbol=0;
+int sum=0;
+unsigned int hash=0;
+int cnt=0; //symbol counter
+char *buf;
+for (i=0; i < size+1; i++)
+    {
+     symbol = ((int)test[i]); //get ascii code of cyrrent symbol
+     if (( symbol > 0 ) && (symbol < 256)) //filter of code symbols
+         {
+          if ( cnt < 10 )
+           sum=sum+xor_tbl[symbol]; // replace ascii_code from table crc8 codes
+           if  ( cnt > 10 )  buf=buf+test[i];
+          }    
+     cnt++;
+    }
+   
+   hash=sum;
+   sum = Crc16(buf,strlen(buf));
+   hash=hash+sum;
+return hash;
+}
+*/
+
+
+
+
+/*
+#define MULTIPLER 31
+unsigned int hash1char (char *str, int len){
+unsigned h;
+int n =0;
+for (n=0; n < len; n++){
+  h = MULTIPLER * h + (unsigned char)str[n]; // приводят к беззнаковому, чтобы итоговое число было положительное 
+  }
+  h = h % len;
+return h;
+}
+*/
+
+int scrambler (char str[45], char result[45]){
+
+int len = strlen(str);
+int i=0;
+int cnt=0;
+    if ( len > 45 ) return -1;
+    
+    for (i=0; i < len; i++){
+         result[i]=str[i];
+         if ( cnt > 1 ) result[i]=str[i-1];
+         cnt++;
+        }
+
+return 0;
+}
 
 int main ()
 {
  char test22[60]="Test";
  char *istr;
  char sep[2] =",";
-
+ unsigned int res,res2;
  FILE * ptrFile = fopen("signals.cfg" , "r");
  char mystring [100];
      
@@ -139,13 +231,23 @@ int main ()
               while ( fgets(mystring, 100, ptrFile) != NULL ) {// считать символы из файла
                      //puts(mystring);  // вывод на экран
                        istr = strtok(mystring,sep);
-                     if (istr != NULL){
-                         //puts(istr);
-                         //Hash_id(istr);
-                         int res;
-                         res = Str2Hash(istr,strlen(istr));
-                         printf (" %i ",res);
-                         //Hash_id(istr);
+                     if (istr != NULL){                         
+                         // res2 = Hash_id2(istr);
+                         //char str[55];
+                         //scrambler (istr,str);
+                         //printf ("%s %s \n\r",istr,str);
+                         
+                         
+                         res = Crc16(istr,strlen(istr));
+                         //res = Crc16(str,strlen(str));
+                         
+                         //res = Str2Hash(istr,strlen(istr));
+                         //res2 = SimpleHash(istr,strlen(istr));
+                         //res2 = hash1char (istr,strlen(istr));
+                         
+                         
+                         printf ("%s %i \n\r",istr,res);
+                         printf ("%i \n\r",res);
                       }
                }
                fclose (ptrFile);
