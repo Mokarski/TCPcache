@@ -1,7 +1,7 @@
 #ifndef _VIRTMB_H
 #define _VIRTMB_H
 
-#define VirtDev 66      //numbers of virtual modbus devices
+#define VirtDev 256      //numbers of virtual modbus devices
 #define VirtDevRegs 40  //number of virtual mb registers
 //   for cache read all devices registers //
 

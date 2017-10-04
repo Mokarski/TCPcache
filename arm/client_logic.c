@@ -16,6 +16,24 @@
 #include "hash.h"
 #define  DEBUG 1
 
+
+
+int sTrigger_Ex (int Signal_Array_id, char *SearchedName, int wait_ExState ){
+    if ( strstr(Signal_Array[Signal_Array_id].Name,SearchedName) != NULL)
+       {
+        if (Signal_Array[Signal_Array_id].ExState == wait_ExState) return 1;        
+       }
+return 0;
+}
+
+int sTrigger_Val (int Signal_Array_id, char *SearchedName, int wait_Val ){
+    if ( strstr(Signal_Array[Signal_Array_id].Name,SearchedName) != NULL)
+       {
+        if (Signal_Array[Signal_Array_id].Value[1] == wait_Val) return 1;        
+       }
+return 0;
+}
+
 //char SignalHash[MAX_Signals][MAX_Signals]; //array for store index of Signals
 
 int Set_Signal_Param (int Signal_Array_id, char *SearchedName, int Ex ,int val){
@@ -53,6 +71,38 @@ int FillHash(void){ //fill the id of signals in cyrrent signals list;
 return 0;
 }
 
+int mode1, mode2, control1,control2,alarm_stop1,alarm_stop2,alarm_stop3;
+int get_state(){
+int state=0;
+      int x = 0;
+      for (x = 0; x < MAX_Signals; x++)
+        {
+         if (strstr (Signal_Array[x].Name,"485.kb.kei1.mode1")!=NULL) mode1 = Signal_Array[x].Value[1];
+         if (strstr (Signal_Array[x].Name,"485.kb.kei1.mode2")!=NULL) mode2 = Signal_Array[x].Value[1];
+         if (strstr (Signal_Array[x].Name,"485.kb.kei1.control1")!=NULL) control1 = Signal_Array[x].Value[1];
+         if (strstr (Signal_Array[x].Name,"485.kb.kei1.control2")!=NULL) control2 = Signal_Array[x].Value[1];
+         if (strstr (Signal_Array[x].Name,"485.kb.kei1.stop_alarm")!=NULL) alarm_stop1 = Signal_Array[x].Value[1]; //gribok stop
+         if (strstr (Signal_Array[x].Name,"485.rpdu485.kei.crit_stop")!=NULL) alarm_stop2 = Signal_Array[x].Value[1]; //gribok stop
+         if (strstr (Signal_Array[x].Name,"485.pukonv485c.kei.stop_alarm")!=NULL) alarm_stop3 = Signal_Array[x].Value[1]; //gribok stop
+        }
+        
+        state=mode1+ mode2+ control1+control2+alarm_stop1+alarm_stop2+alarm_stop3; //state as sum of signals value
+        //printf (">>>>>>>>>>>>>>>>>>>>>> MODE STATE %i | mode1 %i, mode2 %i, control1 %i,control2 %i,alarm_stop1 %i,alarm_stop2 %i,alarm_stop3 %i   \n\r",state, mode1, mode2, control1,control2,alarm_stop1,alarm_stop2,alarm_stop3);
+        if ((mode1 + mode2 + control1 + control2)> 0 ) {
+            state = 3;  //work
+            printf(" *MODE 3 | ");
+           }
+           
+        if ( ( alarm_stop1 + alarm_stop2 + alarm_stop3) > 0) {
+             state = 4; //ALARM stop
+             printf(" *GRIBOK STOP!!!| ");
+             }
+             
+        printf (">>>>>>>>>>>>>>>>>>>>>> MODE STATE %i | mode1 %i, mode2 %i, control1 %i,control2 %i,alarm_stop1 %i,alarm_stop2 %i,alarm_stop3 %i   \n\r",state, mode1, mode2, control1,control2,alarm_stop1,alarm_stop2,alarm_stop3);
+return state;
+}
+
+
 int main(int argc , char *argv[])
 {
 
@@ -87,6 +137,9 @@ int delay = 0; //1 cycle 1 ms
 int tcpresult=0;
 char tst[MAX_MESS];
 char packed_txt_string[MAX_MESS];
+int STATE=0;
+
+
 while (1){
 	    printf("THIS IS LoGiC \n\r");
 
@@ -156,28 +209,69 @@ while (1){
                  
 		      printf(" ==>   SPEEDTEST Deserial signals signals: [ %ld ] ms. \n\r", speedtest_stop());     
 
-         	        printf("=================== ==>  Calculate all HASH TIME START ============================= \n\r", speedtest_stop());         
+                printf("=================== ==>  START SWITCH ============================= \n\r", speedtest_stop());         
 	        speedtest_start(); //time start
 	        //FillHash(); //fill the array of hash
+	        STATE = get_state();
 	        for (z=0; z < MAX_Signals; z++) {
-	             //Set_Signal_Param (int Signal_Array_id, char *SearchedName, int Ex ,int val)
-	               if ( strstr(Signal_Array[z].Name,"wago.") != NULL ) Set_Signal_Param (z, "wago.", 1 ,0);
-	               if ( strstr(Signal_Array[z].Name,"485.") != NULL ) Set_Signal_Param (z, "485.", 1 ,0);
-
-	               if ( strstr(Signal_Array[z].Name,"wago.oc_mdo") != NULL ) Set_Signal_Param (z, "wago.oc_mdo", 2 ,1);
+	        
+                     switch (STATE){
+	                      case 0:  //INIT
+	                               if ( strstr(Signal_Array[z].Name,".") != NULL ) Set_Signal_Param (z, ".", 1 ,0);	                      
+	                               STATE = get_state();
+	                      break;         
+	                                  
+	                      case 1:  //INIT
+	                               if ( strstr(Signal_Array[z].Name,".") != NULL ) Set_Signal_Param (z, ".", 1 ,0);	                      
+	                               STATE = get_state();
+	                      break;
 	               
-	               /*
-	               if ( strstr(Signal_Array[z].Name,"wago.oc_mdo") != NULL ){ 
-	                  if (Signal_Array[z].ExState == 0) Set_Signal_Param (z, "wago.oc_mdo", 2 ,1);	               
-	                  }
-	                   
-	               if ( strstr(Signal_Array[z].Name,"wago.oc_mdo") != NULL ){ 
-	                  if (Signal_Array[z].ExState == 3) Set_Signal_Param (z, "wago.oc_mdo", 2 ,0);	               
-	                  }
-	                 */
-	                  
+	               
+	                      case 2:  //RESET 
+	                               if ( strstr(Signal_Array[z].Name,".") != NULL ) Set_Signal_Param (z, ".", 1 ,0);	                      
+	                               STATE = get_state();
+	                      break;	               
+
+
+	                      case 3:  //WORK
+	                               if ( strstr(Signal_Array[z].Name,"485.rl.relay1") != NULL ) Set_Signal_Param (z, "485.rl.relay1", 2 ,1);	                      
+	                               if ( strstr(Signal_Array[z].Name,"485.rsrs.rm_u1_on") != NULL ) Set_Signal_Param (z, "485.rsrs.rm_u1_on", 2 ,1);	                      
+	                               if ( strstr(Signal_Array[z].Name,"485.rsrs.rm_u2_on") != NULL ) Set_Signal_Param (z, "485.rsrs.rm_u2_on", 2 ,1);	                      
+	                               if ( strstr(Signal_Array[z].Name,"wago.oc_mdo") != NULL ) Set_Signal_Param (z, "wago.oc_mdo", 2 ,1);	                      //start wago	                               
+	                               STATE = get_state();
+	                              // if (sTrigger_Ex (z, "wago.", 0 ))  Set_Signal_Param (z, "wago.", 1 ,0);
+	                              // if ( strstr(Signal_Array[z].Name,"wago.") != NULL ) Set_Signal_Param (z, "wago.", 1 ,0);
+	                              // if ( strstr(Signal_Array[z].Name,"485.") != NULL ) Set_Signal_Param (z, "485.", 1 ,0);
+	                              // if ( strstr(Signal_Array[z].Name,"wago.oc_mdo") != NULL ) Set_Signal_Param (z, "wago.oc_mdo", 2 ,1);
+	                      break;
+
+
+	                      case 4:  //STOP 
+	                               if (sTrigger_Ex (z, "wago.", 0 ))  Set_Signal_Param (z, "wago.", 1 ,0);
+	                               if ( strstr(Signal_Array[z].Name,"485.rl.relay") != NULL ) Set_Signal_Param (z, "485.rl.relay", 2 ,0);	                      //stop rele
+	                               if ( strstr(Signal_Array[z].Name,"485.rsrs.rm_u1_on") != NULL ) Set_Signal_Param (z, "485.rsrs.rm_u1_on", 2 ,0);	              //stop rm1
+	                               if ( strstr(Signal_Array[z].Name,"485.rsrs.rm_u2_on") != NULL ) Set_Signal_Param (z, "485.rsrs.rm_u2_on", 2 ,0);	              //stop rm2
+	                               if ( strstr(Signal_Array[z].Name,"wago.oc_mdo") != NULL ) Set_Signal_Param (z, "wago.oc_mdo", 2 ,0);	                      //stop wago
+	                               STATE = get_state();
+	                      break;
+
+                              case 5:  //TEST
+	                               if (sTrigger_Ex (z, "wago.", 0 ))  Set_Signal_Param (z, "wago.", 1 ,0);
+	                               STATE = get_state();
+	                      break;
+
+                              case 6:  //ERROR 
+	                               if (sTrigger_Ex (z, "wago.", 0 ))  Set_Signal_Param (z, "wago.", 1 ,0);
+	                               STATE = get_state();
+	                      break;
+	               
+	                      default:  //DEFAULT
+	                                printf("default state \n\r");  
+	                                //STATE = get_state();
+	             }
+	             
 	                if (DEBUG == 1)  printf (" <<-- TO SRV  [#%i]  Name:[%s]   Val:[%i]     Ex[%i] \n\r",z,Signal_Array[z].Name,Signal_Array[z].Value[1],Signal_Array[z].ExState);	                    	                
-	              }
+	        }
 	            
 	        printf("=================== ==>  Calculate all HASH TIME: [ %ld ] ms. \n\r", speedtest_stop());         
          //break; //debug

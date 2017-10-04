@@ -10,7 +10,7 @@ uint16_t wr_reg[32];
 int rc;
 int i;
     
-mb = modbus_new_tcp("192.168.1.111", 502);
+mb = modbus_new_tcp("192.168.1.150", 502);
 
         if (modbus_connect(mb) == -1) {
             fprintf(stderr, "Connection failed: %s\n", modbus_strerror(errno));
@@ -31,10 +31,12 @@ int i=0;
 for (i = 0; i < 32; i++){
      printf("reg_%i[%i] \n\r",i,tab_reg[i]);
 }
-*/        
+*/       
+        /* 
         socket_init();
         tcpsignal_read(".");
         socket_close();
+        */
         printf("Wago Server Module");
         rc = modbus_read_registers(mb, 0, 32, tab_reg);
         if (rc == -1) {
@@ -51,7 +53,7 @@ for (i = 0; i < 32; i++){
 // 1 - voltage
 
     wr_reg[0] = 0x3f;
-    rc = modbus_write_registers(mb, 518, 1, wr_reg);
+    rc = modbus_write_registers(mb, 36, 65000, wr_reg);
         if (rc == -1) {
             fprintf(stderr, "mb_wr: %s\n", modbus_strerror(errno));
             return -1;

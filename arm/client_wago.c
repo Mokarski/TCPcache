@@ -17,8 +17,7 @@
 
 
 
-int
-virt_mb_ReadtoCache (int dIndex, int reg_count)
+int virt_mb_ReadtoCache (int dIndex, int reg_count)
 {				//read from real devices to cache by virtual devices Index and regcount
   int connected;
   modbus_t *ctx;
@@ -57,19 +56,19 @@ virt_mb_ReadtoCache (int dIndex, int reg_count)
   int ID;
   ID = Device_Array[dIndex].MB_Id;
   printf ("ID from virtdev list %i \n\r", ID);
-  modbus_set_slave (ctx, ID);
+  modbus_set_slave (ctx, 1);
   connected = modbus_connect (ctx);
 
   if (connected == -1)
     {
-     printf ("Connection failed %i\n", ID);
+     printf ("READ WAGO Connection failed %i\n", ID);
      ret=4; 
      return ret;
          
     }
     
   if (connected == 0){
-    printf ("connected %i\n", ID);
+    printf ("WAGO connected %i\n", ID);
     ret=0;
     }
   int cn = 0;
@@ -107,8 +106,7 @@ virt_mb_ReadtoCache (int dIndex, int reg_count)
 }
 
 
-int
-virt_mb_CachetoDev (int dIndex, int reg_count)
+int virt_mb_CachetoDev (int dIndex, int reg_count)
 {				//read from VIRTUAL devices to REAL devices 
   int connected;
   modbus_t *ctx;
@@ -126,12 +124,12 @@ virt_mb_CachetoDev (int dIndex, int reg_count)
       return 4;
       ret =4;
     }
-  struct timeval old_response_timeout;
-  struct timeval response_timeout;
-  struct timeval byte_timeout;
+//  struct timeval old_response_timeout;
+//  struct timeval response_timeout;
+//  struct timeval byte_timeout;
 
   /* Save original timeout */
-  modbus_get_response_timeout (ctx, &old_response_timeout);
+ // modbus_get_response_timeout (ctx, &old_response_timeout);
 
   /* Define a new and too short timeout! */
   /* response_timeout.tv_sec = 1;
@@ -147,7 +145,7 @@ virt_mb_CachetoDev (int dIndex, int reg_count)
   int ID;
   ID = Device_Array[dIndex].MB_Id;
   printf ("WR ID[%i] from virtdev list, regs to write [%i] \n\r", ID, reg_count);
-//  modbus_set_slave (ctx, ID);
+  modbus_set_slave (ctx, 1); //more then 1 - error bug in libModbus
   connected = modbus_connect (ctx);
 
   if (connected == -1){
@@ -163,20 +161,22 @@ virt_mb_CachetoDev (int dIndex, int reg_count)
   int cn = 0;
 
   int n;
+  /*
   for (n=0; n < reg_count; n++ ){ //copy virt dev registers to tab_reg
       //tab_reg[n] = Device_Array[dIndex].WR_MB_Registers[n] | Device_Array[dIndex].MB_Registers[n];
       tab_reg[n] = Device_Array[dIndex].WR_MB_Registers[n];
       printf (">>>>>>>>>>>>>>>>>>>>>>>   WR----REG[%i] = %i \n\r",n,Device_Array[dIndex].WR_MB_Registers[n]);
       //printf("=========================>>>> WRite REGS[%i] = %i Read REG=%i Or REG= %i \n\r ",n,Device_Array[dIndex].WR_MB_Registers[n],Device_Array[dIndex].MB_Registers[n], Device_Array[dIndex].WR_MB_Registers[n]|Device_Array[dIndex].MB_Registers[n]);
   }
+  */
   
   n=0;
   for (n=0; n < VirtDevRegs; n++ ){
             
        if ( Device_Array[dIndex].WR_MB_reg_counter[n] == 1 ){
            uint16_t tab_reg2[1];
-           tab_reg2[0] = Device_Array[dIndex].WR_MB_Registers[n];
-           printf (">>>>>>>>>> tabreg2[0]=%i \n\r",tab_reg2[0]);
+           tab_reg2[0] = Device_Array[dIndex].WR_MB_Registers[n]; //dIndex - incoming index of used device in DEVICE_ARRAY
+           printf (">>>>>>>>>> intValue tabreg2[0]=%i Number_reg=%i \n\r",tab_reg2[0],n);
            rc = modbus_write_registers (ctx, n, 1, tab_reg2); //write in device by register
            }
       }
@@ -446,12 +446,12 @@ if (DEBUG == 1)   printf ("MAX_Signals [%i] \n", MAX_Signals);
 	      if (Device_Array[c].Rd == 1){ // separate write and read registers!!! 
 	          Device_Array[c].Rd =0;
 	          Device_Array[c].ExState = virt_mb_ReadtoCache (c, total_dev_regs );	// read from real devices to virtual and Write ExState to virtual device/ if ExState = 4 or -1 ->  error connection	      
-	          if ( DEBUG == 1 ) printf ("READ FROM DEVICE ID[%i] Total_REGS[%i] \n\r",Device_Array[c].MB_Id,total_dev_regs); // if signals empty 
+	          if ( DEBUG == 1 ) printf (">>>>TCP READ FROM DEVICE ID[%i] Total_REGS[%i] \n\r",Device_Array[c].MB_Id,total_dev_regs); // if signals empty 
 	          }
 
               if (Device_Array[c].Wr == 2){ // separate write and read registers!!!
                   if ( DEBUG == 1 ) printf(" ====================================================------>>> Have signal to write! \n\r");
-                  if ( DEBUG == 1 ) printf (">>>> WRITE TO  DEVICE ID[%i] Total_REGS[%i] \n\r",Device_Array[c].MB_Id,total_dev_regs); // if signals empty 
+                  if ( DEBUG == 1 ) printf (">>>>TCP WRITE TO  DEVICE ID[%i] Total_REGS[%i] \n\r",Device_Array[c].MB_Id,total_dev_regs); // if signals empty 
                   Device_Array[c].ExState = virt_mb_CachetoDev (c, total_dev_regs);	// Write to Modbus real devices
                   Device_Array[c].Wr = 0;
                  }
