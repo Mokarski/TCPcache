@@ -388,7 +388,11 @@ int frame_unpack (char *srvr_reply, char *data){ // copy serialized signals into
     istr = strtok (srvr_reply,sep); //extract HEADER and DATA by "#"
     if (istr != NULL) { //HEADER
         printf("Header^{%s}\n\r",istr);
-        strcpy(header,istr);
+        if ( strlen(istr)<100 ){ 
+            strcpy(header,istr);
+            
+           }else {printf ("ERR HEADER TOO BIG[%i] \n\r",strlen(istr));}
+           
         } else {  printf ("ERR data_extract: Header - NULL! \n\r");
                   return -1;
                }
@@ -397,6 +401,7 @@ int frame_unpack (char *srvr_reply, char *data){ // copy serialized signals into
     if (istr != NULL) { //DATA
         //printf("PACKET^{%s}\n\r",istr); //debug
         strcpy (data,istr);
+         printf ("data_: {%s} \n\r",data);
         } else { printf ("ERR data_extract: PACKET FROM FARME  - NULL! \n\r");
                  return -1;
                }
@@ -420,9 +425,9 @@ int frame_unpack (char *srvr_reply, char *data){ // copy serialized signals into
                
     istr = strtok (NULL,sep2);    
         if (istr != NULL) { //extrcat lenght 
-        printf("Len^{%s}\n\r",istr);
+        //printf("Len^{%s}\n\r",istr);
         strcpy(c_len,istr);
-        printf("c_len {%s}\n\r",c_len);
+        //printf("c_len {%s}\n\r",c_len);
         } else {  printf ("ERR data_extract: Header2 - NULL! \n\r");
                   return -1;
                }
@@ -432,7 +437,7 @@ int frame_unpack (char *srvr_reply, char *data){ // copy serialized signals into
          //printf ("[r1-%i] [r2-%i]\n\r",r1,r2);
          
          if ( r1 != r2 ){
-             printf("ERR Recived bytes != calculated | [%i != %i] \n\r",r1,r2);
+             printf("ERR Recived bytes len[%i] != calculated bytes len[%i]  \n\r",r1,r2);
              return -2; //if data length != calculated data lenght
              }
      

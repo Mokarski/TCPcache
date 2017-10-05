@@ -8,7 +8,7 @@
 #include <stdlib.h>
 #include "/home/opc/Kombain/test/include/modbus/modbus.h"
 
-#define DEBUG 1 // may be set to 1,2,3,4
+#define DEBUG 3 // may be set to 1,2,3,4
 #include "network.h"
 #include "signals.h"
 #include "virtmb.h"
@@ -319,7 +319,7 @@ if (DEBUG == 1)   printf ("MAX_Signals [%i] \n", MAX_Signals);
       strcpy (message, "");
       frame_pack ("rd", "485.", message);
       tcpresult = frame_tcpreq (message);
-      printf ("Status of TCP SEND: [%i]\n\r", tcpresult);
+      if (DEBUG == 3) printf ("Status of TCP SEND Read request: [%i][%s]\n\r", tcpresult,message);
       if (tcpresult > 1)
 	{
 	  frame_unpack (signal_parser_buf, tst);
@@ -359,8 +359,8 @@ if (DEBUG == 1)   printf ("MAX_Signals [%i] \n", MAX_Signals);
 	        if ( DEBUG == 1 ) printf ("[%i]From_SRV  -->> Name:[%s] Value:[%i] ExState:[%i]\n\r ", z,Signal_Array[z].Name, Signal_Array[z].Value[1], Signal_Array[z].ExState);
 	       }
 	       
-	  if ( Signal_Array[z].ExState > 0 ) {
-	                TCP_SEND = 1; //flag to SRV send 
+	  if ( Signal_Array[z].ExState > 0 ) { //flag to SRV send 
+	                TCP_SEND = 1;          //flag to SRV send 
 	           }
 	           
 	  if ( Signal_Array[z].ExState == 0 ) {	           //debug
@@ -475,7 +475,7 @@ if (DEBUG == 1)   printf ("MAX_Signals [%i] \n", MAX_Signals);
       speedtest_start ();	//time start     
       int x = 0;
 //     socket_init();     
-
+      int ready_to_send_tcp=0;
 
       strcpy (message, "");	//erase buffer     
       char tmpz[150];
@@ -490,11 +490,11 @@ if (DEBUG == 1)   printf ("MAX_Signals [%i] \n", MAX_Signals);
 	if  (Signal_Array[x].Value[1] > 0) 
 	         if ( DEBUG == 4 )  printf ("[%i]TO_SRV  <<-- Name:[%s] Value:[%i] ExState:[%i]\n\r ", x,Signal_Array[x].Name, Signal_Array[x].Value[1], Signal_Array[x].ExState);
 	         
-	  if (strlen (Signal_Array[x].Name) > 1)
-	    {			//write if Name not empty
- //          socket_init();
+	  if (strlen (Signal_Array[x].Name) > 1) //write if Name not empty
+	    {		
 	      pack_signal (x, tmpz);
 	      strcat (message, tmpz);
+	      ready_to_send_tcp=1;
             }
 	  else
 	    break;		// signals list is end
@@ -502,9 +502,11 @@ if (DEBUG == 1)   printf ("MAX_Signals [%i] \n", MAX_Signals);
 	
       strcpy (tst, "");
       frame_pack ("wr", message, tst);
-      if (TCP_SEND > 0 )  tcpresult = frame_tcpreq (tst); //send to srv
+      if (TCP_SEND > 0 )  {
+          if (ready_to_send_tcp == 1) tcpresult = frame_tcpreq (tst); //send to srv
+         }
       
-      if (DEBUG == 3) printf ("\n\r SEND TST^[%s] \n\r", tst);
+      if (DEBUG == 3) printf ("\n\r SEND WRITE request TST^[%s] \n\r", tst);
       printf ("Status of TCP SEND: [%i]\n\r", tcpresult);
       printf
 	(" ++++++++++++++++++++++++==>   SPEEDTEST Send to TCPCache Time: [ %ld ] ms. \n\r",	 speedtest_stop ());

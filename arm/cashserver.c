@@ -15,7 +15,7 @@
 #include<time.h>      // for time_t
 #include<errno.h>     // for print errors
 
-#define DEBUG 2       // 0 -not debug  1- debug
+#define DEBUG 1       // 0 -not debug  1- debug
 #include "signals.h"
 #include "network.h"
 #include "speedtest.h"
@@ -28,7 +28,7 @@
 #define NUM_THREADS 		  4
 #define MAX_SIZE			100
 #define RFC1123FMT "%a, %d %b %Y %H:%M:%S GMT"
-
+#define PORT 8888
 static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
 
@@ -102,7 +102,7 @@ int main(int argc , char *argv[])
     //Prepare the sockaddr_in structure
     server.sin_family = AF_INET;
     server.sin_addr.s_addr = INADDR_ANY;
-    server.sin_port = htons( 8888 );
+    server.sin_port = htons( PORT );
      
     //Bind
     if( bind(socket_desc,(struct sockaddr *)&server , sizeof(server)) < 0)
@@ -266,6 +266,7 @@ void* connection_handler (void *args)
 		
 	//********************************* COMMAND SELECTION AND EXECUTION ******************************/
 	    pthread_mutex_lock(&mutex); // block mutex 
+	        strcpy(tst,""); //erase buffer
 		rd_wr = frame_unpack(client_message,tst);
 	    pthread_mutex_unlock(&mutex); //unlock mutex
 	    
@@ -284,7 +285,7 @@ void* connection_handler (void *args)
        //********************************** READ **********************************************************
        //if( iCmd1 != NULL ){ // cmd read_signal
        if( rd_wr == 1 ){ // cmd read_signal
-                pthread_mutex_lock(&mutex); // block mutex 
+                 pthread_mutex_lock(&mutex); // block mutex 
                 
         char *iStr1, *iStr2, *iStr;        
                 
@@ -332,7 +333,7 @@ void* connection_handler (void *args)
 				}
 			 if (DEBUG == 3) printf ("#%i  <<---- R-SignalsName [%s]  Val{%i} Ex{%i}  \n\r",cnt,arg->SA_ptr[cnt].Name, arg->SA_ptr[cnt].Value[1] ,arg->SA_ptr[cnt].ExState); //debug
 			}
-			pthread_mutex_unlock(&mutex); //unlock mutex
+			 pthread_mutex_unlock(&mutex); //unlock mutex
 			if (found == 0) {
 			printf("CMD_READ: Signal not found \n\r");
 			
@@ -500,7 +501,7 @@ void* connection_handler (void *args)
 
 			}
 			
-			pthread_mutex_unlock(&mutex); //unlock mutex
+			 pthread_mutex_unlock(&mutex); //unlock mutex
 			
 			if (found == 0) {
 			printf("CMD_WRITE: Signal not found! [%i] \n\r",found);

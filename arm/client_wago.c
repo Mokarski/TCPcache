@@ -8,7 +8,7 @@
 #include <stdlib.h>
 #include "/home/opc/Kombain/test/include/modbus/modbus.h"
 
-#define DEBUG 1 // may be set to 1,2,3,4
+#define DEBUG 3 // may be set to 1,2,3,4
 #include "network.h"
 #include "signals.h"
 #include "virtmb.h"
@@ -309,12 +309,20 @@ int main (int argc, char *argv[])
   int TCP_SEND;
   int tcpresult = 0;
   char tst[MAX_MESS];
+
+  char signal_parser_buf2[MAX_MESS];
   int LoadList=0; //flag first load list
   int MB_Write=0; //flag modbus write
+  
+  if (argc == 1) {
+  printf("No server ip! ip:{%s} \n\r USAGE example: client.exe 192.168.1.1\n\r",argv[1]);
+  return;
+  }
 //INIT SIGNALS     
 if (DEBUG == 1)   printf ("MAX_Signals [%i] \n", MAX_Signals);
   init_signals_list ();		// erase signal lsit 
-  if (socket_init ("127.0.0.1") != 0)
+  printf("> Server ip:{%s} \n\r",argv[1]);
+  if (socket_init (argv[1]) != 0)
     {
       printf ("NO Connection to server\n\r");
       return;
@@ -324,17 +332,27 @@ if (DEBUG == 1)   printf ("MAX_Signals [%i] \n", MAX_Signals);
   while (1)
     {
       MB_Write=0;
-      printf ("***THIS iS PcSense [MordorBUS]***\n\r");
+      printf ("***THIS iS WAGO CLIENT***\n\r");
       //speedtest_start ();	//time start
       strcpy (signal_parser_buf, "");	//erase buffer for next iteration
       //======================== read all 485 signals from server create signals and virtual devices ===================
       strcpy (message, "");
+      strcpy (tst, "");	//erase buffer     
       frame_pack ("rd", "wago.", message);
       tcpresult = frame_tcpreq (message);
-      printf ("Status of TCP SEND: [%i]\n\r", tcpresult);
+      printf ("Status of TCP SEND:[%i] READ Request:[%s]\n\r", tcpresult,message);
+      
+      int unpack_ok=0;
       if (tcpresult > 1)
 	{
-	  frame_unpack (signal_parser_buf, tst);
+	  
+	  printf ("Received frame :[%s]. \n\r", signal_parser_buf);
+	  unpack_ok = frame_unpack (signal_parser_buf, tst);
+	    if (unpack_ok > 0)  printf ("Unpack frame state:[%i]. \n\r", unpack_ok);
+	    if (unpack_ok < 0)  printf ("Unpack frame state:[%i].  Error frame container, not all fields present.  \n\r", unpack_ok);
+	    
+	    if (unpack_ok < 0)  printf ("!!!ERROR TCP READ from srv: [%s]\n\r", signal_parser_buf);
+	  
 	} else printf("!!!ERROR freame_tcpreq = %i \n\r",tcpresult);
 
       /*      
@@ -346,8 +364,10 @@ if (DEBUG == 1)   printf ("MAX_Signals [%i] \n", MAX_Signals);
        */
 //    socket_close();
       int signals_found = 0;
-      signals_found = Data_to_sName (tst); //extract all signals from buffer and put into Signal.Name field
-
+      
+      if (unpack_ok > 0){
+          signals_found = Data_to_sName (tst); //extract all signals from buffer and put into Signal.Name field
+         }
 
      // printf	("=================== ==>   SPEEDTEST Time load signals: [ %ld ] ms. \n\r",	 speedtest_stop ());
 
@@ -363,8 +383,8 @@ if (DEBUG == 1)   printf ("MAX_Signals [%i] \n", MAX_Signals);
 	  strcpy (buffer, Signal_Array[z].Name);
 	  //printf ("#%i NameField {%s} \n\r",z,Signal_Array[z].Name);
 	  test = unpack_signal (buffer, z);	//UnPACK Signal from buffer to signal with number Z
-	  //printf ("\n\r #%i RESTORED SIGNAL -  Name:[%s] Val:[%i] Ex[%i] \n\r",z,Signal_Array[z].Name,Signal_Array[z].Value[1],Signal_Array[z].ExState);  //DEBUG
-	  
+	  if ( DEBUG == 3) printf ("\n\r #%i RESTORED SIGNAL -  Name:[%s] Val:[%i] Ex[%i] \n\r",z,Signal_Array[z].Name,Signal_Array[z].Value[1],Signal_Array[z].ExState);  //DEBUG
+
 	  //****************** DEBUG PRINT **************************
 
 	  if ( (Signal_Array[z].Value[1] > 0) || (Signal_Array[z].ExState > 0) ) {  
@@ -488,9 +508,12 @@ if (DEBUG == 1)   printf ("MAX_Signals [%i] \n", MAX_Signals);
       int x = 0;
 //     socket_init();     
 
-
-      strcpy (message, "");	//erase buffer     
+      char message2[MAX_MESS];
+      strcpy (message2, "");	//erase buffer     
+      strcpy (tst, "");	//erase buffer     
       char tmpz[150];
+      strcpy(tmpz,"");
+      printf(" tmpz {%s} \n\r",tmpz);
       for (x = 0; x < MAX_Signals; x++)
 	{
 	  if ( (Signal_Array[x].Value[1] > 0) || (Signal_Array[x].ExState > 0) )
@@ -502,21 +525,24 @@ if (DEBUG == 1)   printf ("MAX_Signals [%i] \n", MAX_Signals);
 	if  (Signal_Array[x].Value[1] > 0) 
 	         if ( DEBUG == 4 )  printf ("[%i]TO_SRV  <<-- Name:[%s] Value:[%i] ExState:[%i]\n\r ", x,Signal_Array[x].Name, Signal_Array[x].Value[1], Signal_Array[x].ExState);
 	         
+	printf ("SignalName:[%s] \n\r",Signal_Array[x].Name);
 	  if (strlen (Signal_Array[x].Name) > 1)
 	    {			//write if Name not empty
  //          socket_init();
 	      pack_signal (x, tmpz);
-	      strcat (message, tmpz);
+	      printf ("construct buffer[%s] strlen[%i] \n\r",tmpz,strlen(tmpz));
+	      strcat (message2, tmpz);
             }
 	  else
 	    break;		// signals list is end
 	}
-	
+      printf(" message {%s} \n\r",message2);
       strcpy (tst, "");
-      frame_pack ("wr", message, tst);
+      frame_pack ("wr", message2, tst);
       if (TCP_SEND > 0 )  tcpresult = frame_tcpreq (tst); //send to srv
       
-      if (DEBUG == 3) printf ("\n\r SEND TST^[%s] \n\r", tst);
+      if (DEBUG == 3) printf ("\n\r SEND WRITE Request TST^[%s] \n\r", tst);
+      printf ("\n\r SEND WRITE Request TST^[%s] \n\r", tst);
       printf ("Status of TCP SEND: [%i]\n\r", tcpresult);
       printf
 	(" ++++++++++++++++++++++++==>   SPEEDTEST Send to TCPCache Time: [ %ld ] ms. \n\r",	 speedtest_stop ());
