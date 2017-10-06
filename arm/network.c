@@ -135,7 +135,7 @@ int result=0; //return number of founded signals
         // Выделение первой части строки
            istr = strtok (tcp_buffer,sep);
            if ( istr == NULL ) {
-              printf ("DATA_to_sName: istr1 NULL \n\r");
+              printf ("!!!ERR extract signals, to name! DATA_to_sName: istr1 = NULL \n\r");
               return 1;
               //sDeSerial_by_num (signal_counter);
               }
@@ -150,15 +150,14 @@ int result=0; //return number of founded signals
                           if ( istr == NULL ) 
                              {
                                printf ("[#%i] End list \n\r",signal_counter);
-                               return 1;
+                               return signal_counter;
                              }
                              
                         strcpy (Signal_Array[signal_counter].Name,istr); //copy 1 signal string to Signal_Array field Name                        
                         signal_counter++;
                         result++; //increment for return results
                      }
-
-return result;
+return signal_counter;
 }
 
 int tcpsignal_read(char *message_in){
@@ -347,9 +346,7 @@ int frame_tcpsend (char *msg){
     
 return ret;
 }
-
-
-
+/*
 int frame_pack (char *type, char *message_in, char *message_out) { //construct frame frome message_in and put result to message type is "rd" or "wr"
     //char message [MAX_MESS]; //max size for 1 packet send for tcp is 65534 bytes 
     char c_len[4];
@@ -377,6 +374,30 @@ int frame_pack (char *type, char *message_in, char *message_out) { //construct f
     if (DEBUG == 1) printf("Constructed Frame^[%s]\n\n\r",message_out);
     return 0;
 }
+*/
+
+int frame_pack (char *type, char *message_in, char *message_out) { //construct frame frome message_in and put result to message type is "rd" or "wr"
+    //char message [MAX_MESS]; //max size for 1 packet send for tcp is 65534 bytes 
+    char c_len[4];
+    char c_count[4];
+
+    if ( strlen (message_in) >  MAX_MESS ) {
+        printf("Exeeded maximum buffer size, message_size: %i > then buffer_size:%i",strlen(message_in), MAX_MESS);
+        return -1;
+       }
+    int len = strlen (message_in) + 1; //length = Data container size in bytes + 1byte =";"    
+    //Try Construct frame
+    strcpy(message_out,type);
+    strcat (message_out,";");
+    ItoA(len,c_len); //convert int to char
+    strcat(message_out,c_len);    
+    strcat (message_out, "#");
+    strcat (message_out,message_in);
+    strcat (message_out,";\0");
+    if (DEBUG == 1) printf("Constructed Frame^[%s]\n\n\r",message_out);
+    if ( strlen(message_out ) < 30) printf("Constructed Frame^[%s]\n\n\r",message_out);
+    return 0;
+}
 
 int frame_unpack (char *srvr_reply, char *data){ // copy serialized signals into data and return 1 if read or 2 if write
     char sep[10]="#";
@@ -401,7 +422,7 @@ int frame_unpack (char *srvr_reply, char *data){ // copy serialized signals into
     if (istr != NULL) { //DATA
         //printf("PACKET^{%s}\n\r",istr); //debug
         strcpy (data,istr);
-         printf ("data_: {%s} \n\r",data);
+        if (strlen (data) < 30) printf ("data_: {%s} \n\r",data);
         } else { printf ("ERR data_extract: PACKET FROM FARME  - NULL! \n\r");
                  return -1;
                }

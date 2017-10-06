@@ -506,7 +506,7 @@ if (DEBUG == 1)   printf ("MAX_Signals [%i] \n", MAX_Signals);
       
       speedtest_start ();	//time start     
       int x = 0;
-//     socket_init();     
+  
 
       char message2[MAX_MESS];
       strcpy (message2, "");	//erase buffer     
@@ -530,13 +530,13 @@ if (DEBUG == 1)   printf ("MAX_Signals [%i] \n", MAX_Signals);
 	    {			//write if Name not empty
  //          socket_init();
 	      pack_signal (x, tmpz);
-	      printf ("construct buffer[%s] strlen[%i] \n\r",tmpz,strlen(tmpz));
+	     // printf ("construct buffer[%s] strlen[%i] \n\r",tmpz,strlen(tmpz));
 	      strcat (message2, tmpz);
             }
 	  else
 	    break;		// signals list is end
 	}
-      printf(" message {%s} \n\r",message2);
+      printf(" message2 {%s} \n\r",message2);
       strcpy (tst, "");
       frame_pack ("wr", message2, tst);
       if (TCP_SEND > 0 )  tcpresult = frame_tcpreq (tst); //send to srv

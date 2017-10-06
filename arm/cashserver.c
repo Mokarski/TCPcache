@@ -15,7 +15,7 @@
 #include<time.h>      // for time_t
 #include<errno.h>     // for print errors
 
-#define DEBUG 1       // 0 -not debug  1- debug
+#define DEBUG 3       // 0 -not debug  1,2,3- debug
 #include "signals.h"
 #include "network.h"
 #include "speedtest.h"
@@ -222,6 +222,137 @@ void ItoA(int n, char s[]) {
 
 
 
+
+
+//********************************** READ **********************************************
+int Read_operation(char tst[MAX_MESS], char to_send[MAX_MESS]){
+        	char *istr;                
+		char sep_comma[4]=";";
+		int found=0;  
+		    printf("[recived >CMD READ] read_signal \n\r");		    
+			size_t xx=0;
+			size_t cnt=0;
+			printf ("SERVER: recive from client: [%s]\n\r",tst);
+			istr = strtok(tst,sep_comma);
+			if (istr != NULL){
+			    printf ("SERVER: GET the NAME [%s]\n\r",istr);
+			    }
+
+			char tmpz[150];
+			//strcpy (result,""); //erase buffer
+			for(cnt=0; cnt <  MAX_Signals; cnt++)
+			{
+				if( strstr(Signal_Array[cnt].Name, istr) !=NULL )
+				{
+				       if ( Signal_Array[cnt].Value[1] > 0 ){
+				           if (DEBUG == 1)    printf ("  READ: Signal > 0 [ Name: [%s]  Value: {%i} ExState: [%i] ] \n\r",Signal_Array[cnt].Name,Signal_Array[cnt].Value[1],Signal_Array[cnt].ExState); //debug
+				          }
+				        pack_signal(cnt,tmpz);
+				        strcat (to_send,tmpz);
+					xx++;
+					found++;
+				}
+			 if (DEBUG == 3) printf ("#%i  <<---- R-SignalsName [%s]  Val{%i} Ex{%i}  \n\r",cnt,Signal_Array[cnt].Name, Signal_Array[cnt].Value[1] ,Signal_Array[cnt].ExState); //debug
+			}
+ printf("Signals READ  found [%i]! \n\r",found);
+return found; //founded signal counter
+}
+//**************************************************************************************
+
+
+//********************************** WRITE *********************************************
+int Write_operation (char tst[MAX_MESS]){
+		    char *istr;
+		    int found=0;          //flag how many founded signals
+		    char digit[5];    //buffer Value of signal as CHAR
+		    char sname [150]; //buffer for temp store signal NAME
+		    char buf_signals[MAX_Signals][150]; //array of MAX_signal elements AND 150 characters each
+		    int t=0;		        
+		    int val;
+		    size_t xx=0;
+		    size_t cnt=0;					    
+		    
+		    printf("[recived >CMD WRITE] write_signal \n\r");
+		    int sn=1; //number of signals started from 1, because before while we get 1 signal
+			
+			if (DEBUG == 1) printf ("SERVER: recive from client WRITE Req [%s]\n\r",tst);
+			istr =strtok(tst,";");			            
+			if ( istr != NULL ){
+			    strcpy (buf_signals[0],istr);
+			   } else {printf ("Not found delimiter [;]\n\r");}
+			
+			while ( istr != NULL ){
+				istr =strtok(NULL,";");
+			         if (istr == NULL) // defend from sigfault
+			            {
+			              printf(" End write to cachebuf, at position [%i]\n\r",sn);
+			              break;
+			             } else {			            
+			    		      strcpy (buf_signals[sn],istr);
+					      if (DEBUG == 1) printf ("Explode ; to cachebuf [#%i]  NAME: [%s] \n\r",sn,buf_signals[sn]); //debug
+			                    }
+				
+				sn++;
+			      }
+			
+			if (DEBUG == 1) printf("Signal_counter sn=%i\n\r",sn);		
+			cnt=0;         
+			for(cnt=0; cnt < MAX_Signals; cnt++) //cycle for signals
+			{ 
+					    
+			    int pr=0;
+			    if ( strlen ( Signal_Array[cnt].Name ) > 2 ) {  // test if signal name not empty
+			             
+			         for (pr = 0; pr < sn; pr++){ //cycle for recived signals from client. number of recived signals = sn
+			
+			                char tmpz[190];
+			                char *istrName;
+			                strcpy(tmpz,buf_signals[pr]); //tmp buf
+			                //printf("tmpz %s\n\r",tmpz);
+			                istrName =strtok(tmpz,":"); //extract name			            
+			                if ( istrName != NULL ){
+			                    //printf("istr %s \n\r",istrName);
+			                    strcpy (tmpz,istrName);
+			                    //printf("tmpz %s \n\r",tmpz);
+			                    } else {
+			                             printf ("Not found Name in buf_signals[:]\n\r");
+			                             break;
+			                             }
+			                    
+			                if ( strstr( Signal_Array[cnt].Name,tmpz  ) != NULL ) { //if in buffer we find signal name			                   
+			                    if (strcmp (Signal_Array[cnt].Name, tmpz)==0) 
+			                       { 
+			                         if ( DEBUG ==1 ) printf(">>>CMPNAME SignalName=[%s]\n\r",Signal_Array[cnt].Name);
+			                         found++;
+			                         int utest=0;
+			                         if ( DEBUG == 1) printf("SignalName[%s] = RecivedName[%s]",Signal_Array[cnt].Name,tmpz);
+			                         if (DEBUG == 1) printf ("before unpack %s \n\r",buf_signals[pr]);			                    
+			                         utest = unpack_signal(buf_signals[pr],pr); //unpack from field buffer to signal properties fields
+			                       }
+			                   }
+			            
+			          }
+			          
+			      
+			      //pr++; // increment start index position of cycle for start next step exclude previus step!!!
+			    }
+			 //if (DEBUG == 3) printf ("#%i thread--- >> WR-SignalsName [%s] Val{%i} Ex{%i} \n\r",cnt,Signal_Array[cnt].Name, Signal_Array[cnt].Value[1] ,Signal_Array[cnt].ExState); //debug
+			 if (DEBUG == 3) printf ("#%i SA--- >> WR-SignalsName [%s] Val{%i} Ex{%i} \n\r",cnt,Signal_Array[cnt].Name, Signal_Array[cnt].Value[1] ,Signal_Array[cnt].ExState); //debug
+
+			 if (DEBUG == 2){
+			    if (Signal_Array[cnt].ExState == 2){
+			        //printf ("#%i IN THRead --- >> WR-SignalsName [%s] Val{%i} Ex{%i} \n\r",cnt,arg->SA_ptr[cnt].Name, arg->SA_ptr[cnt].Value[1] ,arg->SA_ptr[cnt].ExState); //debug
+			        printf ("#%i SA--- >> WR-SignalsName [%s] Val{%i} Ex{%i} \n\r",cnt,Signal_Array[cnt].Name, Signal_Array[cnt].Value[1] ,Signal_Array[cnt].ExState); //debug
+			        }
+			    
+			   }
+
+			}
+ printf("Signals WRITE  found [%i]! \n\r",found);
+return found; //return number of written signals
+}
+//**************************************************************************************
+
 /*
  * This will handle connection for each client
  * */
@@ -230,38 +361,37 @@ void* connection_handler (void *args)
 
 // from struct
 //		
-
-	Discrete_Signals_t *arg = (Discrete_Signals_t * ) getglobalsignals();
-        int n=0;
+     Discrete_Signals_t *arg = (Discrete_Signals_t * ) getglobalsignals();
+     int n=0;
 
     //Get the socket descriptor
     //int sock = arg->nSock; //problem one id to many threads
     int sock =(int)args; // client_sock
     printf(">>>> THREAD Socket ID[#%i] \n\r",sock);
 	//
-	int read_size;
-    char *mesOk, *mesNo, *mesErr, *mesBad, *mesUnp,  client_message[MAX_MESS], signalsBuffer[MAX_MESS];
-    char  *iCmd1, *iCmd2, *iCmdEnd; 
-    
-	char *cmd_end = ";";
-	char *pCM = client_message;
-	char *istr,ival;
-	mesOk = "Ok!";	
-	mesBad = "NOcmd!";
-	mesErr = "Err!";
-	mesUnp = "Err! unpack Farme!";
-	char a[4096];
-	char dig[128];	
-        char packed_txt_string[40000];
-	char tst[MAX_MESS];
-	int rd_wr=0;
-        int found=0;  //founded signals counter
-        int iterration=0;
+    int read_size;
+    char *mesOk, *mesNo, *mesErr, *mesBad, *mesUnp;
+    char  client_message[MAX_MESS];
+    char  client_message_write[MAX_MESS];    
+    char  signalsBuffer[MAX_MESS];
+    char *cmd_end = ";";
+    mesOk = "Ok!";	
+    mesBad = "NOcmd!";
+    mesErr = "Err!";
+    mesUnp = "Err! unpack Farme!";
+//    char a[4096];
+    char dig[128];	
+    //char packed_txt_string[40000];
+    char tst[MAX_MESS];
+    int rd_wr=0;
+//    int found=0;  //founded signals counter
+    int iterration=0;
     while( (read_size = recv(sock , client_message , MAX_MESS , 0) ) > 0 )
     {
       if (DEBUG == 1) iterration++;
 		int mess_length = sizeof(client_message) / sizeof(client_message[0]);
-		 if (DEBUG == 1) printf("\n\r {Cycle %i} \n\r [SRV received: %i bytes] client_message: [%s]\r\n",iterration,read_size ,client_message);
+		 if (DEBUG == 1) printf("\n\r {inTHREAD_sock[%i] Cycle %i} \n\r [SRV received: %i bytes] client_message_read: [%s]\r\n",sock,iterration,read_size ,client_message);
+		 if (strlen(client_message) < 30) printf(">>>Recived from client[%s]\n\r",client_message);
 
 		
 	//********************************* COMMAND SELECTION AND EXECUTION ******************************/
@@ -277,292 +407,92 @@ void* connection_handler (void *args)
 		    printf ("\n ===============================================================\n");
 		    write(sock, mesUnp, strlen(mesUnp));
 		    close (sock); // close socket before exit
+		    printf("Drop the socet and close connection. \n\r");
 		    return 0; 
 		   } else {
   		          if (DEBUG == 1) printf("[FRAMEUNPACK: rd_wr[%i]]   Unpacked: [%s] \r\n", rd_wr, tst);	   
   		         }
-	   
-       //********************************** READ **********************************************************
-       //if( iCmd1 != NULL ){ // cmd read_signal
-       if( rd_wr == 1 ){ // cmd read_signal
-                 pthread_mutex_lock(&mutex); // block mutex 
-                
-        char *iStr1, *iStr2, *iStr;        
-                
-		speedtest_start();
-		char sep_comma[4]=";";
-		    found=0;  
-		    printf("[recived >CMD READ] read_signal \n\r");
-		    printf("THREAD Socket ID[#%i]\n\r",sock);
-			size_t xx=0;
-			size_t cnt=0;
-			printf ("SERVER: recive from client: [%s]\n\r",tst);
-			istr = strtok(tst,sep_comma);
-			if (istr != NULL){
-			    printf ("SERVER: GET the NAME [%s]\n\r",istr);
-			    }
-			/*
-			if (istr != NULL){
-			    istr = strtok (NULL,";"); //mask or signal name
-			   }
-			
-			if (istr != NULL) printf ("NAME: [ %s ]\n\r",istr);
-			*/
-			char result[MAX_MESS];  //buffer for response 50 000 bytes
-			char result2[MAX_MESS];  //buffer for response 50 000 bytes
-			char tmpz[150];
-			strcpy (result,""); //erase buffer
-			for(cnt=0; cnt <  MAX_Signals; cnt++)
-			{
-				if( strstr(arg->SA_ptr[cnt].Name, istr))
-				{
-				 //      printf ("[%i] Signal Name: [%s]\t",cnt,arg->SA_ptr[cnt].Name); //debug
-				       if ( arg->SA_ptr[cnt].Value[1] > 0 ){
-				           if (DEBUG == 1)    printf ("Socket[%i]|  READ: Signal > 0 [ Name: [%s]  Value: {%i} ExState: [%i] ] \n\r",sock,arg->SA_ptr[cnt].Name,arg->SA_ptr[cnt].Value[1],arg->SA_ptr[cnt].ExState); //debug
-				          }
-				        //arg->SA_ptr[cnt].ExState=0; // Flag ExState turn off 
-				        
-				        //strcpy(packed_txt_string,""); //erase buffer
-				        //sSerial_by_num(cnt); //serialize to packet by number of signals				        
-				        pack_signal(cnt,tmpz);
-				        strcat (result,tmpz);
-				        //printf ("[ %s ]\n\r",packed_txt_string); //DEBUG
-
-					xx++;
-					found++;
-				}
-			 if (DEBUG == 3) printf ("#%i  <<---- R-SignalsName [%s]  Val{%i} Ex{%i}  \n\r",cnt,arg->SA_ptr[cnt].Name, arg->SA_ptr[cnt].Value[1] ,arg->SA_ptr[cnt].ExState); //debug
-			}
-			 pthread_mutex_unlock(&mutex); //unlock mutex
-			if (found == 0) {
-			printf("CMD_READ: Signal not found \n\r");
-			
-			//arg->hello = "~core";
-			//mesErr = "Err! NotFound \n\r";
-			write(sock, mesErr, strlen(mesErr));
-			
-			memset(client_message, 0, mess_length);
-			//close(*arg->nSock);
-			//free((int*)arg->nSock);
-			//pthread_exit(0);		
-			}
-
-			if (found > 0) { //section to send client finded signals
-			printf("Signals READ  found [%i]! \n\r",found);
+  		         
+  		         
+  		   
+		   switch (rd_wr){
+  		                   case 1:  //READ OPERATION
+  		                	 speedtest_start();
+  		                	 pthread_mutex_lock(&mutex); // block mutex 
+  		                	 char result[MAX_MESS];  //buffer for response 50 000 bytes
+					 char result2[MAX_MESS];  //buffer for response 50 000 bytes
+					    strcpy(client_message,"");
+  		                	 if (Read_operation(tst,client_message) > 0) { //if founded requested name of signals
+  		                	   
+			                    
+					     frame_pack("Ok!",client_message,result2); //pack all info to FRAME
+					     if (DEBUG == 1) printf ("result2: {%s}",result2);
+					     int msg_len = strlen(result2);
+					     int write_ok;
+					     pthread_mutex_unlock(&mutex); //unlock mutex
+					     
+					     write_ok = write(sock, result2, msg_len ); //send packet to client			
+					     if (DEBUG == 1) printf("\n\rTry to Write,  Sendded bytes: [%i] \n\r",write_ok);
+					     
+					     if (write_ok < 0){
+                            			 printf("TCP SEND Error description is : %s\n",strerror(errno));			    
+						}
 						
-			//strcat (result,mesOk); //add Ok to end
-			//printf ("BUF to SEND:[%s] \n \n \r",result); //debug
-			frame_pack("Ok!",result,result2); //pack all info to FRAME
-			if (DEBUG == 1) printf ("result2: {%s}",result2);
-			//write(sock, result, strlen(result)); //send packet to client			
-			int msg_len = strlen(result2);
-			int write_ok;
-			write_ok = write(sock, result2, msg_len ); //send packet to client			
-			if (DEBUG == 1) printf("\n\rTry to Write, write_ok state: [%i] \n\r",write_ok);
-			if (write_ok < 0){
-			    
-                             printf("Error description is : %s\n",strerror(errno));			    
+					     strcpy (client_message,"");
+					     memset (client_message, 0, mess_length);
+					     
+					  } else {  // if signals not found
+					           printf("CMD_READ: Signal not found \n\r");
+						   write(sock, mesErr, strlen(mesErr));			
+						   memset(client_message, 0, mess_length);
+  		                	         }
+  		                	 printf(" ++++++++++++++++++++++++==>   SPEEDTEST TCPCache READ_REQ Time: [ %ld ] ms. \n\r", speedtest_stop());
 
-			    }
-			strcpy (client_message,"");
-			memset(client_message, 0, mess_length);
-			}
-			/*
-			memset(client_message, 0, mess_length);
-			close(*arg->nSock);
-			free((int*)arg->nSock);
-			pthread_exit(0);		
-		        */
-		         printf(" ++++++++++++++++++++++++==>   SPEEDTEST TCPCache READ_REQ Time: [ %ld ] ms. \n\r", speedtest_stop());
-		    
-		}
-		//*********************************** WRITE ************************************************************
-		//if( iCmd2 != NULL ){ // cmd write_signal
-		 if( rd_wr == 2 ) {
-		    pthread_mutex_lock(&mutex); // block mutex 
-		    char *iStr1, *iStr2, *iStr;        
-		    
-		    speedtest_start();
-		    found=0;          //flag how many founded signals
-		    char digit[5];    //buffer Value of signal as CHAR
-		    char sname [100]; //buffer for temp store signal NAME
-		    char buf_signals[MAX_Signals][150]; //array of MAX_signal elements AND 150 characters each
-		    int t=0;		        
-		    int val;
-		    
-		    /*
-		          for (t=0; t < MAX_Signals; t++){
-		               strcpy(buf_signals[t],""); //clear buffer
-		              }
-		    */        
-		        printf("[recived >CMD WRITE] write_signal \n\r");
-		        //printf("THREAD Socket ID[#%i]\n\r",sock);
-			size_t xx=0;
-			size_t cnt=0;			
-			int sn=1; //number of signals started from 1, because before while we get 1 signal
-			
-			if (DEBUG == 1) printf ("SERVER: recive from client sock_id[%i]: [%s]\n\r",sock,tst);
-			istr =strtok(tst,";");			            
-			if ( istr != NULL ){
-			    strcpy (buf_signals[0],istr);
-			   } else {printf ("Not found delimiter [;]\n\r");}
-			   
-			//istr = strtok (NULL,";");			
-			//printf ("EXPLODE NAME: [ %s ]\n\r",istr);
-			
-			while ( istr != NULL ){
-			        /*if (istr == NULL) // defend from sigfault
-			        {
-			         printf("End write list\n\r");
-			         return ;
-			        }*/
-				istr =strtok(NULL,";");
-				/*
-				if ( istr != NULL ) // defend from sigfault
-			        {
-			         strcpy (buf_signals[sn],istr);
-				 printf ("[#%i] NAME: [%s] \n\r",sn,buf_signals[sn]);
-			         }
-			         */
-			         if (istr == NULL) // defend from sigfault
-			        {
-			         printf("Socket[%i]|  End write to cachebuf, at position [%i]\n\r",sock,sn);
-			         // return ;
-			         break;
-			        } else {
-			                //strcpy (buf_signals[sn],""); //erase buffer segment before copy new parameter
-			    		strcpy (buf_signals[sn],istr);
-					if (DEBUG == 1) printf ("Socket[%i]| explode ; to cachebuf [#%i]  NAME: [%s] \n\r",sock,sn,buf_signals[sn]); //debug
-			               }
+  		                   break;
+  		                   
+  		                   
+  		                   
+  		                   
+  		                   case 2:  //WRITE OPERATION
+  		                         speedtest_start();
+  		                 	 pthread_mutex_lock(&mutex); // block mutex 
+  		                 	 if (strlen (tst)< 30 ) printf ("tst[%s]\n\r",tst);
+  		                 	 if (Write_operation(tst) > 0) { //if recived siggnals founded and writed into server
+			                     write(sock, mesOk, strlen(mesOk));
+			                     memset(client_message, 0, mess_length);
+  		                 	 
+  		                 	 } else {
+						 write(sock, mesErr, strlen(mesErr));			
+						 memset(client_message, 0, mess_length); //erase the buffer
+						 strcpy(client_message,""); //erase the buffer
+  		                 	         }
+  		                 	 
+  		                 	 printf(" ++++++++++++++++++++++++==>   SPEEDTEST TCPCache WRITE_REQ Time: [ %ld ] ms. \n\r", speedtest_stop());
+					 pthread_mutex_unlock(&mutex); //unlock mutex
+  		                   break;
+  		                   
+  		                   default: //Error section
+  		                            printf("not read and not write, may be Error frame \n\r");
+  		                            printf("\n >>>>>>>> Unformatted Client Message -1!!!! \n\r");
+					    write(sock, mesBad, strlen(mesBad));
+					    memset(client_message, 0, mess_length);
+					    strcpy(client_message,"");
+					    memset(client_message_write, 0, mess_length);
+					    strcpy(client_message_write,"");
+					    
 				
-				sn++;
-			   }
-			
-			if (DEBUG == 1) printf("Signal_counter sn=%i\n\r",sn);		
-			cnt=0;         
-			for(cnt=0; cnt < MAX_Signals; cnt++) //cycle for signals
-			{ 
-			//    if (DEBUG == 3) printf ("WR-SignalsName [%s]\n\r",arg->SA_ptr[cnt].Name, arg->SA_ptr[cnt].Value[0] ,arg->SA_ptr[cnt].ExState); //debug
-			    
-			    int pr=0;
-			    if ( strlen ( arg->SA_ptr[cnt].Name ) > 2 ) {  // test if signal name not empty
-			             //printf ("Cyrrent SA: [%s] \n\r",arg->SA_ptr[cnt].Name);
-			             
-			         for (pr = 0; pr < sn; pr++){ //cycle for recived signals from client. number of recived signals = sn
-			
-			              //************************** !!!!!!!!!!!!!!!!!! **********************
-			                //printf("[Total clientsignals#%i][#%i]Cyrrent client signal: [%s]\n\r",sn,pr,buf_signals[pr]);
-			                //if (DEBUG == 1) printf ("StrStr: buf_signals[%s]  -  SignalsName [%s]\n\r",buf_signals[pr],arg->SA_ptr[cnt].Name); //debug
-			                //pack_signal(cnt,tmpz);
-			                //if (DEBUG == 1) printf ("StrStr: buf_signals[%s]  -  SignalsName [%s]\n\r",buf_signals[pr],tmpz); //debug
-			                char tmpz[190];
-			                char *istrName;
-			                strcpy(tmpz,buf_signals[pr]); //tmp buf
-			                //printf("tmpz %s\n\r",tmpz);
-			                istrName =strtok(tmpz,":"); //extract name			            
-			                if ( istrName != NULL ){
-			                    //printf("istr %s \n\r",istrName);
-			                    strcpy (tmpz,istrName);
-			                    //printf("tmpz %s \n\r",tmpz);
-			                    } else {
-			                             printf ("Not found Name in buf_signals[:]\n\r");
-			                             break;
-			                             }
-			                    
-			                if ( strstr( arg->SA_ptr[cnt].Name,tmpz  ) != NULL ) { //if in buffer we find signal name			                   
-			                    if (strcmp (arg->SA_ptr[cnt].Name, tmpz)==0) 
-			                       { 
-			                         if ( DEBUG ==1 ) printf(">>>CMPNAME SignalName=[%s]\n\r",arg->SA_ptr[cnt].Name);
+  		   }  //end switch                                                                                                                                                   
+	   
 
-			                    
-			                         found++;
-			                         int utest=0;
-			                         if ( DEBUG == 1) printf("SignalName[%s] = RecivedName[%s]",arg->SA_ptr[cnt].Name,tmpz);
-			                         if (DEBUG == 1) printf ("before unpack %s \n\r",buf_signals[pr]);			                    
-			                         utest = unpack_signal(buf_signals[pr],pr); //unpack from field buffer to signal properties fields
-			                       }
-			                   }
-			            
-			          }
-			          
-			      
-			      //pr++; // increment start index position of cycle for start next step exclude previus step!!!
-			    }
-			 if (DEBUG == 3) printf ("#%i thread--- >> WR-SignalsName [%s] Val{%i} Ex{%i} \n\r",cnt,arg->SA_ptr[cnt].Name, arg->SA_ptr[cnt].Value[1] ,arg->SA_ptr[cnt].ExState); //debug
-			 if (DEBUG == 3) printf ("#%i SA--- >> WR-SignalsName [%s] Val{%i} Ex{%i} \n\r",cnt,Signal_Array[cnt].Name, Signal_Array[cnt].Value[1] ,Signal_Array[cnt].ExState); //debug
 
-			 if (DEBUG == 2){
-			    if (arg->SA_ptr[cnt].ExState == 2){
-			        printf ("#%i IN THRead --- >> WR-SignalsName [%s] Val{%i} Ex{%i} \n\r",cnt,arg->SA_ptr[cnt].Name, arg->SA_ptr[cnt].Value[1] ,arg->SA_ptr[cnt].ExState); //debug
-			        printf ("#%i SA--- >> WR-SignalsName [%s] Val{%i} Ex{%i} \n\r",cnt,Signal_Array[cnt].Name, Signal_Array[cnt].Value[1] ,Signal_Array[cnt].ExState); //debug
-			        }
-			    
-			   }
 
-			}
-			
-			 pthread_mutex_unlock(&mutex); //unlock mutex
-			
-			if (found == 0) {
-			printf("CMD_WRITE: Signal not found! [%i] \n\r",found);
-			
-			//arg->hello = "~core";
-			//mesErr = "Err! WriteSignals Not FOund ";
-			write(sock, mesErr, strlen(mesErr));			
-			memset(client_message, 0, mess_length); //erase the buffer
-			strcpy(client_message,""); //erase the buffer
-			//close(*arg->nSock);
-			//free((int*)arg->nSock);
-			//pthread_exit(0);		
-			}
-
-			if (found > 0) {
-			printf("Founded WRITE signals [%i]\n\r",found);
-			//mesOk = "Ok!";
-			//arg->hello = "~core";
-			write(sock, mesOk, strlen(mesOk));
-			memset(client_message, 0, mess_length);
-			}
-			
-			/*
-			memset(client_message, 0, mess_length);
-			close(*arg->nSock);
-			free((int*)arg->nSock);
-			pthread_exit(0);		
-		       */
-		        printf(" ++++++++++++++++++++++++==>   SPEEDTEST TCPCache WRITE_REQ Time: [ %ld ] ms. \n\r", speedtest_stop());
 		        
-		}
+	} //end while
 	
 		
 		
-		/****************************** ERROR CMD SECTION ********************************************/
-		// At this place we have no command write or read occured
-		//if(  (iCmd1 == NULL) && (iCmd2 == NULL)  ){
-		 if( rd_wr == -1 ) {
-			printf("\n >>>>>>>> Unformatted Client Message -1!!!! \n\r");
-			//arg->msg = "~~~";
-			write(sock, mesBad, strlen(mesBad));
-			memset(client_message, 0, mess_length);
-			strcpy(client_message,"");
-			//close(*arg->nSock);
-			//free((int*)arg->nSock);
-			//pthread_exit(0);			
-		}		
 		
-		if( rd_wr == -2 ) {
-			printf("\n >>>>>>>> Unformatted Client Message -2!!!! \n\r");
-			//arg->msg = "~~~";
-			write(sock, mesBad, strlen(mesBad));
-			memset(client_message, 0, mess_length);
-			strcpy(client_message,"");
-			//close(*arg->nSock);
-			//free((int*)arg->nSock);
-			//pthread_exit(0);			
-		}
-		
-    }
-     
+ 
     if(read_size == 0)    
     {   
         printf("ERROR^: recived size = 0 \n\r  THREAD Socket ID[#%i]\n\r",sock);
@@ -575,12 +505,6 @@ void* connection_handler (void *args)
     {
         perror("SERVER: Recv failed");
     }
-	//close(*arg->nSock);         
-
-    //Free the socket pointer
-    //printf(" ++++++++++++++++++++++++==>   SPEEDTEST  TCPCache write from client Time: [ %ld ] ms. \n\r", speedtest_stop());
-     close (sock);
-    //free((int*)arg->nSock);
-    //free (sock);
-    return 0;
+    close (sock);
+return 0;
 }

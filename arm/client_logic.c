@@ -7,14 +7,14 @@
 #include <arpa/inet.h> //inet_addr
 #include <stdlib.h>
 
-#define  DEBUG 1
+#define  DEBUG 0 //may be 0,1,2,3
 #include "network.h"
 #include "signals.h"
 #include "speedtest.h"
 #include <errno.h>
 #include <unistd.h>
 #include "hash.h"
-#define  DEBUG 1
+
 
 
 
@@ -111,16 +111,25 @@ int main(int argc , char *argv[])
     init_signals_list(); // erase signal lsit 
 
 //************* CREATE SOCKET *********************
-//if (socket_init("127.0.0.1") !=0){
-//     printf ("No Connection to server\n\r");
-//     return; //return 0 if all OK else return 1
-//     }
-     
-     
-     if (socket_init2() !=0){
+ if (argc == 1) {
+      printf("No server ip! ip:{%s} \n\r USAGE example: client.exe 192.168.1.1\n\r",argv[1]);
+      return;
+    }
+                
+ printf("> Server ip:{%s} \n\r",argv[1]);
+                 
+                 
+
+ if (socket_init(argv[1]) !=0){
      printf ("No Connection to server\n\r");
      return; //return 0 if all OK else return 1
      }
+     
+     
+//     if (socket_init2() !=0){
+//     printf ("No Connection to server\n\r");
+//     return; //return 0 if all OK else return 1
+//     }
      
      //ok
      /*
@@ -158,9 +167,9 @@ while (1){
 
 	    //======================== read all 485 signals from server create signals and virtual devices ===================
 	    strcpy(message,""); //erase buffer
-	    printf("Buffer befor create Messasge: [%s] \n\r",message);
+	    //printf("Buffer befor create Messasge: [%s] \n\r",message);
 	    frame_pack("rd", ".", message);
-	    printf("Message: [%s] \n\r",message);	    
+	    //printf("Message: [%s] \n\r",message);	    
 	    
 		//tcpresult = frame_tcpreq(message);                      //send and recive response from server and copy to global signal_parser_buf
 		
@@ -169,8 +178,8 @@ while (1){
 		printf ("tcp send result[%i]\n\r",tcpresult);	    
 		//in this place need to unpack signals from frame
 		if ( frame_unpack(signal_parser_buf,tst) < 0){
-		    printf ("ERROR UNPACK! \n\r");
-		     printf(">>>>RECIVED^{%s} \n\r",tst);
+		     //printf ("ERROR UNPACK! \n\r");
+		     printf(">>>>ERROR FRAME UNPACK! RECIVED^{%s} \n\r",tst);
 		    break;
 		    }
 		if ( DEBUG == 1 ) printf(">>>>RECIVED^{%s} \n\r",tst);
@@ -217,28 +226,34 @@ while (1){
 	        
                      switch (STATE){
 	                      case 0:  //INIT
+	                               printf("\n\r++++++++++++++++++++++++++++++>>>>MODE INIT\n\r");
 	                               if ( strstr(Signal_Array[z].Name,".") != NULL ) Set_Signal_Param (z, ".", 1 ,0);	                      
-	                               STATE = get_state();
+	                               //STATE = get_state();
 	                      break;         
 	                                  
 	                      case 1:  //INIT
 	                               if ( strstr(Signal_Array[z].Name,".") != NULL ) Set_Signal_Param (z, ".", 1 ,0);	                      
-	                               STATE = get_state();
+	                               //STATE = get_state();
 	                      break;
 	               
 	               
 	                      case 2:  //RESET 
 	                               if ( strstr(Signal_Array[z].Name,".") != NULL ) Set_Signal_Param (z, ".", 1 ,0);	                      
-	                               STATE = get_state();
+	                               //STATE = get_state();
 	                      break;	               
 
 
 	                      case 3:  //WORK
+	                               //printf("\n\r++++++++++++++++++++++++++++++>>>>MODE WORK\n\r");
+	                               //read all signals
+	                               //if ( strstr(Signal_Array[z].Name,"485.kb") != NULL ) Set_Signal_Param (z, ".", 1 ,0);	                      
+	                               //write if mode = 3
 	                               if ( strstr(Signal_Array[z].Name,"485.rl.relay1") != NULL ) Set_Signal_Param (z, "485.rl.relay1", 2 ,1);	                      
+	                               if ( strstr(Signal_Array[z].Name,"485.rl.relay2") != NULL ) Set_Signal_Param (z, "485.rl.relay1", 2 ,1);	                      
 	                               if ( strstr(Signal_Array[z].Name,"485.rsrs.rm_u1_on") != NULL ) Set_Signal_Param (z, "485.rsrs.rm_u1_on", 2 ,1);	                      
 	                               if ( strstr(Signal_Array[z].Name,"485.rsrs.rm_u2_on") != NULL ) Set_Signal_Param (z, "485.rsrs.rm_u2_on", 2 ,1);	                      
 	                               if ( strstr(Signal_Array[z].Name,"wago.oc_mdo") != NULL ) Set_Signal_Param (z, "wago.oc_mdo", 2 ,1);	                      //start wago	                               
-	                               STATE = get_state();
+	                               //STATE = get_state();
 	                              // if (sTrigger_Ex (z, "wago.", 0 ))  Set_Signal_Param (z, "wago.", 1 ,0);
 	                              // if ( strstr(Signal_Array[z].Name,"wago.") != NULL ) Set_Signal_Param (z, "wago.", 1 ,0);
 	                              // if ( strstr(Signal_Array[z].Name,"485.") != NULL ) Set_Signal_Param (z, "485.", 1 ,0);
@@ -247,22 +262,24 @@ while (1){
 
 
 	                      case 4:  //STOP 
+	                               //printf("\n\r++++++++++++++++++++++++++++++>>>>MODE SOTP !!!!!!!1\n\r");	                      
 	                               if (sTrigger_Ex (z, "wago.", 0 ))  Set_Signal_Param (z, "wago.", 1 ,0);
 	                               if ( strstr(Signal_Array[z].Name,"485.rl.relay") != NULL ) Set_Signal_Param (z, "485.rl.relay", 2 ,0);	                      //stop rele
 	                               if ( strstr(Signal_Array[z].Name,"485.rsrs.rm_u1_on") != NULL ) Set_Signal_Param (z, "485.rsrs.rm_u1_on", 2 ,0);	              //stop rm1
 	                               if ( strstr(Signal_Array[z].Name,"485.rsrs.rm_u2_on") != NULL ) Set_Signal_Param (z, "485.rsrs.rm_u2_on", 2 ,0);	              //stop rm2
 	                               if ( strstr(Signal_Array[z].Name,"wago.oc_mdo") != NULL ) Set_Signal_Param (z, "wago.oc_mdo", 2 ,0);	                      //stop wago
-	                               STATE = get_state();
+	                               //printf("\n\r++++++++++++++++++++++++++++++>>>>MODE SOTP !!!!!!!1\n\r");	                      	                               
+	                               //STATE = get_state();
 	                      break;
 
                               case 5:  //TEST
 	                               if (sTrigger_Ex (z, "wago.", 0 ))  Set_Signal_Param (z, "wago.", 1 ,0);
-	                               STATE = get_state();
+	                               //STATE = get_state();
 	                      break;
 
                               case 6:  //ERROR 
 	                               if (sTrigger_Ex (z, "wago.", 0 ))  Set_Signal_Param (z, "wago.", 1 ,0);
-	                               STATE = get_state();
+	                               //STATE = get_state();
 	                      break;
 	               
 	                      default:  //DEFAULT
@@ -273,7 +290,7 @@ while (1){
 	                if (DEBUG == 1)  printf (" <<-- TO SRV  [#%i]  Name:[%s]   Val:[%i]     Ex[%i] \n\r",z,Signal_Array[z].Name,Signal_Array[z].Value[1],Signal_Array[z].ExState);	                    	                
 	        }
 	            
-	        printf("=================== ==>  Calculate all HASH TIME: [ %ld ] ms. \n\r", speedtest_stop());         
+	        printf("=================== ==>  Calculate all TIME: [ %ld ] ms. \n\r", speedtest_stop());         
          //break; //debug
                      //=========  SEND all signals to TCPCache =======
 
