@@ -15,8 +15,90 @@
 #include <unistd.h>
 #include "hash.h"
 
+#define Devices 40
+#define SignalsPerDev 100
 
+struct DeviceSignalCache {
+char DeviceName[100];
+int  Device_ID;
+char  Signals_Name[SignalsPerDev][100]; //device_name[100].signal_name[60]
+int  Signals_ID[SignalsPerDev]; 
+int  Signals_Val[SignalsPerDev];
+int  Signals_Ex[SignalsPerDev];
+};
 
+struct DeviceSignalCache DevCache[Devices]; //40 devices
+
+int FillDevCache(){
+int i=0;
+   for (i=0; i < MAX_Signals; i++)
+       {
+        if (strlen (Signal_Array[i].Name) > 2)
+           {
+            int dev;
+            for (dev=0; dev < Devices; dev++)
+                {
+                
+                 //if device already created
+                           if ( DevCache[dev].Device_ID == Signal_Array[i].MB_Id ) //if empty slot for dev
+                              {                               
+                               int sign=0;
+                               int Last_free_index=0;
+                               for (sign=0; sign < SignalsPerDev; sign++){
+                               
+                                    if ( strlen(DevCache[dev].Signals_Name[sign]) < 2 ) { //if signal slot is empty
+                                         Last_free_index=sign; //save the index of empty slot
+                                        }
+                               
+                                    if ( strlen(DevCache[dev].Signals_Name[sign]) > 2 ){ //if name not empty
+                                         //if ( strstr(DevCache[dev].Signals_Name[sign],Signal_Array[i].Name)!=NULL )// if signal is present
+                                             //break;
+                                        }                                    
+
+                                        
+                                     if ( strstr (DevCache[dev].Signals_Name[sign],Signal_Array[i].Name) == NULL ){    
+                                         printf("Free index [%i]\n\r",Last_free_index);
+                                         DevCache[dev].Signals_ID[Last_free_index] = i; //signal number in Signal_Array
+                                         strcpy(DevCache[dev].Signals_Name[Last_free_index],Signal_Array[i].Name);   
+                                         printf("EXIST->>devNum[%i] Mb_ID[%i] DEV_Name[%s] Signal_id[%i] Signal_Name[%s]\n\r ",dev,DevCache[dev].Device_ID ,DevCache[dev].DeviceName, DevCache[dev].Signals_ID[0],DevCache[dev].Signals_Name[0]);                                         
+                                         break;
+                                         }                  
+                                   }
+                               }else{  //if not exist
+                                      if ( strlen(DevCache[dev].DeviceName) < 2 ) //if empty slot for dev
+                                          {
+                                             if ( DevCache[dev].Device_ID ==0 ){
+                                                 strcpy(DevCache[dev].DeviceName,Signal_Array[i].Name);
+                                                 DevCache[dev].Device_ID = Signal_Array[i].MB_Id;
+                                                 DevCache[dev].Signals_ID[0] = i; //signal number in Signal_Array
+                                                 strcpy(DevCache[dev].Signals_Name[0],Signal_Array[i].Name);
+                                                 printf("NEW->>devNum[%i] Mb_ID[%i] DEV_Name[%s] Signal_id[%i] Signal_Name[%s]\n\r ",dev,DevCache[dev].Device_ID ,DevCache[dev].DeviceName, DevCache[dev].Signals_ID[0],DevCache[dev].Signals_Name[0]);
+                                                 break;
+                                                }
+                                           }
+                           
+                                    }
+               }
+        
+          }
+        }
+return 0;
+}
+
+int ShowDevCache(){
+int i=0;
+    printf("Show Virtual Device Cache: \n\r");
+    for (i=0; i < Devices; i++){
+       if (DevCache[i].Device_ID > 0){
+          printf(">>>[%i]DevName[%s] DevId[%i] \n\r",i,DevCache[i].DeviceName,DevCache[i].Device_ID);
+          int sign;
+          for (sign=0; sign < SignalsPerDev; sign++){
+               printf("[%i]Signal_id[%i] SignalName[%s]\n\r",sign,DevCache[i].Signals_ID[sign],DevCache[i].Signals_Name[sign]);     
+          }
+       }
+    }
+return 0;
+}
 
 int sTrigger_Ex (int Signal_Array_id, char *SearchedName, int wait_ExState ){
     if ( strstr(Signal_Array[Signal_Array_id].Name,SearchedName) != NULL)
@@ -253,6 +335,8 @@ while (1){
 	                               if ( strstr(Signal_Array[z].Name,"485.rsrs.rm_u1_on") != NULL ) Set_Signal_Param (z, "485.rsrs.rm_u1_on", 2 ,1);	                      
 	                               if ( strstr(Signal_Array[z].Name,"485.rsrs.rm_u2_on") != NULL ) Set_Signal_Param (z, "485.rsrs.rm_u2_on", 2 ,1);	                      
 	                               if ( strstr(Signal_Array[z].Name,"wago.oc_mdo") != NULL ) Set_Signal_Param (z, "wago.oc_mdo", 2 ,1);	                      //start wago	                               
+	                                if ( strstr(Signal_Array[z].Name,"485.rsrs2.state_sound1_led") != NULL ) Set_Signal_Param (z, "485.rsrs2.state_sound1_led", 2 ,1);	                      
+	                                if ( strstr(Signal_Array[z].Name,"485.rsrs2.state_sound2_led") != NULL ) Set_Signal_Param (z, "485.rsrs2.state_sound2_led", 2 ,1);	                      
 	                               //STATE = get_state();
 	                              // if (sTrigger_Ex (z, "wago.", 0 ))  Set_Signal_Param (z, "wago.", 1 ,0);
 	                              // if ( strstr(Signal_Array[z].Name,"wago.") != NULL ) Set_Signal_Param (z, "wago.", 1 ,0);
@@ -289,7 +373,13 @@ while (1){
 	             
 	                if (DEBUG == 1)  printf (" <<-- TO SRV  [#%i]  Name:[%s]   Val:[%i]     Ex[%i] \n\r",z,Signal_Array[z].Name,Signal_Array[z].Value[1],Signal_Array[z].ExState);	                    	                
 	        }
-	            
+	        /*
+	        printf("=================== ==>  Virt Cache Fill.============= \n\r");             
+	        FillDevCache();
+	        printf("=================== ==>  Show CacheDev: ================ \n\r");         
+	        ShowDevCache();
+	        break;
+	        */
 	        printf("=================== ==>  Calculate all TIME: [ %ld ] ms. \n\r", speedtest_stop());         
          //break; //debug
                      //=========  SEND all signals to TCPCache =======
