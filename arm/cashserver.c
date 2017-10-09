@@ -226,6 +226,7 @@ void ItoA(int n, char s[]) {
 
 //********************************** READ **********************************************
 int Read_operation(char tst[MAX_MESS], char to_send[MAX_MESS]){
+pthread_mutex_lock(&mutex); // block mutex 
         	char *istr;                
 		char sep_comma[4]=";";
 		int found=0;  
@@ -246,7 +247,9 @@ int Read_operation(char tst[MAX_MESS], char to_send[MAX_MESS]){
 				{
 				       if ( Signal_Array[cnt].Value[1] > 0 ){
 				           if (DEBUG == 1)    printf ("  READ: Signal > 0 [ Name: [%s]  Value: {%i} ExState: [%i] ] \n\r",Signal_Array[cnt].Name,Signal_Array[cnt].Value[1],Signal_Array[cnt].ExState); //debug
+				    
 				          }
+				        if (DEBUG == 3)    printf ("  READ: Signal > 0 [ Name: [%s]  Value: {%i} ExState: [%i] ] \n\r",Signal_Array[cnt].Name,Signal_Array[cnt].Value[1],Signal_Array[cnt].ExState); //debug
 				        pack_signal(cnt,tmpz);
 				        strcat (to_send,tmpz);
 					xx++;
@@ -255,6 +258,7 @@ int Read_operation(char tst[MAX_MESS], char to_send[MAX_MESS]){
 			 if (DEBUG == 3) printf ("#%i  <<---- R-SignalsName [%s]  Val{%i} Ex{%i}  \n\r",cnt,Signal_Array[cnt].Name, Signal_Array[cnt].Value[1] ,Signal_Array[cnt].ExState); //debug
 			}
  printf("Signals READ  found [%i]! \n\r",found);
+ pthread_mutex_unlock(&mutex); // unblock mutex 
 return found; //founded signal counter
 }
 //**************************************************************************************
@@ -262,6 +266,7 @@ return found; //founded signal counter
 
 //********************************** WRITE *********************************************
 int Write_operation (char tst[MAX_MESS]){
+pthread_mutex_lock(&mutex); // block mutex 
 		    char *istr;
 		    int found=0;          //flag how many founded signals
 		    char digit[5];    //buffer Value of signal as CHAR
@@ -348,6 +353,7 @@ int Write_operation (char tst[MAX_MESS]){
 			   }
 
 			}
+ pthread_mutex_unlock(&mutex); // unblock mutex 
  printf("Signals WRITE  found [%i]! \n\r",found);
 return found; //return number of written signals
 }
@@ -418,7 +424,7 @@ void* connection_handler (void *args)
 		   switch (rd_wr){
   		                   case 1:  //READ OPERATION
   		                	 speedtest_start();
-  		                	 pthread_mutex_lock(&mutex); // block mutex 
+  		                	 //pthread_mutex_lock(&mutex); // block mutex 
   		                	 char result[MAX_MESS];  //buffer for response 50 000 bytes
 					 char result2[MAX_MESS];  //buffer for response 50 000 bytes
 					    strcpy(client_message,"");
@@ -429,7 +435,7 @@ void* connection_handler (void *args)
 					     if (DEBUG == 1) printf ("result2: {%s}",result2);
 					     int msg_len = strlen(result2);
 					     int write_ok;
-					     pthread_mutex_unlock(&mutex); //unlock mutex
+					    // pthread_mutex_unlock(&mutex); //unlock mutex
 					     
 					     write_ok = write(sock, result2, msg_len ); //send packet to client			
 					     if (DEBUG == 1) printf("\n\rTry to Write,  Sendded bytes: [%i] \n\r",write_ok);
@@ -455,9 +461,10 @@ void* connection_handler (void *args)
   		                   
   		                   case 2:  //WRITE OPERATION
   		                         speedtest_start();
-  		                 	 pthread_mutex_lock(&mutex); // block mutex 
+  		                 	 //pthread_mutex_lock(&mutex); // block mutex 
   		                 	 if (strlen (tst)< 30 ) printf ("tst[%s]\n\r",tst);
   		                 	 if (Write_operation(tst) > 0) { //if recived siggnals founded and writed into server
+  		                 	 //pthread_mutex_unlock(&mutex); //unlock mutex
 			                     write(sock, mesOk, strlen(mesOk));
 			                     memset(client_message, 0, mess_length);
   		                 	 
@@ -468,7 +475,7 @@ void* connection_handler (void *args)
   		                 	         }
   		                 	 
   		                 	 printf(" ++++++++++++++++++++++++==>   SPEEDTEST TCPCache WRITE_REQ Time: [ %ld ] ms. \n\r", speedtest_stop());
-					 pthread_mutex_unlock(&mutex); //unlock mutex
+					 
   		                   break;
   		                   
   		                   default: //Error section

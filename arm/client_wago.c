@@ -319,7 +319,7 @@ int tcpresult = 0;
       strcpy (signal_parser_buf, "");	//erase buffer for next iteration
       //======================== read all 485 signals from server create signals and virtual devices ===================
       strcpy (message, "");
-      frame_pack ("rd", "485.", message);
+      frame_pack ("rd", "wago.", message);
       tcpresult = frame_tcpreq (message);
       //ret=tcpresult; //return result of unpack
       

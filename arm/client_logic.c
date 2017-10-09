@@ -334,7 +334,7 @@ while (1){
 	                               if ( strstr(Signal_Array[z].Name,"485.rl.relay2") != NULL ) Set_Signal_Param (z, "485.rl.relay1", 2 ,1);	                      
 	                               if ( strstr(Signal_Array[z].Name,"485.rsrs.rm_u1_on") != NULL ) Set_Signal_Param (z, "485.rsrs.rm_u1_on", 2 ,1);	                      
 	                               if ( strstr(Signal_Array[z].Name,"485.rsrs.rm_u2_on") != NULL ) Set_Signal_Param (z, "485.rsrs.rm_u2_on", 2 ,1);	                      
-	                               if ( strstr(Signal_Array[z].Name,"wago.oc_mdo") != NULL ) Set_Signal_Param (z, "wago.oc_mdo", 2 ,1);	                      //start wago	                               
+	                               if ( strstr(Signal_Array[z].Name,"wago.oc_mdo1.ka7_1") != NULL ) Set_Signal_Param (z, "wago.oc_mdo1.ka7_1", 2 ,1);	                      //start wago	                               
 	                                if ( strstr(Signal_Array[z].Name,"485.rsrs2.state_sound1_led") != NULL ) Set_Signal_Param (z, "485.rsrs2.state_sound1_led", 2 ,1);	                      
 	                                if ( strstr(Signal_Array[z].Name,"485.rsrs2.state_sound2_led") != NULL ) Set_Signal_Param (z, "485.rsrs2.state_sound2_led", 2 ,1);	                      
 	                               //STATE = get_state();
