@@ -376,6 +376,48 @@ int frame_pack (char *type, char *message_in, char *message_out) { //construct f
 }
 */
 
+strcpyN(int start_pos, char *str, char *result){
+int n=0;
+int inc=0;
+strcpy(result,"");
+printf("strcpyN: Size recived %i \n\r",strlen(str));
+if (strlen(str) < 1) return -1;
+for (n=0; n < (strlen(str)); n++)
+    {
+      if ( n >= start_pos ){
+          result[inc]=str[n];
+          inc++;
+          //printf("strcpyN [%c] \n\r",result[inc]);
+         }    
+    }
+    printf("strcpyN [%s] \n\r",result);
+return 0;
+}
+
+
+Nstcpy(int end_pos, char *str2, char *result2){
+int n=0;
+int inc=0;
+    //strcpy(result2,"");
+    if (strlen(str2) < 1) return -1;
+    printf("Nstrcpy_in str[%s] pos[%i]\n\r",str2,end_pos);
+    printf("Nstrcpy [%s] \n\r",result2);
+    for (n=0; n != (strlen(str2)); n++)
+        {
+         // printf("%i [%c] \n\r",n,str[n]);
+         if ( inc != end_pos ){
+             result2[inc]=str2[n];
+             printf("%i [%c] \n\r",n,result2[inc]);         
+             printf("Nstrcpy [%s] \n\r",result2);
+             inc++;
+             } 
+        }
+    printf("Nstrcpy [%s] \n\r",result2);
+return 0;
+}
+
+
+
 int frame_pack (char *type, char *message_in, char *message_out) { //construct frame frome message_in and put result to message type is "rd" or "wr"
     //char message [MAX_MESS]; //max size for 1 packet send for tcp is 65534 bytes 
     char c_len[4];
@@ -387,13 +429,15 @@ int frame_pack (char *type, char *message_in, char *message_out) { //construct f
        }
     int len = strlen (message_in) + 1; //length = Data container size in bytes + 1byte =";"    
     //Try Construct frame
-    strcpy(message_out,type);
+    strcpy (message_out,"$"); 
+    strcat(message_out,type);
     strcat (message_out,";");
     ItoA(len,c_len); //convert int to char
     strcat(message_out,c_len);    
     strcat (message_out, "#");
     strcat (message_out,message_in);
-    strcat (message_out,";\0");
+    strcat (message_out,";*\0");
+//    strcat (message_out,";\0");
     if (DEBUG == 1) printf("Constructed Frame^[%s]\n\n\r",message_out);
     if ( strlen(message_out ) < 30) printf("Constructed Frame^[%s]\n\n\r",message_out);
     return 0;
@@ -406,15 +450,27 @@ int frame_unpack (char *srvr_reply, char *data){ // copy serialized signals into
     char header[100];
     char c_len[10];
     int  ret_rd_wr=0;
-    istr = strtok (srvr_reply,sep); //extract HEADER and DATA by "#"
+    
+    //test frame for accepting $-start symbol. *-end symbol;
+    if (strstr(srvr_reply,"$")==NULL)  {
+       printf("ERR Not found Start symbol in frame \n\r");
+       return -1;
+       }
+    if (strstr(srvr_reply,"*")==NULL) {
+       printf("ERR Not found Stop symbol in frame \n\r");    
+       return -1;
+        }
+    
+    istr = strtok (srvr_reply,sep); //extract HEADER and DATA by "#" seporator
     if (istr != NULL) { //HEADER
         printf("Header^{%s}\n\r",istr);
-        if ( strlen(istr)<100 ){ 
-            strcpy(header,istr);
-            
-           }else {printf ("ERR HEADER TOO BIG[%i] \n\r",strlen(istr));}
+         if ( strlen(istr)<100 ){ 
+             strcpy(header,"");
+             strcpyN (1,istr,header); //miss first symbol "$"             
+             if ( strlen(header) < 30 ) printf("Header^{%s}\n\r",header);
+             }else {printf ("ERR HEADER TOO BIG[%i] \n\r",strlen(istr));}
            
-        } else {  printf ("ERR data_extract: Header - NULL! \n\r");
+       } else {  printf ("ERR data_extract: Header - NULL! \n\r");
                   return -1;
                }
     
@@ -423,7 +479,7 @@ int frame_unpack (char *srvr_reply, char *data){ // copy serialized signals into
         //printf("PACKET^{%s}\n\r",istr); //debug
         strcpy (data,istr);
         if (strlen (data) < 30) printf ("data_: {%s} \n\r",data);
-        } else { printf ("ERR data_extract: PACKET FROM FARME  - NULL! \n\r");
+        } else { printf ("ERR data_extract: PACKET FROM FRAME  - NULL! \n\r");
                  return -1;
                }
     
@@ -434,12 +490,12 @@ int frame_unpack (char *srvr_reply, char *data){ // copy serialized signals into
     if (istr != NULL) { //type of frame read or write
         printf("Type^{%s}\n\r",istr);
         strcpy(type,istr);
-        if (strstr(type,"rd")) ret_rd_wr=1; //read request
-        if (strstr(type,"wr")) ret_rd_wr=2; //write request
+        if (strstr(type,"rd")) ret_rd_wr=1;  //read request
+        if (strstr(type,"wr")) ret_rd_wr=2;  //write request
         if (strstr(type,"Ok!")) ret_rd_wr=3; //ack - ok
         if (strstr(type,"err")) ret_rd_wr=4; //server return "error request"
         if (strstr(type,"ret")) ret_rd_wr=5; //retry request, if packet len no OK
-        } else {  printf ("ERR data_extract: Header1 - NULL! \n\r");
+        } else {  printf ("ERR data_extract: Header_cmd - NULL! \n\r");
                   return -1;
                }
                
@@ -449,16 +505,23 @@ int frame_unpack (char *srvr_reply, char *data){ // copy serialized signals into
         //printf("Len^{%s}\n\r",istr);
         strcpy(c_len,istr);
         //printf("c_len {%s}\n\r",c_len);
-        } else {  printf ("ERR data_extract: Header2 - NULL! \n\r");
+        } else {  printf ("ERR data_extract: Header_pkt_len - NULL! \n\r");
                   return -1;
                }
                
          int r1= atoi (c_len); //number bytes in packet;
-         int r2= strlen (data);
+        /* char *tmps22;
+         
+         Nstcpy(strlen(data)-1,data,tmps22);
+         strcpy(data,"");
+         strcpy(data,tmps22);
+         */
+         int r2= strlen (data)-1; //bad solution packet len - 1  "*"
          //printf ("[r1-%i] [r2-%i]\n\r",r1,r2);
          
          if ( r1 != r2 ){
              printf("ERR Recived bytes len[%i] != calculated bytes len[%i]  \n\r",r1,r2);
+             printf("DATA:{%s}\n\n",data);
              return -2; //if data length != calculated data lenght
              }
      

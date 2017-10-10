@@ -15,7 +15,7 @@
 #include<time.h>      // for time_t
 #include<errno.h>     // for print errors
 
-#define DEBUG 3       // 0 -not debug  1,2,3- debug
+#define DEBUG 1       // 0 -not debug  1,2,3- debug
 #include "signals.h"
 #include "network.h"
 #include "speedtest.h"
