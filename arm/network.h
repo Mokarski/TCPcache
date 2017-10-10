@@ -41,7 +41,7 @@ struct sockaddr_in server;
 //  NETWORK
 int socket_init();
 int socket_close();
-int frame_unpack (char *server_reply, char *data);
+int frame_unpack (char *srv_re, char *dat);
 
 int tcpsignal_parser( char* tcp_buffer );
 int tcpsignal_read(char *message_in);

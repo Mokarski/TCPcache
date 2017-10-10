@@ -429,14 +429,14 @@ int frame_pack (char *type, char *message_in, char *message_out) { //construct f
        }
     int len = strlen (message_in) + 1; //length = Data container size in bytes + 1byte =";"    
     //Try Construct frame
-    strcpy (message_out,"$"); 
+    strcpy (message_out,"");  //$
     strcat(message_out,type);
     strcat (message_out,";");
     ItoA(len,c_len); //convert int to char
     strcat(message_out,c_len);    
     strcat (message_out, "#");
     strcat (message_out,message_in);
-    strcat (message_out,";*\0");
+    strcat (message_out,";\0"); //*
 //    strcat (message_out,";\0");
     if (DEBUG == 1) printf("Constructed Frame^[%s]\n\n\r",message_out);
     if ( strlen(message_out ) < 30) printf("Constructed Frame^[%s]\n\n\r",message_out);
@@ -450,7 +450,7 @@ int frame_unpack (char *srvr_reply, char *data){ // copy serialized signals into
     char header[100];
     char c_len[10];
     int  ret_rd_wr=0;
-    
+    /*
     //test frame for accepting $-start symbol. *-end symbol;
     if (strstr(srvr_reply,"$")==NULL)  {
        printf("ERR Not found Start symbol in frame \n\r");
@@ -460,17 +460,19 @@ int frame_unpack (char *srvr_reply, char *data){ // copy serialized signals into
        printf("ERR Not found Stop symbol in frame \n\r");    
        return -1;
         }
-    
+    */
     istr = strtok (srvr_reply,sep); //extract HEADER and DATA by "#" seporator
     if (istr != NULL) { //HEADER
         printf("Header^{%s}\n\r",istr);
-         if ( strlen(istr)<100 ){ 
-             strcpy(header,"");
-             strcpyN (1,istr,header); //miss first symbol "$"             
+         if ( strlen(istr)<100 ){          
+             //strcpy(header,"");
+             strcpy(header,istr);             
+             //strcpyN (1,istr,header); //miss first symbol "$"             
              if ( strlen(header) < 30 ) printf("Header^{%s}\n\r",header);
              }else {printf ("ERR HEADER TOO BIG[%i] \n\r",strlen(istr));}
            
        } else {  printf ("ERR data_extract: Header - NULL! \n\r");
+                 printf (">>>>>>> ERR data_extract: \n\r->SRV REPLY:{%s}\n\r ->DATA:{%s}! \n\r",srvr_reply,data);
                   return -1;
                }
     
@@ -479,7 +481,9 @@ int frame_unpack (char *srvr_reply, char *data){ // copy serialized signals into
         //printf("PACKET^{%s}\n\r",istr); //debug
         strcpy (data,istr);
         if (strlen (data) < 30) printf ("data_: {%s} \n\r",data);
-        } else { printf ("ERR data_extract: PACKET FROM FRAME  - NULL! \n\r");
+        } else { 
+                 printf ("ERR data_extract: PACKET FROM FRAME  - NULL! \n\r");
+                 printf (">>>>>>> ERR data_extract: \n\r->SRV REPLY:{%s}\n\r ->DATA:{%s}! \n\r",srvr_reply,data);
                  return -1;
                }
     
@@ -496,6 +500,7 @@ int frame_unpack (char *srvr_reply, char *data){ // copy serialized signals into
         if (strstr(type,"err")) ret_rd_wr=4; //server return "error request"
         if (strstr(type,"ret")) ret_rd_wr=5; //retry request, if packet len no OK
         } else {  printf ("ERR data_extract: Header_cmd - NULL! \n\r");
+    		  printf (">>>>>>> ERR data_extract: \n\r->SRV REPLY:{%s}\n\r ->DATA:{%s}! \n\r",srvr_reply,data);
                   return -1;
                }
                
@@ -506,6 +511,7 @@ int frame_unpack (char *srvr_reply, char *data){ // copy serialized signals into
         strcpy(c_len,istr);
         //printf("c_len {%s}\n\r",c_len);
         } else {  printf ("ERR data_extract: Header_pkt_len - NULL! \n\r");
+                  printf (">>>>>>> ERR data_extract: \n\r->SRV REPLY:{%s}\n\r ->DATA:{%s}! \n\r",srvr_reply,data);
                   return -1;
                }
                
@@ -516,7 +522,7 @@ int frame_unpack (char *srvr_reply, char *data){ // copy serialized signals into
          strcpy(data,"");
          strcpy(data,tmps22);
          */
-         int r2= strlen (data)-1; //bad solution packet len - 1  "*"
+         int r2= strlen (data); //bad solution packet len - 1  "*"
          //printf ("[r1-%i] [r2-%i]\n\r",r1,r2);
          
          if ( r1 != r2 ){

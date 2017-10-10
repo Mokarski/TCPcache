@@ -25,10 +25,10 @@
 #define BAD_MESSAGE         -13
 #define SUCCESS               0
 #define FAIL_ERROR			  1
-#define NUM_THREADS 		  4
+#define NUM_THREADS 			  4
 #define MAX_SIZE			100
-#define RFC1123FMT "%a, %d %b %Y %H:%M:%S GMT"
-#define PORT 8888
+#define RFC1123FMT 	"%a, %d %b %Y %H:%M:%S GMT"
+#define PORT 		8888
 static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
 
@@ -222,7 +222,13 @@ void ItoA(int n, char s[]) {
 
 
 
-
+int ShowAllSignals(){
+int i=0;
+    for (i=0; i < MAX_Signals; i++){
+         printf("#%i Signlal[%s] \n\r",i,Signal_Array[i].Name);
+        }
+return 0;
+}
 
 //********************************** READ **********************************************
 int Read_operation(char tst[MAX_MESS], char to_send[MAX_MESS]){
@@ -258,6 +264,7 @@ pthread_mutex_lock(&mutex); // block mutex
 			 if (DEBUG == 3) printf ("#%i  <<---- R-SignalsName [%s]  Val{%i} Ex{%i}  \n\r",cnt,Signal_Array[cnt].Name, Signal_Array[cnt].Value[1] ,Signal_Array[cnt].ExState); //debug
 			}
  printf("Signals READ  found [%i]! \n\r",found);
+ if (found == 0) ShowAllSignals();
  pthread_mutex_unlock(&mutex); // unblock mutex 
 return found; //founded signal counter
 }
@@ -384,7 +391,7 @@ void* connection_handler (void *args)
     mesOk = "Ok!";	
     mesBad = "NOcmd!";
     mesErr = "Err!";
-    mesUnp = "Err! unpack Farme!";
+    mesUnp = "Err! unpack Frame!";
 //    char a[4096];
     char dig[128];	
     //char packed_txt_string[40000];
@@ -395,32 +402,32 @@ void* connection_handler (void *args)
     while( (read_size = recv(sock , client_message , MAX_MESS , 0) ) > 0 )
     {
       if (DEBUG == 1) iterration++;
-		int mess_length = sizeof(client_message) / sizeof(client_message[0]);
+		int mess_length = sizeof(client_message) / sizeof(char);
 		 if (DEBUG == 1) printf("\n\r {inTHREAD_sock[%i] Cycle %i} \n\r [SRV received: %i bytes] client_message_read: [%s]\r\n",sock,iterration,read_size ,client_message);
-		 if (strlen(client_message) < 30) printf(">>>Recived from client[%s]\n\r",client_message);
+		 if (strlen(client_message) < 30) printf(">>>[Sock %i] Recived from client[%s]\n\r",sock,client_message);
 
 		
 	//********************************* COMMAND SELECTION AND EXECUTION ******************************/
-	    pthread_mutex_lock(&mutex); // block mutex 
+	    //pthread_mutex_lock(&mutex); // block mutex 
 	        strcpy(tst,""); //erase buffer
 		rd_wr = frame_unpack(client_message,tst);
-	    pthread_mutex_unlock(&mutex); //unlock mutex
+	    //pthread_mutex_unlock(&mutex); //unlock mutex
 	    
 		if (rd_wr < 0) {
 		    printf ("\n ===============================================================\n");
 		    printf ("----------------------> FRAME_UNPACK ERROR!!!!!: %i \n\r",rd_wr);
-		    if (DEBUG > 0) printf("\n\r {Cycle %i} \n\r [SRV received: %i bytes] client_message: [%s]\r\n",iterration,read_size ,client_message);
+		    if (DEBUG > 0) printf("\n\rSOCKET_ID[%i] {Cycle %i} \n\r [SRV received: %i bytes] client_message: [%s]\r\n",sock,iterration,read_size ,client_message);
 		    printf ("\n ===============================================================\n");
 		    write(sock, mesUnp, strlen(mesUnp));
 		    close (sock); // close socket before exit
-		    printf("Drop the socet and close connection. \n\r");
+		    printf("Drop the socet[%i] and close connection. \n\r",sock);
 		    return 0; 
 		   } else {
-  		          if (DEBUG == 1) printf("[FRAMEUNPACK: rd_wr[%i]]   Unpacked: [%s] \r\n", rd_wr, tst);	   
+  		          if (DEBUG == 1) printf("Thread_sock[%i] [FRAMEUNPACK: rd_wr[%i]]   Unpacked: [%s] \r\n",sock, rd_wr, tst);	   
   		         }
   		         
   		         
-  		   
+  		   //All mutex opertion moved inside function Read_operation/Write_operation
 		   switch (rd_wr){
   		                   case 1:  //READ OPERATION
   		                	 speedtest_start();
