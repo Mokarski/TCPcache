@@ -496,7 +496,7 @@ void* connection_handler (void *args)
 					    
 				
   		   }  //end switch                                                                                                                                                   
-	   
+	   strcpy(client_message,""); //erase buffer for next recive
 
 
 

@@ -376,7 +376,7 @@ int frame_pack (char *type, char *message_in, char *message_out) { //construct f
 }
 */
 
-strcpyN(int start_pos, char *str, char *result){
+int strcpyN(int start_pos, char *str, char *result){
 int n=0;
 int inc=0;
 strcpy(result,"");
@@ -395,7 +395,7 @@ return 0;
 }
 
 
-Nstcpy(int end_pos, char *str2, char *result2){
+int Nstcpy(int end_pos, char *str2, char *result2){
 int n=0;
 int inc=0;
     //strcpy(result2,"");
@@ -417,6 +417,60 @@ return 0;
 }
 
 
+int exploderL(char delimiter, char *inn, char *outt){
+int n=0;
+int inc=0;
+char tmp_out[MAX_MESS];
+//strcpy(outt,"");
+strcpy(tmp_out,"");
+    //outt[0]='z';
+    printf("EXPLODER_L d %c in[%s] out[%s] \n\r",delimiter,inn,outt);
+    if(strlen(inn) < 1) return -1;
+    int len = strlen(inn);
+    //int len =5;
+    
+    for (n=0; n < len; n++)
+        {
+         printf( "EXPLODER_L #%i [%c] \n\r",n,inn[n]);
+         //if(inn[n]==delimiter){
+         if ( inn[n]==delimiter ) {
+             strncpy(outt,tmp_out,(size_t)n);
+             break;
+             } else {
+                      printf("EXPLODER_L inner for[%i]  char[%c] inc[%i] \n\r",n,inn[n],inc);
+                      printf("EXPLODER_L #%i out{%s} \n\r",n,tmp_out);
+                      tmp_out[n]=inn[n];
+                      //inc++;
+                      printf("EXPLODER_L outter %i [%c] out{%s} \n\r",n,inn[n],tmp_out);
+                    } 
+             printf("EXPLODER_L out [%s] \n\r",tmp_out);
+         //if ( inn[n]== delimiter )break;
+        }
+return 0;
+}
+
+int exploderR(char delimiter, char *in, char *out){
+int n=0;
+int inc=0;
+int start=0;
+strcpy(out,"");
+    printf("d %c in[%s] out[%s] \n\r",delimiter,in,out);    
+    if (strlen(in) < 1) return -1;
+    for (n=0; n != (strlen(in)); n++)
+        {
+         // printf("%i [%c] \n\r",n,str[n]);
+         
+         if (start == 1 )
+            {
+             out[inc]=in[n];
+             inc++;
+             }          
+             
+         if ( in[n]==delimiter ) start=1;         
+        }
+     printf("EXPLODER_R out [%s] \n\r",out);        
+return 0;
+}
 
 int frame_pack (char *type, char *message_in, char *message_out) { //construct frame frome message_in and put result to message type is "rd" or "wr"
     //char message [MAX_MESS]; //max size for 1 packet send for tcp is 65534 bytes 
@@ -443,13 +497,20 @@ int frame_pack (char *type, char *message_in, char *message_out) { //construct f
     return 0;
 }
 
-int frame_unpack (char *srvr_reply, char *data){ // copy serialized signals into data and return 1 if read or 2 if write
-    char sep[10]="#";
-    char type[5];
-    char *istr;
+int frame_unpack (char *srvr_reply, char *dat){ // copy serialized signals into data and return 1 if read or 2 if write
+    char sep ='#';
+    char type[3];    
+    char istr[MAX_MESS];
     char header[100];
     char c_len[10];
     int  ret_rd_wr=0;
+
+    //clear trash
+    strcpy(c_len,"");
+    strcpy(type,"");    
+    strcpy(istr,"");
+    strcpy(header,"");
+    
     /*
     //test frame for accepting $-start symbol. *-end symbol;
     if (strstr(srvr_reply,"$")==NULL)  {
@@ -461,57 +522,67 @@ int frame_unpack (char *srvr_reply, char *data){ // copy serialized signals into
        return -1;
         }
     */
-    istr = strtok (srvr_reply,sep); //extract HEADER and DATA by "#" seporator
-    if (istr != NULL) { //HEADER
-        printf("Header^{%s}\n\r",istr);
-         if ( strlen(istr)<100 ){          
+    exploderL (sep,srvr_reply,header); //extract HEADER and DATA by "#" seporator
+    if (header != NULL) { //HEADER
+        printf("Header^{%s}\n\r",header);
+         if ( strlen(header)<100 ){          
              //strcpy(header,"");
-             strcpy(header,istr);             
+             //strcpy(header,istr);             
              //strcpyN (1,istr,header); //miss first symbol "$"             
-             if ( strlen(header) < 30 ) printf("Header^{%s}\n\r",header);
-             }else {printf ("ERR HEADER TOO BIG[%i] \n\r",strlen(istr));}
+             if ( strlen(header) < 30 ) printf("(len<30) Header^{%s}\n\r",header);
+             }else {printf ("ERR HEADER TOO BIG[%i] \n\r",strlen(header));}
            
        } else {  printf ("ERR data_extract: Header - NULL! \n\r");
-                 printf (">>>>>>> ERR data_extract: \n\r->SRV REPLY:{%s}\n\r ->DATA:{%s}! \n\r",srvr_reply,data);
+                 printf (">>>>>>> ERR data_extract: \n\r->SRV REPLY:{%s}\n\r ->DATA:{%s}! \n\r",srvr_reply,dat);
                   return -1;
                }
     
-    istr = strtok (NULL,sep);
+    exploderR (sep,srvr_reply,istr);
     if (istr != NULL) { //DATA
         //printf("PACKET^{%s}\n\r",istr); //debug
-        strcpy (data,istr);
-        if (strlen (data) < 30) printf ("data_: {%s} \n\r",data);
+        strcpy (dat,istr);
+        if (strlen (dat) < 30) printf ("data_: {%s} \n\r",dat);
         } else { 
                  printf ("ERR data_extract: PACKET FROM FRAME  - NULL! \n\r");
-                 printf (">>>>>>> ERR data_extract: \n\r->SRV REPLY:{%s}\n\r ->DATA:{%s}! \n\r",srvr_reply,data);
+                 printf (">>>>>>> ERR data_extract: \n\r->SRV REPLY:{%s}\n\r ->DATA:{%s}! \n\r",srvr_reply,dat);
                  return -1;
                }
     
     
     
-    char sep2[10]=";";           
-    istr = strtok (header,sep2); //extract type and number bytes
-    if (istr != NULL) { //type of frame read or write
-        printf("Type^{%s}\n\r",istr);
-        strcpy(type,istr);
+    char sep2=';';           
+    exploderL(sep2,header,type); //extract type CMD  by ";"
+    /*if (strlen(type) > 4) {
+        printf("Too long cmd! more then 4 bytes! \n\r");
+        return -1;
+        }
+        */
+    if (type != NULL) { //type of frame read or write
+        printf("Type^{%s}\n\r",type);
+        //strcpy(type,istr);
         if (strstr(type,"rd")) ret_rd_wr=1;  //read request
         if (strstr(type,"wr")) ret_rd_wr=2;  //write request
         if (strstr(type,"Ok!")) ret_rd_wr=3; //ack - ok
         if (strstr(type,"err")) ret_rd_wr=4; //server return "error request"
         if (strstr(type,"ret")) ret_rd_wr=5; //retry request, if packet len no OK
         } else {  printf ("ERR data_extract: Header_cmd - NULL! \n\r");
-    		  printf (">>>>>>> ERR data_extract: \n\r->SRV REPLY:{%s}\n\r ->DATA:{%s}! \n\r",srvr_reply,data);
+    		  printf (">>>>>>> ERR data_extract: \n\r->SRV REPLY:{%s}\n\r ->DATA:{%s}! \n\r",srvr_reply,dat);
                   return -1;
                }
                
                
-    istr = strtok (NULL,sep2);    
-        if (istr != NULL) { //extrcat lenght 
-        //printf("Len^{%s}\n\r",istr);
-        strcpy(c_len,istr);
+     exploderR (sep2,header,c_len);    //extract number bytes by ";"
+     if (strlen (c_len) > 9 )
+        {
+         printf("Too big number in packet len! More then 9 bytes! \n\r");
+         return -1;
+        }
+        if (c_len != NULL) { //extrcat lenght 
+        printf("Len^{%s}\n\r",c_len);
+        //strcpy(c_len,istr);
         //printf("c_len {%s}\n\r",c_len);
         } else {  printf ("ERR data_extract: Header_pkt_len - NULL! \n\r");
-                  printf (">>>>>>> ERR data_extract: \n\r->SRV REPLY:{%s}\n\r ->DATA:{%s}! \n\r",srvr_reply,data);
+                  printf (">>>>>>> ERR data_extract: \n\r->SRV REPLY:{%s}\n\r ->DATA:{%s}! \n\r",srvr_reply,dat);
                   return -1;
                }
                
@@ -522,12 +593,12 @@ int frame_unpack (char *srvr_reply, char *data){ // copy serialized signals into
          strcpy(data,"");
          strcpy(data,tmps22);
          */
-         int r2= strlen (data); //bad solution packet len - 1  "*"
+         int r2= strlen (dat); //bad solution packet len - 1  "*"
          //printf ("[r1-%i] [r2-%i]\n\r",r1,r2);
          
          if ( r1 != r2 ){
              printf("ERR Recived bytes len[%i] != calculated bytes len[%i]  \n\r",r1,r2);
-             printf("DATA:{%s}\n\n",data);
+             printf("DATA:{%s}\n\n",dat);
              return -2; //if data length != calculated data lenght
              }
      
