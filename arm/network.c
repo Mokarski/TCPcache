@@ -279,7 +279,7 @@ int frame_tcpreq (char *msg){
                   }
         
         if ( strlen (server_reply) > 5){ //if response from server more then 4 symbols, then we get signals
-            //strcpy(signal_parser_buf, server_reply); //copy to global array 
+            strcpy(signal_parser_buf, server_reply); //copy to global array 
             ret=2;
             }
     
