@@ -260,7 +260,7 @@ int frame_tcpreq (char *msg){
  char *pSR = server_reply;
  int ret=0;
  
-    if( send(sock , msg , strlen(msg) , 0) < 0)
+    if( send(sock , msg , strlen(msg)+1, 0) < 0)
         {
             puts("Send request to CacheServer failed!!!");
             return -1;
@@ -279,7 +279,7 @@ int frame_tcpreq (char *msg){
                   }
         
         if ( strlen (server_reply) > 5){ //if response from server more then 4 symbols, then we get signals
-            strcpy(signal_parser_buf, server_reply); //copy to global array 
+            //strcpy(signal_parser_buf, server_reply); //copy to global array 
             ret=2;
             }
     
@@ -420,15 +420,11 @@ return 0;
 int exploderL(char delimiter, char *inn, char *outt){
 int n=0;
 int inc=0;
-char tmp_out[MAX_MESS];
-//strcpy(outt,"");
-strcpy(tmp_out,"");
-    //outt[0]='z';
+char tmp_out[MAX_MESS]  = {0};
+
     printf("EXPLODER_L d %c in[%s] out[%s] \n\r",delimiter,inn,outt);
     if(strlen(inn) < 1) return -1;
     int len = strlen(inn);
-    //int len =5;
-    
     for (n=0; n < len; n++)
         {
          printf( "EXPLODER_L #%i [%c] \n\r",n,inn[n]);
@@ -444,7 +440,7 @@ strcpy(tmp_out,"");
                       printf("EXPLODER_L outter %i [%c] out{%s} \n\r",n,inn[n],tmp_out);
                     } 
              printf("EXPLODER_L out [%s] \n\r",tmp_out);
-         //if ( inn[n]== delimiter )break;
+
         }
 return 0;
 }
@@ -453,10 +449,9 @@ int exploderR(char delimiter, char *in, char *out){
 int n=0;
 int inc=0;
 int start=0;
-strcpy(out,"");
-    printf("d %c in[%s] out[%s] \n\r",delimiter,in,out);    
+    printf("EXPLODER_R d %c in[%s] out[%s] \n\r",delimiter,in,out);    
     if (strlen(in) < 1) return -1;
-    for (n=0; n != (strlen(in)); n++)
+    for (n=0; n < (strlen(in)); n++)
         {
          // printf("%i [%c] \n\r",n,str[n]);
          
@@ -468,14 +463,16 @@ strcpy(out,"");
              
          if ( in[n]==delimiter ) start=1;         
         }
+     out[inc] = 0;        
      printf("EXPLODER_R out [%s] \n\r",out);        
+
 return 0;
 }
 
 int frame_pack (char *type, char *message_in, char *message_out) { //construct frame frome message_in and put result to message type is "rd" or "wr"
     //char message [MAX_MESS]; //max size for 1 packet send for tcp is 65534 bytes 
-    char c_len[4];
-    char c_count[4];
+    char c_len[4]={0};
+    char c_count[4]={0};
 
     if ( strlen (message_in) >  MAX_MESS ) {
         printf("Exeeded maximum buffer size, message_size: %i > then buffer_size:%i",strlen(message_in), MAX_MESS);
@@ -483,7 +480,8 @@ int frame_pack (char *type, char *message_in, char *message_out) { //construct f
        }
     int len = strlen (message_in) + 1; //length = Data container size in bytes + 1byte =";"    
     //Try Construct frame
-    strcpy (message_out,"");  //$
+    //strcpy (message_out,"");  //$
+    memset(message_out, 0, sizeof(message_out));
     strcat(message_out,type);
     strcat (message_out,";");
     ItoA(len,c_len); //convert int to char
@@ -499,36 +497,17 @@ int frame_pack (char *type, char *message_in, char *message_out) { //construct f
 
 int frame_unpack (char *srvr_reply, char *dat){ // copy serialized signals into data and return 1 if read or 2 if write
     char sep ='#';
-    char type[3];    
-    char istr[MAX_MESS];
-    char header[100];
-    char c_len[10];
+    char type[4]={0}; // rd / wr err/ ret /Ok! +1 end string = 4 char
+    char istr[MAX_MESS]={0};
+    char header[100]={0};
+    char c_len[10]={0};
     int  ret_rd_wr=0;
-
-    //clear trash
-    strcpy(c_len,"");
-    strcpy(type,"");    
-    strcpy(istr,"");
-    strcpy(header,"");
     
-    /*
-    //test frame for accepting $-start symbol. *-end symbol;
-    if (strstr(srvr_reply,"$")==NULL)  {
-       printf("ERR Not found Start symbol in frame \n\r");
-       return -1;
-       }
-    if (strstr(srvr_reply,"*")==NULL) {
-       printf("ERR Not found Stop symbol in frame \n\r");    
-       return -1;
-        }
-    */
+
     exploderL (sep,srvr_reply,header); //extract HEADER and DATA by "#" seporator
     if (header != NULL) { //HEADER
         printf("Header^{%s}\n\r",header);
          if ( strlen(header)<100 ){          
-             //strcpy(header,"");
-             //strcpy(header,istr);             
-             //strcpyN (1,istr,header); //miss first symbol "$"             
              if ( strlen(header) < 30 ) printf("(len<30) Header^{%s}\n\r",header);
              }else {printf ("ERR HEADER TOO BIG[%i] \n\r",strlen(header));}
            
@@ -552,14 +531,9 @@ int frame_unpack (char *srvr_reply, char *dat){ // copy serialized signals into 
     
     char sep2=';';           
     exploderL(sep2,header,type); //extract type CMD  by ";"
-    /*if (strlen(type) > 4) {
-        printf("Too long cmd! more then 4 bytes! \n\r");
-        return -1;
-        }
-        */
+
     if (type != NULL) { //type of frame read or write
         printf("Type^{%s}\n\r",type);
-        //strcpy(type,istr);
         if (strstr(type,"rd")) ret_rd_wr=1;  //read request
         if (strstr(type,"wr")) ret_rd_wr=2;  //write request
         if (strstr(type,"Ok!")) ret_rd_wr=3; //ack - ok
@@ -579,23 +553,13 @@ int frame_unpack (char *srvr_reply, char *dat){ // copy serialized signals into 
         }
         if (c_len != NULL) { //extrcat lenght 
         printf("Len^{%s}\n\r",c_len);
-        //strcpy(c_len,istr);
-        //printf("c_len {%s}\n\r",c_len);
         } else {  printf ("ERR data_extract: Header_pkt_len - NULL! \n\r");
                   printf (">>>>>>> ERR data_extract: \n\r->SRV REPLY:{%s}\n\r ->DATA:{%s}! \n\r",srvr_reply,dat);
                   return -1;
                }
                
          int r1= atoi (c_len); //number bytes in packet;
-        /* char *tmps22;
-         
-         Nstcpy(strlen(data)-1,data,tmps22);
-         strcpy(data,"");
-         strcpy(data,tmps22);
-         */
          int r2= strlen (dat); //bad solution packet len - 1  "*"
-         //printf ("[r1-%i] [r2-%i]\n\r",r1,r2);
-         
          if ( r1 != r2 ){
              printf("ERR Recived bytes len[%i] != calculated bytes len[%i]  \n\r",r1,r2);
              printf("DATA:{%s}\n\n",dat);

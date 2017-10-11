@@ -384,9 +384,9 @@ void* connection_handler (void *args)
 	//
     int read_size;
     char *mesOk, *mesNo, *mesErr, *mesBad, *mesUnp;
-    char  client_message[MAX_MESS];
-    char  client_message_write[MAX_MESS];    
-    char  signalsBuffer[MAX_MESS];
+    char  client_message[MAX_MESS]={0};
+//    char  client_message_write[MAX_MESS];    
+    char  signalsBuffer[MAX_MESS]={0};
     char *cmd_end = ";";
     mesOk = "Ok!";	
     mesBad = "NOcmd!";
@@ -395,7 +395,7 @@ void* connection_handler (void *args)
 //    char a[4096];
     char dig[128];	
     //char packed_txt_string[40000];
-    char tst[MAX_MESS];
+    char tst[MAX_MESS]={0};
     int rd_wr=0;
 //    int found=0;  //founded signals counter
     int iterration=0;
@@ -409,7 +409,7 @@ void* connection_handler (void *args)
 		
 	//********************************* COMMAND SELECTION AND EXECUTION ******************************/
 	    //pthread_mutex_lock(&mutex); // block mutex 
-	        strcpy(tst,""); //erase buffer
+	        memset(tst, 0, sizeof(tst));
 		rd_wr = frame_unpack(client_message,tst);
 	    //pthread_mutex_unlock(&mutex); //unlock mutex
 	    
@@ -432,9 +432,9 @@ void* connection_handler (void *args)
   		                   case 1:  //READ OPERATION
   		                	 speedtest_start();
   		                	 //pthread_mutex_lock(&mutex); // block mutex 
-  		                	 char result[MAX_MESS];  //buffer for response 50 000 bytes
-					 char result2[MAX_MESS];  //buffer for response 50 000 bytes
-					    strcpy(client_message,"");
+  		                	 char result[MAX_MESS]={0};  //buffer for response 50 000 bytes
+					 char result2[MAX_MESS]={0};  //buffer for response 50 000 bytes
+					 memset(client_message, 0, sizeof(client_message)); //erase buffer before fill the result					
   		                	 if (Read_operation(tst,client_message) > 0) { //if founded requested name of signals
   		                	   
 			                    
@@ -449,9 +449,7 @@ void* connection_handler (void *args)
 					     
 					     if (write_ok < 0){
                             			 printf("TCP SEND Error description is : %s\n",strerror(errno));			    
-						}
-						
-					     strcpy (client_message,"");
+						}				     
 					     memset (client_message, 0, mess_length);
 					     
 					  } else {  // if signals not found
@@ -477,8 +475,7 @@ void* connection_handler (void *args)
   		                 	 
   		                 	 } else {
 						 write(sock, mesErr, strlen(mesErr));			
-						 memset(client_message, 0, mess_length); //erase the buffer
-						 strcpy(client_message,""); //erase the buffer
+						 memset(client_message, 0, mess_length); //erase the buffer						 
   		                 	         }
   		                 	 
   		                 	 printf(" ++++++++++++++++++++++++==>   SPEEDTEST TCPCache WRITE_REQ Time: [ %ld ] ms. \n\r", speedtest_stop());
@@ -490,13 +487,10 @@ void* connection_handler (void *args)
   		                            printf("\n >>>>>>>> Unformatted Client Message -1!!!! \n\r");
 					    write(sock, mesBad, strlen(mesBad));
 					    memset(client_message, 0, mess_length);
-					    strcpy(client_message,"");
-					    memset(client_message_write, 0, mess_length);
-					    strcpy(client_message_write,"");
 					    
 				
   		   }  //end switch                                                                                                                                                   
-	   strcpy(client_message,""); //erase buffer for next recive
+	  
 
 
 
