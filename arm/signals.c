@@ -160,6 +160,85 @@ if (istr != NULL){
 return 0;
 }
 
+int unpack_signal_srv (char *str, int n){ //unpack from buffer to signal parameters with name_id n
+    char sep[3]=":";
+    char *istr;
+    //printf("Unpack Signal: [%s]\n\r",str);
+
+istr = strtok (str, sep);
+if (istr != NULL){
+   //printf ("1 - %s ",istr);
+   int c =1;
+    while ( istr != NULL ){
+           switch (c) {
+           case 1:
+                  //printf ("%i - %s ",c,istr);
+                  //strcpy ( Signal_Array[n].Name,istr );
+           break;
+
+           case 2:
+                 //printf ("%i - %s ",c,istr);
+                 strcpy ( Signal_Array[n].Val_Type,istr );
+           break;
+
+           case 3:
+                 //printf ("%i - %s ",c,istr);
+                  Signal_Array[n].MB_Id = atoi ( istr );
+           break;
+
+           case 4:
+                 //printf ("%i - %s ",c,istr);
+                 Signal_Array[n].MB_Reg_Num = atoi ( istr );
+           break;
+
+           case 5:
+                 //printf ("%i - %s ",c,istr);
+                 Signal_Array[n].Bit_Pos = atoi ( istr );
+           break;
+
+           case 6:
+                 //printf ("%i - %s ",c,istr);
+                 Signal_Array[n].Value[1] = atoi ( istr );
+           break;
+
+           case 7:
+                 //printf ("%i - %s ",c,istr);
+                 Signal_Array[n].TCP_Type = atoi ( istr );
+           break;
+
+           case 8:
+                 //printf ("%i - %s ",c,istr);
+                 strcpy (Signal_Array[n].TCP_Addr ,istr );
+           break;
+
+           case 9:
+                 //printf ("%i - %s ",c,istr);
+                 Signal_Array[n].Prio = atoi ( istr );
+           break;
+
+           case 10:
+                 //printf ("%i - %s ",c,istr);
+                 Signal_Array[n].Off = atoi ( istr );
+           break;
+
+           case 11:
+                 //printf ("%i - %s \n\r",c,istr);
+                 Signal_Array[n].ExState = atoi ( istr );                 
+           break;
+
+           default:
+           printf("Input_string {%s} ",str);
+           printf(" unpack_signal error index more then fields 11 < [%i]\n\r",c);
+           
+           }
+
+           c++;
+           istr = strtok (NULL, sep);
+           //printf ("%i - %s ",c,istr);
+          }
+}
+return 0;
+}
 
                 
 int sDeSerial_by_num (int n){ //for thread solution

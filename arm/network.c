@@ -7,6 +7,28 @@
 #include "signals.h"
 #include "network.h"
 
+
+/*
+* This is substract from src string to destination string n symbols
+* Копирует в dst не больше cnt символов из src начиная с позиции pos.
+* Память под принимающую строку должна быть заранее выделена с учётом завершающего нуля.
+*/
+char * substr(char * dst, const char * src, size_t pos, size_t cnt){
+    size_t len;
+    
+        if ( ! dst || ! src || strlen(src) < pos )
+           return NULL;
+                
+        if ( ( len = strlen(src + pos) ) > cnt )
+            len = cnt;
+        strncpy(dst, src + pos, len);
+        dst[len] = '\0';
+                                    
+return dst;
+}
+                                        
+
+
 /*
  * приведение целого к строковому формату
   */
@@ -375,7 +397,7 @@ int frame_pack (char *type, char *message_in, char *message_out) { //construct f
     return 0;
 }
 */
-
+/*
 int strcpyN(int start_pos, char *str, char *result){
 int n=0;
 int inc=0;
@@ -415,31 +437,31 @@ int inc=0;
     printf("Nstrcpy [%s] \n\r",result2);
 return 0;
 }
-
+*/
 
 int exploderL(char delimiter, char *inn, char *outt){
 int n=0;
 int inc=0;
 char tmp_out[MAX_MESS]  = {0};
 
-    printf("EXPLODER_L d %c in[%s] out[%s] \n\r",delimiter,inn,outt);
+//    printf("EXPLODER_L d %c in[%s] out[%s] \n\r",delimiter,inn,outt); //debug
     if(strlen(inn) < 1) return -1;
     int len = strlen(inn);
     for (n=0; n < len; n++)
         {
-         printf( "EXPLODER_L #%i [%c] \n\r",n,inn[n]);
+//         printf( "EXPLODER_L #%i [%c] \n\r",n,inn[n]);
          //if(inn[n]==delimiter){
          if ( inn[n]==delimiter ) {
              strncpy(outt,tmp_out,(size_t)n);
              break;
              } else {
-                      printf("EXPLODER_L inner for[%i]  char[%c] inc[%i] \n\r",n,inn[n],inc);
-                      printf("EXPLODER_L #%i out{%s} \n\r",n,tmp_out);
-                      tmp_out[n]=inn[n];
-                      //inc++;
-                      printf("EXPLODER_L outter %i [%c] out{%s} \n\r",n,inn[n],tmp_out);
+//                      printf("EXPLODER_L inner for[%i]  char[%c] inc[%i] \n\r",n,inn[n],inc); //debug
+//                      printf("EXPLODER_L #%i out{%s} \n\r",n,tmp_out);  //debug
+                      tmp_out[inc]=inn[n];
+                      inc++;
+//                      printf("EXPLODER_L outter %i [%c] out{%s} \n\r",n,inn[n],tmp_out);  //debug
                     } 
-             printf("EXPLODER_L out [%s] \n\r",tmp_out);
+//             printf("EXPLODER_L out [%s] \n\r",tmp_out);
 
         }
 return 0;
@@ -449,7 +471,7 @@ int exploderR(char delimiter, char *in, char *out){
 int n=0;
 int inc=0;
 int start=0;
-    printf("EXPLODER_R d %c in[%s] out[%s] \n\r",delimiter,in,out);    
+//    printf("EXPLODER_R d %c in[%s] out[%s] \n\r",delimiter,in,out);    
     if (strlen(in) < 1) return -1;
     for (n=0; n < (strlen(in)); n++)
         {
@@ -457,14 +479,21 @@ int start=0;
          
          if (start == 1 )
             {
-             out[inc]=in[n];
-             inc++;
+             //strncpy(out,tmp_out,(size_t)n);            
+//             substr(char * dst, const char * src, size_t pos, size_t cnt)
+             substr(out,in,n,strlen(in)-1);
+             //out[inc]=in[n];
+             //inc++;
+             break;
              }          
              
-         if ( in[n]==delimiter ) start=1;         
+         if ( in[n]==delimiter ){ 
+             start=1;         
+             //strncpy(out,tmp_out,(size_t)n);
+            }
         }
-     out[inc] = 0;        
-     printf("EXPLODER_R out [%s] \n\r",out);        
+//       out[inc] = 0;        
+//     printf("EXPLODER_R out [%s] \n\r",out);        
 
 return 0;
 }

@@ -7,8 +7,8 @@
 #include <arpa/inet.h>		//inet_addr
 #include <stdlib.h>
 #include "/home/opc/Kombain/test/include/modbus/modbus.h"
-
-#define DEBUG 3 // may be set to 0,1,2,3,4
+//3
+#define DEBUG 0 // may be set to 0,1,2,3,4
 #include "network.h"
 #include "signals.h"
 #include "virtmb.h"

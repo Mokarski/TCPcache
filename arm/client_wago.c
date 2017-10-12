@@ -7,8 +7,8 @@
 #include <arpa/inet.h>		//inet_addr
 #include <stdlib.h>
 #include "/home/opc/Kombain/test/include/modbus/modbus.h"
-
-#define DEBUG 3 // may be set to 0,1,2,3,4
+//3
+#define DEBUG 0 // may be set to 0,1,2,3,4
 #include "network.h"
 #include "signals.h"
 #include "virtmb.h"
@@ -315,10 +315,11 @@ int ret;
 int rd_wr;
 int tcpresult = 0;
 
-      speedtest_start ();	//time start
-      strcpy (signal_parser_buf, "");	//erase buffer for next iteration
+      speedtest_start ();	//time start      
+      memset(signal_parser_buf, 0, sizeof(signal_parser_buf)); //erase buffer for next iteration
+      memset(message, 0, sizeof(message));
       //======================== read all 485 signals from server create signals and virtual devices ===================
-      strcpy (message, "");
+      
       frame_pack ("rd", "wago.", message);
       tcpresult = frame_tcpreq (message);
       //ret=tcpresult; //return result of unpack
@@ -454,16 +455,17 @@ return ret;
 //*********************************Write_Op ****************************************
 int Write_Op(){
   int tcpresult = 0;
-  char tst[MAX_MESS];      
-  char send_buf[MAX_MESS]; 
-  char tmpz[150];     
+  char tst[MAX_MESS]={0};      
+  char send_buf[MAX_MESS]={0}; 
+  char tmpz[150]={0};     
   
       speedtest_start ();	//time start     
       int x = 0;
       int ready_to_send_tcp=0;
 
-      strcpy (message, "");	//erase buffer     
-      strcpy (tst, "");
+      //erase buffer     
+      memset(message, 0, sizeof(message));
+      memset(tst, 0, sizeof(tst));
       for (x = 0; x < MAX_Signals; x++)
 	{
 	       if ( (Signal_Array[x].Value[1] > 0) || (Signal_Array[x].ExState > 0) )
@@ -481,26 +483,15 @@ int Write_Op(){
 	      strcat (tst, tmpz);
 	      ready_to_send_tcp=1;
             }
-	  //else
-	  //    break;		// signals list is end
+	  else
+	      break;		// signals list is end
 	}
 	
       //printf("SEND_BUFFER[%s]\n\r",tst);
       if (strlen(tst) > 0){
-          //strcpy (tst, send_buf);
-          //strcpy(send_buf,"");
           frame_pack ("wr",tst, send_buf);
-          //printf("FRAME_PACK[%s]\n\r",send_buf);
           if (ready_to_send_tcp == 1) {
               tcpresult = frame_tcpreq (send_buf); //send to srv
-              /*  
-               if( send(sock , tst , strlen(tst) , 0) < 0)
-                 {
-                          puts("ERR!!! Send request to CacheServer failed!!!");
-                          printf("Send_Buffer[%s]\n\r",message);
-                 } //else  printf ("[ Send to SRV ]: {%s} \n\r",msg); } //debug info
-              */
-
              }
          }else printf("ERR!!! Send_Buffer is empty! \n\r");
          

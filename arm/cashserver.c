@@ -15,7 +15,7 @@
 #include<time.h>      // for time_t
 #include<errno.h>     // for print errors
 
-#define DEBUG 1       // 0 -not debug  1,2,3- debug
+#define DEBUG 0       // 0 -not debug  1,2,3,4,5- debug
 #include "signals.h"
 #include "network.h"
 #include "speedtest.h"
@@ -179,6 +179,7 @@ int main(int argc , char *argv[])
 * Копирует в dst не больше cnt символов из src начиная с позиции pos.
 * Память под принимающую строку должна быть заранее выделена с учётом завершающего нуля. 
 */
+/*
 char * substr(char * dst, const char * src, size_t pos, size_t cnt){
     size_t len;
     
@@ -192,7 +193,7 @@ char * substr(char * dst, const char * src, size_t pos, size_t cnt){
     
     return dst;
 }
-
+*/
 /*
  * приведение целого к строковому формату
  */
@@ -245,7 +246,7 @@ pthread_mutex_lock(&mutex); // block mutex
 			    printf ("SERVER: GET the NAME [%s]\n\r",istr);
 			    }
 
-			char tmpz[150];
+			char tmpz[150]={0};
 			//strcpy (result,""); //erase buffer
 			for(cnt=0; cnt <  MAX_Signals; cnt++)
 			{
@@ -277,8 +278,8 @@ pthread_mutex_lock(&mutex); // block mutex
 		    char *istr;
 		    int found=0;          //flag how many founded signals
 		    char digit[5];    //buffer Value of signal as CHAR
-		    char sname [150]; //buffer for temp store signal NAME
-		    char buf_signals[MAX_Signals][150]; //array of MAX_signal elements AND 150 characters each
+		    char sname [150]={0}; //buffer for temp store signal NAME
+		    char buf_signals[MAX_Signals][150]={0}; //array of MAX_signal elements AND 150 characters each
 		    int t=0;		        
 		    int val;
 		    size_t xx=0;
@@ -304,7 +305,8 @@ pthread_mutex_lock(&mutex); // block mutex
 					      if (DEBUG == 1) printf ("Explode ; to cachebuf [#%i]  NAME: [%s] \n\r",sn,buf_signals[sn]); //debug
 			                    }
 				
-				sn++;
+				sn++;//????
+				//printf(">>>>>>>>>>>>>>>>>>>>>>>>SN [%i]\n\r",sn);
 			      }
 			
 			if (DEBUG == 1) printf("Signal_counter sn=%i\n\r",sn);		
@@ -317,7 +319,7 @@ pthread_mutex_lock(&mutex); // block mutex
 			             
 			         for (pr = 0; pr < sn; pr++){ //cycle for recived signals from client. number of recived signals = sn
 			
-			                char tmpz[190];
+			                char tmpz[190]={0};
 			                char *istrName;
 			                strcpy(tmpz,buf_signals[pr]); //tmp buf
 			                //printf("tmpz %s\n\r",tmpz);
@@ -337,9 +339,17 @@ pthread_mutex_lock(&mutex); // block mutex
 			                         if ( DEBUG ==1 ) printf(">>>CMPNAME SignalName=[%s]\n\r",Signal_Array[cnt].Name);
 			                         found++;
 			                         int utest=0;
-			                         if ( DEBUG == 1) printf("SignalName[%s] = RecivedName[%s]",Signal_Array[cnt].Name,tmpz);
-			                         if (DEBUG == 1) printf ("before unpack %s \n\r",buf_signals[pr]);			                    
-			                         utest = unpack_signal(buf_signals[pr],pr); //unpack from field buffer to signal properties fields
+			                         if ( DEBUG == 1) printf(">>>>>>>>>>Id_SA[%i]=Id_Pr[%i] SignalName[%s] = RecivedName[%s]\n\r",cnt,pr,Signal_Array[cnt].Name,tmpz);
+			                         if (DEBUG == 1) printf (">>>before unpack [%s] id[%i] \n\r",buf_signals[pr],pr);			                    
+			                         
+			                         if (DEBUG == 5){			                         
+			                             if ((cnt < 285) && (strstr(buf_signals[pr],"wago.")!=NULL))
+			                                 {
+			                                  printf(">>>>id<285 and {wago.} ID_cnt[%i] ID_pr[%i] SA.Name_CNT[%s] SA.Name_pr[%s] \n\r buf_name[%s] INPUT_TST:[%s]\n\r",cnt,pr,Signal_Array[cnt].Name,Signal_Array[pr].Name,buf_signals[pr],tst);
+			                                 }
+			                             }                        
+			                         utest = unpack_signal(buf_signals[pr],cnt); //unpack from field buffer to signal properties fields ????
+			                         
 			                       }
 			                   }
 			            

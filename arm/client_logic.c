@@ -242,28 +242,29 @@ while (1){
 	    //printf("Buffer befor create Messasge: [%s] \n\r",message);
 	    frame_pack("rd", ".", message);
 	    tcpresult = frame_tcpreq(message); 
+	    printf ("tcp send result[%i]\n\r",tcpresult);	    
+				    printf("=================== ==>   SPEEDTEST Time to prepare packet: [ %ld ] ms. \n\r", speedtest_stop());         		
+				    speedtest_start(); //time start
+
 		
-		printf ("tcp send result[%i]\n\r",tcpresult);	    
 		//in this place need to unpack signals from frame
 		if ( frame_unpack(signal_parser_buf,tst) < 0){
 		     //printf ("ERROR UNPACK! \n\r");
 		     printf(">>>>ERROR FRAME UNPACK! RECIVED^{%s} \n\r",tst);
 		    break;
 		    }
+					printf("=================== ==>   SPEEDTEST Time frame_unpack: [ %ld ] ms. \n\r", speedtest_stop());         
+					speedtest_start(); //time start					
+
 		if ( DEBUG == 1 ) printf(">>>>RECIVED^{%s} \n\r",tst);
 		//printf ("\n\r FRAME_UNPACK: \n\r %s\n\r",tst);
 		//Data_to_sName (signal_parser_buf);     	            // explode signals by delimiter ";"	  and copy to Signal.Name[]
-		
-		Data_to_sName (tst);
-		
-	        //printf("Recived Buffer ==== [%s] \n\r",signal_parser_buf); //-48	     
-                strcpy(signal_parser_buf,""); 			//erase buffer before next iteration
+		speedtest_start(); //time start
+		Data_to_sName (tst);		
                 memset(signal_parser_buf, 0, sizeof(signal_parser_buf));
-                
-                
                 memset(tst, 0, sizeof(tst));
-                printf("=================== ==>   SPEEDTEST Time load signals: [ %ld ] ms. \n\r", speedtest_stop());         
-  	        
+                
+                printf("=================== ==>   SPEEDTEST Time load Data_to_sName: [ %ld ] ms. \n\r", speedtest_stop());           	        
   	        speedtest_start(); //time start //deserial test  	         
   	        
 	        int z=0;		
@@ -288,7 +289,7 @@ while (1){
                  
 		      printf(" ==>   SPEEDTEST Deserial signals signals: [ %ld ] ms. \n\r", speedtest_stop());     
 
-                printf("=================== ==>  START SWITCH ============================= \n\r", speedtest_stop());         
+                printf("=================== ==>  START SWITCH ============================= \n\r");         
 	        speedtest_start(); //time start
 	        //FillHash(); //fill the array of hash
 	        STATE = get_state();
@@ -297,36 +298,47 @@ while (1){
                      switch (STATE){
 	                      case 0:  //INIT
 	                               printf("\n\r++++++++++++++++++++++++++++++>>>>MODE INIT\n\r");
-	                               if ( strstr(Signal_Array[z].Name,".") != NULL ) Set_Signal_Param (z, ".", 1 ,0);	                      
+	                               //if ( strstr(Signal_Array[z].Name,".") != NULL ) Set_Signal_Param (z, ".", 1 ,0);	                      
+	                               	 if ( strstr(Signal_Array[z].Name,"485.kb") != NULL ) Set_Signal_Param (z, "485.kb", 1 ,0);	                      
+	                               	 //if (sTrigger_Ex (z, "wago.oc_mdo", 0 ))  Set_Signal_Param (z, "wago.oc_mdo", 2 ,0);
+	                                 
+	                                 //if ( strstr(Signal_Array[z].Name,"wago.oc_mdo") != NULL ) Set_Signal_Param (z, "wago.oc_mdo", 2 ,0);	                      //stop wago	                               	                               	 
 	                               //STATE = get_state();
 	                      break;         
 	                                  
 	                      case 1:  //INIT
-	                               if ( strstr(Signal_Array[z].Name,".") != NULL ) Set_Signal_Param (z, ".", 1 ,0);	                      
+	                               printf("\n\r++++++++++++++++++++++++++++++>>>>MODE INIT2\n\r");	                      
+	                               //if ( strstr(Signal_Array[z].Name,".") != NULL ) Set_Signal_Param (z, ".", 1 ,0);	                      
+	                                //if ( strstr(Signal_Array[z].Name,".") != NULL ) Set_Signal_Param (z, "485.kb", 1 ,0);	                      
 	                               //STATE = get_state();
 	                      break;
 	               
 	               
 	                      case 2:  //RESET 
-	                               if ( strstr(Signal_Array[z].Name,".") != NULL ) Set_Signal_Param (z, ".", 1 ,0);	                      
+	                               printf("\n\r++++++++++++++++++++++++++++++>>>>MODE RESET\n\r");	                      
+	                               //if ( strstr(Signal_Array[z].Name,".") != NULL ) Set_Signal_Param (z, ".", 1 ,0);	                      
+	                                //if ( strstr(Signal_Array[z].Name,".") != NULL ) Set_Signal_Param (z, "485.kb", 1 ,0);	                      
 	                               //STATE = get_state();
 	                      break;	               
 
 
 	                      case 3:  //WORK
-	                               printf("\n\r++++++++++++++++++++++++++++++>>>>MODE WORK\n\r");
+	                               //printf("\n\r++++++++++++++++++++++++++++++>>>>MODE WORK\n\r");
 	                               //read all signals
 	                               //if ( strstr(Signal_Array[z].Name,"485.kb") != NULL ) Set_Signal_Param (z, ".", 1 ,0);	                      
 	                               //write if mode = 3
-	                               if ( strstr(Signal_Array[z].Name,"485.rl.relay1") != NULL ) Set_Signal_Param (z, "485.rl.relay1", 2 ,1);	                      
-	                               if ( strstr(Signal_Array[z].Name,"485.rl.relay2") != NULL ) Set_Signal_Param (z, "485.rl.relay1", 2 ,1);	                      
+	                             //  if ( strstr(Signal_Array[z].Name,"485.rl.relay1") != NULL ) Set_Signal_Param (z, "485.rl.relay1", 2 ,1);	                      
+	                             //  if ( strstr(Signal_Array[z].Name,"485.rl.relay2") != NULL ) Set_Signal_Param (z, "485.rl.relay1", 2 ,1);
+	                               if ( strstr(Signal_Array[z].Name,"485.kb") != NULL ) Set_Signal_Param (z, "485.kb", 1 ,0);	                      	                      
 	                               if ( strstr(Signal_Array[z].Name,"485.rsrs.rm_u1_on") != NULL ) Set_Signal_Param (z, "485.rsrs.rm_u1_on", 2 ,1);	                      
 	                               if ( strstr(Signal_Array[z].Name,"485.rsrs.rm_u2_on") != NULL ) Set_Signal_Param (z, "485.rsrs.rm_u2_on", 2 ,1);	                      
-	                               if ( strstr(Signal_Array[z].Name,"wago.oc_mdo1.ka7_1") != NULL ) Set_Signal_Param (z, "wago.oc_mdo1.ka7_1", 2 ,1);	                      //start wago	                               
+	                               
 	                                if ( strstr(Signal_Array[z].Name,"485.rsrs2.state_sound1_led") != NULL ) Set_Signal_Param (z, "485.rsrs2.state_sound1_led", 2 ,1);	                      
 	                                if ( strstr(Signal_Array[z].Name,"485.rsrs2.state_sound2_led") != NULL ) Set_Signal_Param (z, "485.rsrs2.state_sound2_led", 2 ,1);	                      
+	                               
 	                               //STATE = get_state();
-	                              // if (sTrigger_Ex (z, "wago.", 0 ))  Set_Signal_Param (z, "wago.", 1 ,0);
+	                                //if (sTrigger_Ex (z, "wago.", 0 ))  Set_Signal_Param (z, "wago.", 1 ,0);
+	                                if ( strstr(Signal_Array[z].Name,"wago.oc_mdo") != NULL ) Set_Signal_Param (z, "wago.oc_mdo", 2 ,1);	                      //start wago	                               
 	                              // if ( strstr(Signal_Array[z].Name,"wago.") != NULL ) Set_Signal_Param (z, "wago.", 1 ,0);
 	                              // if ( strstr(Signal_Array[z].Name,"485.") != NULL ) Set_Signal_Param (z, "485.", 1 ,0);
 	                              // if ( strstr(Signal_Array[z].Name,"wago.oc_mdo") != NULL ) Set_Signal_Param (z, "wago.oc_mdo", 2 ,1);
@@ -334,23 +346,25 @@ while (1){
 
 
 	                      case 4:  //STOP 
-	                               //printf("\n\r++++++++++++++++++++++++++++++>>>>MODE SOTP !!!!!!!1\n\r");	                      
-	                               if (sTrigger_Ex (z, "wago.", 0 ))  Set_Signal_Param (z, "wago.", 1 ,0);
-	                               if ( strstr(Signal_Array[z].Name,"485.rl.relay") != NULL ) Set_Signal_Param (z, "485.rl.relay", 2 ,0);	                      //stop rele
-	                               if ( strstr(Signal_Array[z].Name,"485.rsrs.rm_u1_on") != NULL ) Set_Signal_Param (z, "485.rsrs.rm_u1_on", 2 ,0);	              //stop rm1
-	                               if ( strstr(Signal_Array[z].Name,"485.rsrs.rm_u2_on") != NULL ) Set_Signal_Param (z, "485.rsrs.rm_u2_on", 2 ,0);	              //stop rm2
-	                               if ( strstr(Signal_Array[z].Name,"wago.oc_mdo") != NULL ) Set_Signal_Param (z, "wago.oc_mdo", 2 ,0);	                      //stop wago
+	                               printf("\n\r++++++++++++++++++++++++++++++>>>>MODE SOTP !!!!!!!1\n\r");	                      
+	                              // if (sTrigger_Ex (z, "wago.", 0 ))  Set_Signal_Param (z, "wago.", 1 ,0);
+	                              // if ( strstr(Signal_Array[z].Name,"485.rl.relay") != NULL ) Set_Signal_Param (z, "485.rl.relay", 2 ,0);	                      //stop rele
+	                              // if ( strstr(Signal_Array[z].Name,"485.rsrs.rm_u1_on") != NULL ) Set_Signal_Param (z, "485.rsrs.rm_u1_on", 2 ,0);	              //stop rm1
+	                              // if ( strstr(Signal_Array[z].Name,"485.rsrs.rm_u2_on") != NULL ) Set_Signal_Param (z, "485.rsrs.rm_u2_on", 2 ,0);	              //stop rm2
+	                               //if ( strstr(Signal_Array[z].Name,"wago.oc_mdo") != NULL ) Set_Signal_Param (z, "wago.oc_mdo", 2 ,0);	                      //stop wago
 	                               //printf("\n\r++++++++++++++++++++++++++++++>>>>MODE SOTP !!!!!!!1\n\r");	                      	                               
 	                               //STATE = get_state();
 	                      break;
 
                               case 5:  //TEST
-	                               if (sTrigger_Ex (z, "wago.", 0 ))  Set_Signal_Param (z, "wago.", 1 ,0);
+	                               printf("\n\r++++++++++++++++++++++++++++++>>>>MODE TEST !!!!!!!1\n\r");	                                                    
+	                               //if (sTrigger_Ex (z, "wago.", 0 ))  Set_Signal_Param (z, "wago.", 1 ,0);
 	                               //STATE = get_state();
 	                      break;
 
                               case 6:  //ERROR 
-	                               if (sTrigger_Ex (z, "wago.", 0 ))  Set_Signal_Param (z, "wago.", 1 ,0);
+	                               printf("\n\r++++++++++++++++++++++++++++++>>>>MODE ERROR !!!!!!!1\n\r");	                                                    
+	                               //if (sTrigger_Ex (z, "wago.", 0 ))  Set_Signal_Param (z, "wago.", 1 ,0);
 	                               //STATE = get_state();
 	                      break;
 	               
@@ -368,7 +382,7 @@ while (1){
 	        ShowDevCache();
 	        break;
 	        */
-	        printf("=================== ==>  Calculate all TIME: [ %ld ] ms. \n\r", speedtest_stop());         
+	        printf("=================== ==>  Calculate SWITCH TIME: [ %ld ] ms. \n\r", speedtest_stop());         
          //break; //debug
                      //=========  SEND all signals to TCPCache =======
 
@@ -392,15 +406,19 @@ while (1){
           //else
             //break;              // signals list is end
         }
+      printf("=================== ==>  Buffer assembly TIME: [ %ld ] ms. \n\r", speedtest_stop());         
+      speedtest_start ();       //time start
       memset(tst, 0, sizeof(tst));
       frame_pack ("wr", message, tst);
+      printf("=================== ==>  Calculate PACK TIME: [ %ld ] ms. \n\r", speedtest_stop());         
+      speedtest_start ();       //time start
       tcpresult = frame_tcpreq (tst);
       if (DEBUG == 1) printf ("\n\r SEND TST^[%s] \n\r", tst);
       printf ("Status of TCP SEND: [%i]\n\r", tcpresult);
       //tcpsignal_packet_write(message);
       // printf("Send to TCPCache:[%s] \n\r",message);
 
-
+        printf("=================== ==>  Calculate TCP SEND to SRV TIME: [ %ld ] ms. \n\r", speedtest_stop());         
          
         printf("end iteration.. \n\r");     
        }
