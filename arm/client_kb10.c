@@ -281,7 +281,7 @@ while (1){
 
 	    memset(message, 0, sizeof(message));
 	    //printf("Buffer befor create Messasge: [%s] \n\r",message);
-	    frame_pack("rd", ".", message);
+	    frame_pack("rd", "panel10.", message);
 	    tcpresult = frame_tcpreq(message); 
 			if ( DEBUG == 1 )    printf ("tcp send result[%i]\n\r",tcpresult);	    
 				if ( DEBUG == 1 )    printf("=================== ==>   SPEEDTEST Time to prepare packet: [ %ld ] ms. \n\r", speedtest_stop());         		
@@ -289,6 +289,7 @@ while (1){
 
 		
 		//in this place need to unpack signals from frame
+		printf("RECIVED PACKET [%s]\n\r",signal_parser_buf);
 		if ( frame_unpack(signal_parser_buf,tst) < 0){
 		     //printf ("ERROR UNPACK! \n\r");
 		if ( DEBUG == 1 )     printf(">>>>ERROR FRAME UNPACK! RECIVED^{%s} \n\r",tst);

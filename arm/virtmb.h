@@ -2,7 +2,7 @@
 #define _VIRTMB_H
 
 #define VirtDev 20      //numbers of virtual modbus devices
-#define VirtDevRegs 40  //number of virtual mb registers
+#define VirtDevRegs 50  //number of virtual mb registers
 //   for cache read all devices registers //
 
 struct Mb_Device {

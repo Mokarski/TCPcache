@@ -440,7 +440,7 @@ void* connection_handler (void *args)
   		   //All mutex opertion moved inside function Read_operation/Write_operation
 		   switch (rd_wr){
   		                   case 1:  //READ OPERATION
-  		                	 speedtest_start();
+  		                	  if (DEBUG == 1) speedtest_start();
   		                	 //pthread_mutex_lock(&mutex); // block mutex 
   		                	 char result[MAX_MESS]={0};  //buffer for response 50 000 bytes
 					 char result2[MAX_MESS]={0};  //buffer for response 50 000 bytes
@@ -467,7 +467,7 @@ void* connection_handler (void *args)
 						   write(sock, mesErr, strlen(mesErr));			
 						   memset(client_message, 0, mess_length);
   		                	         }
-  		                	 printf(" ++++++++++++++++++++++++==>   SPEEDTEST TCPCache READ_REQ Time: [ %ld ] ms. \n\r", speedtest_stop());
+  		                	 if (DEBUG == 1) printf(" ++++++++++++++++++++++++==>   SPEEDTEST TCPCache READ_REQ Time: [ %ld ] ms. \n\r", speedtest_stop());
 
   		                   break;
   		                   
@@ -475,7 +475,7 @@ void* connection_handler (void *args)
   		                   
   		                   
   		                   case 2:  //WRITE OPERATION
-  		                         speedtest_start();
+  		                         if (DEBUG == 1)  speedtest_start();
   		                 	 //pthread_mutex_lock(&mutex); // block mutex 
   		                 	 if (strlen (tst)< 30 ) printf ("tst[%s]\n\r",tst);
   		                 	 if (Write_operation(tst) > 0) { //if recived siggnals founded and writed into server
@@ -488,7 +488,7 @@ void* connection_handler (void *args)
 						 memset(client_message, 0, mess_length); //erase the buffer						 
   		                 	         }
   		                 	 
-  		                 	 printf(" ++++++++++++++++++++++++==>   SPEEDTEST TCPCache WRITE_REQ Time: [ %ld ] ms. \n\r", speedtest_stop());
+  		                 	 if (DEBUG == 1) printf(" ++++++++++++++++++++++++==>   SPEEDTEST TCPCache WRITE_REQ Time: [ %ld ] ms. \n\r", speedtest_stop());
 					 
   		                   break;
   		                   
