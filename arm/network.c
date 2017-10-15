@@ -148,38 +148,38 @@ return 0;
 
 
 int Data_to_sName( char* tcp_buffer ){ //extract from tcp buffer signal and put to Name field
-char sep[10]=";";
-char *istr;
+	char sep[10]=";";
+		char *istr;
+		
+		int signal_counter=0;
+		
+		int result=0; //return number of founded signals
+	// Выделение первой части строки
+	istr = strtok (tcp_buffer,sep);
+		if ( istr == NULL ) {
+			printf ("!!!ERR extract signals, to name! DATA_to_sName: istr1 = NULL \n\r");
+			return 1;
+			//sDeSerial_by_num (signal_counter);
+		}
+	strcpy (Signal_Array[signal_counter].Name,istr); //copy 1 signal string to Signal_Array field Name
+	signal_counter++; //increment before while
+	result++;
+	// Выделение последующих частей
+	while ( istr != NULL )
+	{
+		istr = strtok (NULL,sep);   
 
-int signal_counter=0;
+		if ( istr == NULL ) 
+		{
+			printf ("[#%i] End list \n\r",signal_counter);
+			return signal_counter;
+		}
 
-int result=0; //return number of founded signals
-        // Выделение первой части строки
-           istr = strtok (tcp_buffer,sep);
-           if ( istr == NULL ) {
-              printf ("!!!ERR extract signals, to name! DATA_to_sName: istr1 = NULL \n\r");
-              return 1;
-              //sDeSerial_by_num (signal_counter);
-              }
-            strcpy (Signal_Array[signal_counter].Name,istr); //copy 1 signal string to Signal_Array field Name
-            signal_counter++; //increment before while
-            result++;
-        // Выделение последующих частей
-                 while ( istr != NULL )
-                    {
-                       istr = strtok (NULL,sep);   
-                       
-                          if ( istr == NULL ) 
-                             {
-                               printf ("[#%i] End list \n\r",signal_counter);
-                               return signal_counter;
-                             }
-                             
-                        strcpy (Signal_Array[signal_counter].Name,istr); //copy 1 signal string to Signal_Array field Name                        
-                        signal_counter++;
-                        result++; //increment for return results
-                     }
-return signal_counter;
+		strcpy (Signal_Array[signal_counter].Name,istr); //copy 1 signal string to Signal_Array field Name                        
+		signal_counter++;
+		result++; //increment for return results
+	}
+	return signal_counter;
 }
 
 int tcpsignal_read(char *message_in){

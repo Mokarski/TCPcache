@@ -73,48 +73,45 @@ return tab_reg[0];
 
 int virt_mb_filldev( char *sName, int mb_id, int mb_reg, int inExState){ //fill unic dev to virt
 	int i=0;
-	int uniq_test=0;
 	//int reg_counter[VirtDevRegs]; //temporary array for count number of regs
 	
 	if (inExState == 2) printf("MB_FILL_DEVICES EX[%i] \n\r",inExState);
 	
 	for (i=0; i < VirtDev; i++){
-		if ( Device_Array[i].MB_Id == mb_id ) {
-			uniq_test=0;
+		if (Device_Array[i].Name[0] == 0) {
+			break;
+		}
+
+		if(Device_Array[i].MB_Id == mb_id) {
 			Device_Array[i].ExState = inExState; //very bad idea
 			Device_Array[i].MB_reg_counter[mb_reg] = 1; //mark for this DEV_ID register as used
 			if (inExState == 1) Device_Array[i].Rd=1;  //mark device to read
-			if (inExState == 2){
-			     Device_Array[i].Wr=1;  //mark device  to write
-			     Device_Array[i].WR_MB_reg_counter[mb_reg] = 1; //mark for this DEV_ID register as used
-			     printf(">>>>>> WR Name[%s] EX=%i\n\r",sName,inExState);
-			    }
-			
-			break;
-		} else uniq_test++; //increment checked position
-	}
-	
-	if ( uniq_test > 0 ){ // if device is unique
-		for (i=0; i< VirtDev; i++){
-			
-			if ( strlen (Device_Array[i].Name) < 2){			
-		                strcpy(Device_Array[i].Name,sName); //fill the name
-				Device_Array[i].MB_Id = mb_id;
-				Device_Array[i].ExState = inExState; //very bad idea
-				if (inExState == 1) Device_Array[i].Rd=1;  //mark device to read
-				if (inExState == 2) {
-				      Device_Array[i].Wr=1;  //mark device  to write
-				      printf(">>>>>>WR Name[%s] EX=%i\n\r",sName,inExState);
-				      Device_Array[i].WR_MB_reg_counter[mb_reg] = 1; //mark for this DEV_ID register as used
-				     }
-				Device_Array[i].MB_reg_counter[mb_reg] = 1; //mark for this DEV_ID register as used  >>>>>>> fix missed zerro index!
-				
-				break; // device copied to array DONE
+			if (inExState == 2) {
+				Device_Array[i].Wr=1;  //mark device  to write
+				Device_Array[i].WR_MB_reg_counter[mb_reg] = 1; //mark for this DEV_ID register as used
+				printf(">>>>>> WR Name[%s] EX=%i\n\r", sName,inExState);
 			}
+			
+			return;
 		}
 	}
 	
-return 0;
+	if(i >= VirtDev) {
+		return -1;
+	}
+
+	strcpy(Device_Array[i].Name, sName); //fill the name
+	Device_Array[i].MB_Id = mb_id;
+	Device_Array[i].ExState = inExState; //very bad idea
+	if (inExState == 1) Device_Array[i].Rd=1;  //mark device to read
+	if (inExState == 2) {
+		Device_Array[i].Wr=1;  //mark device  to write
+		printf(">>>>>>WR Name[%s] EX=%i\n\r",sName,inExState);
+		Device_Array[i].WR_MB_reg_counter[mb_reg] = 1; //mark for this DEV_ID register as used
+	}
+	Device_Array[i].MB_reg_counter[mb_reg] = 1; //mark for this DEV_ID register as used  >>>>>>> fix missed zerro index!
+
+	return 0;
 }	
  
 //read one virtual device register

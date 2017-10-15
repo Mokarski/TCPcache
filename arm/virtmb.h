@@ -18,7 +18,8 @@ struct Mb_Device {
  int  Off;               //Signal not used if OFF = 1;
  int EventTrigger;          //signal has trigger state
  int For_Remove;        // mar for remove from tasks       
-       } Mb_Device_Cache;
+ int SignalIndex;
+} Mb_Device_Cache;
 
 struct Mb_Device Device_Array [VirtDev]; //number of virtual devices
        
