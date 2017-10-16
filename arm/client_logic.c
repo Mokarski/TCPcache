@@ -49,14 +49,14 @@
 	 }
  */
 unsigned int Send_ID[MAX_Signals];
+int hash_inited = 0;
 struct hash_s *name_hash;
 struct hash_s *prefix_hash;
 
 int Init_Send_ID() {
 	int x=0;
 	for (x=0; x < MAX_Signals; x++) {
-		Send_ID[x]=1;
-
+		Send_ID[x]=0;
 	}
 	return 0;
 }
@@ -169,48 +169,56 @@ int Set_Signal_Param (int Signal_Array_id, int Ex ,int val){
 }
 
 int Set_Signal_Ex (int ID, int Ex){        
-        if (Ex==RD)
-           { 
-	    if  (Signal_Array[ID].TCP_Type[0]=='w')           
-              {
-	         Send_ID[ID]=1;
-		 Signal_Array[ID].ExState = Ex;                      
-              }
-           }
-           
-        if (Ex==WR)
-           {
-	    if  (Signal_Array[ID].TCP_Type[0]=='w')
-	        {
-	         Send_ID[ID]=1;
-		 Signal_Array[ID].ExState = Ex;        
-	        }
-	   }
-	
+	if(Ex==RD)
+	{ 
+		if  (Signal_Array[ID].TCP_Type[0]=='r')           
+		{
+			Send_ID[ID]=1;
+			Signal_Array[ID].ExState = Ex;                      
+		}
+	}
+
+	if (Ex==WR)
+	{
+		if(Signal_Array[ID].TCP_Type[0]=='w')
+		{
+			Send_ID[ID]=1;
+			Signal_Array[ID].ExState = Ex;        
+		}
+	}
+
 	return  0;
 }
 
 int Set_Signal_Ex_Val (char *name, int Ex, int Val){
+	if(Ex == RD) {
+		return -1;
+	}
 	// && (Signal_Array[ID].ExState!=WR)
 	struct Signal *s;
 	s = hash_find(name_hash, Signal_Array, name);
 	if(s) {
+		if(s->TCP_Type[0] != 'w')
+		{
+			return -1;
+		}
+
+		Send_ID[s->Srv_id_num] = 1;
 		s->ExState = Ex;
 		s->Value[1] = Val;
 	}
 	return  0;
 }
 
-int SetVal (char *Signal, int Val, int Ex){
+int GetVal(char *Signal ){
 	struct Signal *s;
 	s = hash_find(name_hash, Signal_Array, Signal);
 	if(s) {
-			printf(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>SETVAL Name{%s} Val{%i} Ex{%i} \n\r",s->Name,s->Value[1],s->ExState);
-			s->Value[1]=Val;
-			s->ExState = Ex;   	
+		//printf(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>GETVAL Name{%s} Val{%i} \n\r",s->Name,s->Value[1]);		
+		return 	s->Value[1];
 	}
 
-	return 0;
+	return -1;
 }
 
 
@@ -223,36 +231,18 @@ int FillSignalIndex(void){ //fill the id of signals in cyrrent signals list;
 	return 0;
 }
 
-int HashTable[4000]; //key table HASH = iindex of array and content = id signals
-int FillHash(void){ //fill the id of signals in cyrrent signals list;
-
-	int n=0;
-	int h;
-	for (n=0; n < MAX_Signals; n++){
-
-		h=Hash_id(Signal_Array[n].Name );
-
-		HashTable[h]=n;
-		printf("NAME[%s] HASH[%i] id[%i] \n\r",Signal_Array[n].Name ,h,n);
-	}
-	return 0;
-}
-
-int mode1, mode2, control1,control2,alarm_stop1,alarm_stop2,alarm_stop3;
-
 int get_state(){
 	int state=0;
 	int x = 0;
 	struct Signal *s;
+	int mode1, mode2, control1,control2,alarm_stop1,alarm_stop2,alarm_stop3;
+
 
 	s = hash_find(name_hash, Signal_Array, "485.kb.kei1.mode1");
 	if(s) mode1 = s->Value[1];
 	s = hash_find(name_hash, Signal_Array, "485.kb.kei1.mode2");
 	if(s) mode2 = s->Value[1];
-	s = hash_find(name_hash, Signal_Array, "485.kb.kei1.control1");
-	if(s) control1 = s->Value[1];
-	s = hash_find(name_hash, Signal_Array, "485.kb.kei1.control2");
-	if(s) control2 = s->Value[1];
+
 	s = hash_find(name_hash, Signal_Array, "485.kb.kei1.stop_alarm"); //gribok stop
 	if(s) alarm_stop1 = s->Value[1];
 	s = hash_find(name_hash, Signal_Array, "485.rpdu485.kei.crit_stop"); //gribok stop
@@ -260,19 +250,14 @@ int get_state(){
 	s = hash_find(name_hash, Signal_Array, "485.pukonv485c.kei.stop_alarm"); //gribok stop
 	if(s) alarm_stop3 = s->Value[1];
 
-	state=mode1+ mode2+ control1+control2+alarm_stop1+alarm_stop2+alarm_stop3; //state as sum of signals value
-	//printf (">>>>>>>>>>>>>>>>>>>>>> MODE STATE %i | mode1 %i, mode2 %i, control1 %i,control2 %i,alarm_stop1 %i,alarm_stop2 %i,alarm_stop3 %i   \n\r",state, mode1, mode2, control1,control2,alarm_stop1,alarm_stop2,alarm_stop3);
-	if ((mode1 + mode2 + control1 + control2)> 0 ) {
-		state = 3;  //work
-		printf(" *MODE 3 | ");
-	}
+	control1 = GetVal("485.kb.kei1.control1");
+	control2 = GetVal("485.kb.kei1.control2");
 
+	//printf (">>>>>>>>>>>>>>>>>>>>>> MODE STATE %i | mode1 %i, mode2 %i, control1 %i,control2 %i,alarm_stop1 %i,alarm_stop2 %i,alarm_stop3 %i   \n\r",state, mode1, mode2, control1,control2,alarm_stop1,alarm_stop2,alarm_stop3);
 	if ( ( alarm_stop1 + alarm_stop2 + alarm_stop3) > 0) {
 		state = 4; //ALARM stop
 		printf(" *GRIBOK STOP!!!| ");
 	}
-
-	if (DEBUG == 1)  printf (">>>>>>>>>>>>>>>>>>>>>> MODE STATE %i | mode1 %i, mode2 %i, control1 %i,control2 %i,alarm_stop1 %i,alarm_stop2 %i,alarm_stop3 %i   \n\r",state, mode1, mode2, control1,control2,alarm_stop1,alarm_stop2,alarm_stop3);
 
 	if ((control1== 0) && ( control2==1)) state =31; //Mestno
 	if ((control1== 1) && ( control2==1)) state =32; //Provod	        
@@ -281,6 +266,43 @@ int get_state(){
 	return state;
 }
 
+int GetSignals() {
+	int z=0;		
+	int tcpresult;
+	char tst[MAX_MESS]={0};
+
+	memset(message, 0, sizeof(message));
+	//printf("Buffer befor create Messasge: [%s] \n\r",message);
+	frame_pack("rd", ".", message);
+	tcpresult = frame_tcpreq(message); 
+
+	//in this place need to unpack signals from frame
+	if(frame_unpack(signal_parser_buf, tst) < 0){
+		return -1;
+	}
+
+	Data_to_sName(tst);
+	memset(signal_parser_buf, 0, sizeof(signal_parser_buf));
+	memset(tst, 0, sizeof(tst));
+
+	for (z=0; z < MAX_Signals; z++) {
+		//////	              printf(" \n\r |Signal FIELDS BEFORE parser: Name{%s} Val0[%i]  Val1[%i]| \n\r",Signal_Array[z].Name, Signal_Array[z].Value[0] , Signal_Array[z].Value[1]); //DEBUG
+		int test=0;	            
+		char buffer[350]={0};
+		strcpy (buffer, Signal_Array[z].Name);
+		test = unpack_signal(buffer, z); //from buffer to signal with number Z
+		Signal_Array[z].Srv_id_num = z;
+
+		if(!hash_inited) {
+			if(Signal_Array[z].Name[0] != 0) {
+				hash_add(name_hash, Signal_Array, z);
+				hash_add_by_prefix(prefix_hash, Signal_Array, z);
+			}
+		}
+	}
+
+	hash_inited = 1;
+}
 
 int main(int argc , char *argv[])
 {
@@ -304,31 +326,14 @@ int main(int argc , char *argv[])
 		return; //return 0 if all OK else return 1
 	}
 
-
-	//     if (socket_init2() !=0){
-	//     printf ("No Connection to server\n\r");
-	//     return; //return 0 if all OK else return 1
-	//     }
-
-	//ok
-	/*
-		 int u=0;
-		 for (u=0; u < MAX_Signals; u++) {
-		 printf("1Signal preparse: Name{%s} Val0[%i]  Val1[%i] \n\r",Signal_Array[u].Name,Signal_Array[u].Value[0]  ,Signal_Array[u].Value[1]); //-48
-		 }
-
-		 return 0;
-	 */
-
 	//******************* WORK CYCLE *******************
 	int delay = 0; //1 cycle 1 ms
-	int tcpresult=0;
-	char tst[MAX_MESS]={0};
 	char packed_txt_string[MAX_MESS]={0};
 	int STATE=0;
 	int RqTCPSend=0;
+	char tst[MAX_MESS]={0};
+	int tcpresult;
 	Init_Send_ID();
-	int hash_inited = 0;
 
 	hash_create(&name_hash);
 	hash_create(&prefix_hash);
@@ -340,111 +345,49 @@ int main(int argc , char *argv[])
 
 		//======================== read all 485 signals from server create signals and virtual devices ===================
 
-		memset(message, 0, sizeof(message));
-		//printf("Buffer befor create Messasge: [%s] \n\r",message);
-		frame_pack("rd", ".", message);
-		tcpresult = frame_tcpreq(message); 
-		if ( DEBUG == 1 )    printf ("tcp send result[%i]\n\r",tcpresult);	    
-		if ( DEBUG == 1 )    printf("=================== ==>   SPEEDTEST Time to prepare packet: [ %ld ] ms. \n\r", speedtest_stop());         		
-		if ( DEBUG == 1 )      speedtest_start(); //time start
-
-
-		//in this place need to unpack signals from frame
-		if ( frame_unpack(signal_parser_buf,tst) < 0){
-			//printf ("ERROR UNPACK! \n\r");
-			printf(">>>>ERROR FRAME UNPACK! RECIVED^{%s} \n\r",tst);
-			break;
-		}
-		printf("=================== ==>   SPEEDTEST Time frame_unpack: [ %ld ] ms. \n\r", speedtest_stop());         
-		if ( DEBUG == 1 )	speedtest_start(); //time start					
-
-		//if ( DEBUG == 1 ) 
-
-		printf(">>>>RECIVED^{%s} \n\r",tst);
-		//printf ("\n\r FRAME_UNPACK: \n\r %s\n\r",tst);
-		//Data_to_sName (signal_parser_buf);     	            // explode signals by delimiter ";"	  and copy to Signal.Name[]
-		if ( DEBUG == 1 ) speedtest_start(); //time start
-		Data_to_sName (tst);		
-		memset(signal_parser_buf, 0, sizeof(signal_parser_buf));
-		memset(tst, 0, sizeof(tst));
-
-		if ( DEBUG == 1 ) printf("=================== ==>   SPEEDTEST Time load Data_to_sName: [ %ld ] ms. \n\r", speedtest_stop());           	        
-		if ( DEBUG == 1 ) speedtest_start(); //time start //deserial test  	         
-
-		int z=0;		
-		int id=-1;
-		int wr=0;
-
-		//FillSignalIndex(); //fill the index of loaded  signals
-
-		if ( DEBUG == 1 )        printf("\n\r ================================ *UNPACK signals* ====================================\n\r");	        
-		for (z=0; z < MAX_Signals; z++) {
-			//////	              printf(" \n\r |Signal FIELDS BEFORE parser: Name{%s} Val0[%i]  Val1[%i]| \n\r",Signal_Array[z].Name, Signal_Array[z].Value[0] , Signal_Array[z].Value[1]); //DEBUG
-			int test=0;	            
-			char buffer[350]={0};
-			//printf("START SEND_ID[%i]=%i \n\r",z,Send_ID[z]);
-			strcpy (buffer, Signal_Array[z].Name);
-			if (strstr(Signal_Array[z].Name,"485.kb.key.start_hydratation")!=NULL ) printf("\n\r NAME{%s} Val{%i} Ex[%i] \n\r",Signal_Array[z].Name,Signal_Array[z].Value[1],Signal_Array[z].ExState);
-			test = unpack_signal(buffer  ,z); //from buffer to signal with number Z
-			if (strstr(Signal_Array[z].Name,"485.kb.key.start_hydratation")!=NULL ) printf("\n\r NAME{%s} Val{%i} Ex[%i] \n\r",Signal_Array[z].Name,Signal_Array[z].Value[1],Signal_Array[z].ExState);
-			if (DEBUG == 1)  printf ("FROM SRV ->> [#%i]  Name:[%s]   Val:[%i]     Ex[%i] \n\r",z,Signal_Array[z].Name,Signal_Array[z].Value[1],Signal_Array[z].ExState);	                    
-			Signal_Array[z].Srv_id_num = z;
-                       /*
-			if(Signal_Array[z].Name[0] == 0) {
-				break;
-			}
-			*/
-
-			if(!hash_inited) {
-			    if(Signal_Array[z].Name[0] != 0) {
-				hash_add(name_hash, Signal_Array, z);
-				hash_add_by_prefix(prefix_hash, Signal_Array, z);
-				}
-			}
-
-			// if ((Signal_Array[z].ExState == 0)  || (Signal_Array[z].ExState > 2) ) {
-			//       RqTCPSend=1;
-			//      }
-
-		} //end  unpack
-
-		hash_inited = 1;
-
 		if ( DEBUG == 1 )        printf(" ================================ *** ====================================\n\r");    		    
 
-		if ( DEBUG == 1 )        printf(" ==>   SPEEDTEST Deserial signals signals: [ %ld ] ms. \n\r", speedtest_stop());     
-
+		GetSignals();
 
 		/////////////////////////////////////////////////////// COMMAND/////////////////////////////////////////////////////////////
 
 		if ( DEBUG == 1 )    printf("=================== ==>  START SWITCH ============================= \n\r");         
-		if ( DEBUG == 1 )    speedtest_start(); //time start
 
+		// Check state
 		STATE = get_state();
 
-		z=0;
 		int hydr=0;
 
 		struct hash_item_s *item;
 		struct Signal *s;
 
-		if ( DEBUG == 1 ) printf("\n\rAnalyzing state\n\r");
+		printf("\n\rAnalyzing state %d\n\r", STATE);
+
+		// Read keyboard
+		item = hash_find_by_prefix(prefix_hash, "485.");
+		while(item) {
+			if(strncmp(Signal_Array[item->idx].Name, "485.kb.", 7) == 0)
+				Set_Signal_Ex(item->idx, RD); //cmd read keyboard modbus device and put result signals in Signal_Array            
+			if(strncmp(Signal_Array[item->idx].Name, "485.rsrs.", 9) == 0)
+				Set_Signal_Ex(item->idx, RD); //cmd read keyboard modbus device and put result signals in Signal_Array            						
+			item = item->next;
+		}
+		item = hash_find_by_prefix(prefix_hash, "wago.");
+		while(item) {
+			Set_Signal_Ex(item->idx, RD); //read wago	                               
+			//printf("Modified Signal [%s]; %s ExState: %d; \n", Signal_Array[item->idx].Name, Signal_Array[item->idx].TCP_Type, Signal_Array[item->idx].ExState);
+			item = item->next;
+		}
 
 		switch (STATE){
 			case 0:  //INIT
 				if ( DEBUG == 1 ) printf("\n\r++++++++++++++++++++++++++++++>>>>MODE INIT\n\r");
-				item = hash_find_by_prefix(prefix_hash, "wago.");
-				while(item) {
-					Set_Signal_Ex(item->idx, RD); //read wago	                               
-					item = item->next;
-				}
 				item = hash_find_by_prefix(prefix_hash, "485.");
 				while(item) {
 					Set_Signal_Ex(item->idx, RD); //read keyboard
+					//printf("Modified Signal [%s]; %s ExState: %d; \n", Signal_Array[item->idx].Name, Signal_Array[item->idx].TCP_Type, Signal_Array[item->idx].ExState);
 					item = item->next;
 				}
-				// printf ("CASE -> Send_ID{%i}=%i \n\r",z,Send_ID[z]);
-				//Send_ID[z]=1;
 				break;         
 
 			case 1:  //INIT
@@ -456,43 +399,25 @@ int main(int argc , char *argv[])
 
 
 			case 31:  //WORK mestno
-				Set_Signal_Ex_Val("485.rsrs.rm_u1_on1", WR,1); //write bit
-				Set_Signal_Ex_Val("485.rsrs.rm_u2_on2", WR,1); //write bit
-				        SetVal("485.rsrs2.state_sound2_led",1,WR); //Sound Warning2	                                     	                                     	                               
-					SetVal("485.rsrs2.state_sound1_led",1,WR); //Sound Warning1	                   	                                                                                       
-					SetVal("wago.oc_mdo1.ka7_1",1,WR); //KOntaktor QF1
-					SetVal("wago.oc_mdo1.ka4_1",1,WR); //Hydro pump M5	                                     
-					SetVal("wago.oc_mdo1.woter1",1,WR); //hydro
-
-				//if (sTrigger_Ex (z, "485.kb.key.start_hydratation", OK ) && sTrigger_Val (z, "485.kb.key.start_hydratation", 1 ) ) // start Hydratation
-				if ((strstr(Signal_Array[z].Name,"485.kb.key.start_hydratation")!=NULL)&&(Signal_Array[z].Value[1]==1))
-				{
-					// if ( DEBUG == 1 )     printf("\n\r====================================================>>>>START Hydrotation\n\r");	                                   	                                    
-					printf("\n\r====================================================>>>>START Hydrotation\n\r");	                                   	                                    					SetVal("485.rsrs2.state_sound2_led",1,WR); //Sound Warning2	                                     	                                     	                               
-					SetVal("485.rsrs2.state_sound1_led",1,WR); //Sound Warning1	                   	                                                                                       	                                    
-					hydr=1;
-				}
-
-
-				if (hydr==1)
-				{
-					if ( DEBUG == 1 )  printf("\n\r=============================>>>>START hydr\n\r");	                                   
-					//SetVal("wago.oc_mdo1.ka",1,WR); //hydro	                                      
-					SetVal("485.rsrs2.state_sound2_led",1,WR); //Sound Warning2	                                     	                                     	                               
-					SetVal("485.rsrs2.state_sound1_led",1,WR); //Sound Warning1	                   	                                                                                       
-					SetVal("wago.oc_mdo1.ka7_1",1,WR); //KOntaktor QF1
-					SetVal("wago.oc_mdo1.ka4_1",1,WR); //Hydro pump M5	                                     
-					SetVal("wago.oc_mdo1.woter1",1,WR); //hydro
-
-				}
-
 				item = hash_find_by_prefix(prefix_hash, "485.");
 				while(item) {
-					if(strncmp(Signal_Array[item->idx].Name, "485.kb.", 7) == 0)
-						Set_Signal_Ex (item->idx, RD); //cmd read keyboard modbus device and put result signals in Signal_Array            
-					if(strncmp(Signal_Array[item->idx].Name, "485.rsrs.", 9) == 0)
-						Set_Signal_Ex (item->idx, RD); //cmd read keyboard modbus device and put result signals in Signal_Array            						
+					if(strncmp(Signal_Array[item->idx].Name, "485.rsrs.rm_u", 13) == 0)
+						Set_Signal_Ex_Val(Signal_Array[item->idx].Name, WR,1); //write bit
 					item = item->next;
+				}
+				Set_Signal_Ex_Val("485.rsrs.rm_u1_on0", WR, 1);
+				Set_Signal_Ex_Val("485.rsrs2.state_sound2_led", WR, 1); //Sound Warning2	                                     	                                     	                               
+				Set_Signal_Ex_Val("485.rsrs2.state_sound1_led", WR, 1); //Sound Warning1	                   	                                                                                       
+				Set_Signal_Ex_Val("wago.oc_mdo1.ka7_1", WR, 1); //KOntaktor QF1
+				Set_Signal_Ex_Val("wago.oc_mdo1.ka4_1", WR, 1); //Hydro pump M5	                                     
+				Set_Signal_Ex_Val("wago.oc_mdo1.woter1", WR, 1); //hydro
+
+				//if (sTrigger_Ex (z, "485.kb.key.start_hydratation", OK ) && sTrigger_Val (z, "485.kb.key.start_hydratation", 1 ) ) // start Hydratation
+				if ((GetVal("485.kb.key.start_hydratation")) > 0)
+				{
+					// if ( DEBUG == 1 )     printf("\n\r====================================================>>>>START Hydrotation\n\r");	                                   	                                    
+					printf("\n\r====================================================>>>>Button Hydrotation\n\r");	
+					hydr=1;                                   	                                    					
 				}
 
 				break;
@@ -535,28 +460,22 @@ int main(int argc , char *argv[])
 		//printf("1Must be empty buffer - MESSAGE:[%s] \n\r",message);
 		char tmpz[150]={0};
 		int Send_Ready=0;
-		for (x = 0; x < MAX_Signals; x++)
+		for(x = 0; x < MAX_Signals; x++)
 		{
-			if (Signal_Array[x].Name[0] == 0)  //write if Name not empty
+			if(Signal_Array[x].Name[0] == 0)  //write if Name not empty
 			{ 
 				break;
 			}
-			// memset(packed_txt_string, 0, sizeof(packed_txt_string));
-			// printf("Founded Name:[%s] \n\r",Signal_Array[x].Name);
-			//Ex == 1 or Ex == 2
-			//printf ("Send_ID{%i}=%i\n\r",x,Send_ID[x]);
-			if ((Send_ID[x]) && (Signal_Array[x].Name[0] != 0)){                
-			   
+
+			if(Send_ID[x]){                
 				pack_signal (x, tmpz);
-				//printf ("Signal[%s] tmpz[%s]\n\r",Signal_Array[x].Name,tmpz);
+				printf ("Signal[%s] tmpz[%s]\n\r",Signal_Array[x].Name,tmpz);
 				strcat (message, tmpz);                 
 				//printf ("MESSAGE[%s]\n",message);
 				Send_Ready=1;
 			}
 
 			Send_ID[x]=0;
-			//else
-			//break;              // signals list is end
 		}
 		if (Send_Ready == 1){
 			if ( DEBUG == 1 )   printf("=================== ==>  Buffer assembly TIME: [ %ld ] ms. \n\r", speedtest_stop());         
@@ -569,7 +488,7 @@ int main(int argc , char *argv[])
 			if (DEBUG == 1) printf ("\n\r SEND TST^[%s] \n\r", tst);
 			if ( DEBUG == 1 )  printf ("Status of TCP SEND: [%i]\n\r", tcpresult);
 			//tcpsignal_packet_write(message);
-			printf("Send to TCPCache:[%s] \n\r",tst);
+			//printf("Send to TCPCache:[%s] \n\r",tst);
 			//break;
 		}
 

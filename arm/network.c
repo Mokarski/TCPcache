@@ -526,76 +526,73 @@ int frame_pack (char *type, char *message_in, char *message_out) { //construct f
 
 int frame_unpack (char *srvr_reply, char *dat){ // copy serialized signals into data and return 1 if read or 2 if write
     char sep ='#';
-    char type[4]={0}; // rd / wr err/ ret /Ok! +1 end string = 4 char
-    char istr[MAX_MESS]={0};
-    char header[100]={0};
-    char c_len[10]={0};
+		char *type;
+		char *istr;
+		char *header;
+		char *c_len;
     int  ret_rd_wr=0;
     
 
-    exploderL (sep,srvr_reply,header); //extract HEADER and DATA by "#" seporator
-    if (header != NULL) { //HEADER
-        printf("Header^{%s}\n\r",header);
-         if ( strlen(header)<100 ){          
-             if ( strlen(header) < 30 ) printf("(len<30) Header^{%s}\n\r",header);
-             }else {printf ("ERR HEADER TOO BIG[%i] \n\r",strlen(header));}
-           
-       } else {  printf ("ERR data_extract: Header - NULL! \n\r");
-                 printf (">>>>>>> ERR data_extract: \n\r->SRV REPLY:{%s}\n\r ->DATA:{%s}! \n\r",srvr_reply,dat);
-                  return -1;
-               }
-    
-    exploderR (sep,srvr_reply,istr);
-    if (istr != NULL) { //DATA
-        //printf("PACKET^{%s}\n\r",istr); //debug
-        strcpy (dat,istr);
-        if (strlen (dat) < 30) printf ("data_: {%s} \n\r",dat);
-        } else { 
-                 printf ("ERR data_extract: PACKET FROM FRAME  - NULL! \n\r");
-                 printf (">>>>>>> ERR data_extract: \n\r->SRV REPLY:{%s}\n\r ->DATA:{%s}! \n\r",srvr_reply,dat);
-                 return -1;
-               }
-    
-    
+    //exploderL (sep,srvr_reply,header); //extract HEADER and DATA by "#" seporator
+		header = srvr_reply;
+		istr = strchr(srvr_reply, '#');
+		if(!istr) {
+			printf ("ERR data_extract: PACKET FROM FRAME  - NULL! \n\r");
+			printf (">>>>>>> ERR data_extract: \n\r->SRV REPLY:{%s}\n\r", srvr_reply);
+			return -1;
+		}
+
+		*istr = 0;
+		istr ++;
+
+		printf("Header^{%s}\n\r",header);
+		if(strlen(header)<100) {
+			if ( strlen(header) < 30 ) printf("(len<30) Header^{%s}\n\r",header);
+		} else {
+			printf("ERR HEADER TOO BIG[%i] \n\r",strlen(header));
+		}
+
+		//exploderR (sep,srvr_reply,istr);
+		strcpy (dat, istr);
+		if (strlen(dat) < 30) printf ("data_: {%s} \n\r",dat);
     
     char sep2=';';           
-    exploderL(sep2,header,type); //extract type CMD  by ";"
 
-    if (type != NULL) { //type of frame read or write
-        printf("Type^{%s}\n\r",type);
-        if (strstr(type,"rd")) ret_rd_wr=1;  //read request
-        if (strstr(type,"wr")) ret_rd_wr=2;  //write request
-        if (strstr(type,"Ok!")) ret_rd_wr=3; //ack - ok
-        if (strstr(type,"err")) ret_rd_wr=4; //server return "error request"
-        if (strstr(type,"ret")) ret_rd_wr=5; //retry request, if packet len no OK
-        } else {  printf ("ERR data_extract: Header_cmd - NULL! \n\r");
-    		  printf (">>>>>>> ERR data_extract: \n\r->SRV REPLY:{%s}\n\r ->DATA:{%s}! \n\r",srvr_reply,dat);
-                  return -1;
-               }
-               
-               
-     exploderR (sep2,header,c_len);    //extract number bytes by ";"
-     if (strlen (c_len) > 9 )
-        {
-         printf("Too big number in packet len! More then 9 bytes! \n\r");
-         return -1;
-        }
-        if (c_len != NULL) { //extrcat lenght 
-        printf("Len^{%s}\n\r",c_len);
-        } else {  printf ("ERR data_extract: Header_pkt_len - NULL! \n\r");
-                  printf (">>>>>>> ERR data_extract: \n\r->SRV REPLY:{%s}\n\r ->DATA:{%s}! \n\r",srvr_reply,dat);
-                  return -1;
-               }
-               
-         int r1= atoi (c_len); //number bytes in packet;
-         int r2= strlen (dat); //bad solution packet len - 1  "*"
-         if ( r1 != r2 ){
-             printf("ERR Recived bytes len[%i] != calculated bytes len[%i]  \n\r",r1,r2);
-             printf("DATA:{%s}\n\n",dat);
-             return -2; //if data length != calculated data lenght
-             }
-     
-     
+		type = header;
+		c_len = strchr(header, sep2);
+
+		if(!c_len) {
+			printf("ERR header format is invalid! %s\r\n", header);
+			return -1;
+		}
+
+		*c_len = 0;
+		c_len ++;
+
+		printf("Type^{%s}\n\r",type);
+		if(!strcmp(type,"rd")) ret_rd_wr=1;  //read request
+		if(!strcmp(type,"wr")) ret_rd_wr=2;  //write request
+		if(!strcmp(type,"Ok!")) ret_rd_wr=3; //ack - ok
+		if(!strcmp(type,"err")) ret_rd_wr=4; //server return "error request"
+		if(!strcmp(type,"ret")) ret_rd_wr=5; //retry request, if packet len no OK
+
+		if(strlen(c_len) > 9)
+		{
+			printf("Too big number in packet len! More then 9 bytes! \n\r");
+			return -1;
+		}
+
+		printf("Len^{%s}\n\r",c_len);
+
+		int r1= atoi(c_len); //number bytes in packet;
+		int r2= strlen(dat); //bad solution packet len - 1  "*"
+
+		if(r1 != r2){
+			printf("ERR Recived bytes len[%i] != calculated bytes len[%i]  \n\r",r1,r2);
+			printf("DATA:{%s}\n\n",dat);
+			return -2; //if data length != calculated data lenght
+		}
+
     return ret_rd_wr;
 }
 

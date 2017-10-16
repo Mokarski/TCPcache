@@ -18,9 +18,9 @@ struct Signal {
     int  Bit_Pos;        // bit position
 
 //if signals tcp
-    int  TCP_Mb;          // TCP Modbus or tcp flow
-    char  TCP_Type[4];       // TCP flag if set to 1 then tcp if set to 0 modbus rtu
-    char TCP_Addr[18];   // TCP address of signals 192.168.255.255 max size 18 digits
+    int   TCP_Mb;         // TCP Modbus or tcp flow
+    char  TCP_Type[3];       // TCP flag if set to 1 then tcp if set to 0 modbus rtu
+    int   TCP_Addr;       // TCP address of signals 192.168.255.255 max size 18 digits
 
 //values 
  int  Value[2];          // value 2 int

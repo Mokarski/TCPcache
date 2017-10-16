@@ -91,94 +91,95 @@ signals_txt (char *packed_txt_string)
 }
 
 
-int
-unpack_signal (char *str, int n)
+int unpack_signal (char *str, int n)
 {				//unpack from buffer to signal parameters with name_id n
-  char sep[3] = ":";
-  char *istr;
-  //printf("Unpack Signal: [%s]\n\r",str);
 
-  istr = strtok (str, sep);
-  if (istr != NULL)
-    {
-      //printf ("1 - %s ",istr);
-      int c = 1;
-      while (istr != NULL)
+	char sep[3] = ":";
+	char *istr;
+	printf("Unpack Signal: [%s]\n\r",str);
+
+	istr = strtok (str, sep);
+	if (istr != NULL)
 	{
-	  switch (c)
-	    {
-	    case 1:
-	      //printf ("%i - %s ",c,istr);
-	      strcpy (Signal_Array[n].Name, istr);
-	      break;
+		//printf ("1 - %s ",istr);
+		int c = 1;
+		while (istr != NULL)
+		{
+			switch (c)
+			{
+				case 1:
+					printf ("%i - %s ",c,istr);
+					strcpy (Signal_Array[n].Name, istr);
+					break;
 
-	    case 2:
-	      //printf ("%i - %s ",c,istr);
-	      strcpy (Signal_Array[n].Val_Type, istr);
-	      break;
+				case 2:
+					printf ("%i - %s ",c,istr);
+					strcpy (Signal_Array[n].Val_Type, istr);
+					break;
 
-	    case 3:
-	      //printf ("%i - %s ",c,istr);
-	      Signal_Array[n].MB_Id = atoi (istr);
-	      break;
+				case 3:
+					printf ("%i - %s ",c,istr);
+					Signal_Array[n].MB_Id = atoi (istr);
+					break;
 
-	    case 4:
-	      //printf ("%i - %s ",c,istr);
-	      Signal_Array[n].MB_Reg_Num = atoi (istr);
-	      break;
+				case 4:
+					printf ("%i - %s ",c,istr);
+					Signal_Array[n].MB_Reg_Num = atoi (istr);
+					break;
 
-	    case 5:
-	      //printf ("%i - %s ",c,istr);
-	      Signal_Array[n].Bit_Pos = atoi (istr);
-	      break;
+				case 5:
+					printf ("%i - %s ",c,istr);
+					Signal_Array[n].Bit_Pos = atoi (istr);
+					break;
 
-	    case 6:
-	      //printf ("%i - %s ",c,istr);
-	      Signal_Array[n].Value[1] = atoi (istr);
-	      break;
+				case 6:
+					printf ("%i - %s ",c,istr);
+					Signal_Array[n].Value[1] = atoi (istr);
+					break;
 
-	    case 7:
-	      //printf ("%i - %s ",c,istr);
-	      // TYPE of Signal - read or write - R,W,RW	       
-	      strcpy (Signal_Array[n].TCP_Type, istr);
-	      break;
+				case 7:
+					//printf ("%i - %s ",c,istr);
+					// TYPE of Signal - read or write - R,W,RW	       
+					strcpy (Signal_Array[n].TCP_Type, istr);
+					break;
 
-	    case 8:
-	      //printf ("%i - %s ",c,istr);
-	      strcpy (Signal_Array[n].TCP_Addr, istr);
-	      break;
+				case 8:
+					printf ("%i - %s ",c,istr);
+					//strcpy (Signal_Array[n].TCP_Addr, istr);
+					Signal_Array[n].TCP_Addr = atoi(istr);
+					break;
 
-	    case 9:
-	      //printf ("%i - %s ",c,istr);
-	      Signal_Array[n].Prio = atoi (istr);
-	      break;
+				case 9:
+					printf ("%i - %s ",c,istr);
+					Signal_Array[n].Prio = atoi (istr);
+					break;
 
-	    case 10:
-	      //printf ("%i - %s ",c,istr);
-	      Signal_Array[n].Off = atoi (istr);
-	      break;
+				case 10:
+					printf ("%i - %s ",c,istr);
+					Signal_Array[n].Off = atoi (istr);
+					break;
 
-	    case 11:
-	      //printf ("%i - %s \n\r",c,istr);
-	      Signal_Array[n].ExState = atoi (istr);
-	      break;
+				case 11:
+					printf ("%i - %s \n\r",c,istr);
+					Signal_Array[n].ExState = atoi (istr);
+					break;
 
-	    default:
-	      printf ("Input_string {%s} ", str);
-	      printf
-		(" unpack_signal error index more then fields 11 < [%i]\n\r",
-		 c);
+				default:
+					printf ("Input_string {%s} ", str);
+					printf
+						(" unpack_signal error index more then fields 11 < [%i]\n\r",
+						 c);
 
-	    }
+			}
 
-	  c++;
-	  istr = strtok (NULL, sep);
-	  //printf ("%i - %s ",c,istr);
+			c++;
+			istr = strtok (NULL, sep);
+			//printf ("%i - %s ",c,istr);
+		}
 	}
-    }
-  return 0;
+	return 0;
 }
-
+/*
 int
 unpack_signal_srv (char *str, int n)
 {				//unpack from buffer to signal parameters with name_id n
@@ -196,7 +197,7 @@ unpack_signal_srv (char *str, int n)
 	  switch (c)
 	    {
 	    case 1:
-	      //printf ("%i - %s ",c,istr);
+	      printf ("%i - %s ",c,istr);
 	      //strcpy ( Signal_Array[n].Name,istr );
 	      break;
 
@@ -265,7 +266,7 @@ unpack_signal_srv (char *str, int n)
     }
   return 0;
 }
-
+*/
 
 int
 sDeSerial_by_num (int n)
@@ -368,8 +369,9 @@ sDeSerial_by_num (int n)
     {
       printf ("DeSerializer: Null strtok8\n\r");
       return 1;
-    }
-  strcat (Signal_Array[n].TCP_Addr, istr1);
+    }    
+  
+  Signal_Array[n].TCP_Addr = atoi (istr1);
 
   istr1 = strtok (NULL, sep1);
   if (istr1 == NULL)
@@ -401,124 +403,57 @@ sDeSerial_by_num (int n)
 int
 pack_signal (int n, char *str)
 {				//pack from Signaal_id[n] to buffer 
-  char tmp[9];
-  char *istr;
-  //printf("Unpack Signal: [%s]\n\r",str);
+	char tmp[9];
+	char *istr;
+	//printf("Unpack Signal: [%s]\n\r",str);
 
-//istr = strtok (str, sep);
-  if (istr != NULL)
-    {
-      //printf ("1 - %s ",istr);
-      int c = 1;
-      while (c < 12)
+	//istr = strtok (str, sep);
+	if (istr != NULL)
 	{
-	  switch (c)
-	    {
-	    case 1:
-	      strcpy (str, Signal_Array[n].Name);	//firstly USE strcpy, for erase buffer
-	      strcat (str, ":");	//next use strcat for cuncatinate strings
-	      //printf("--[#%i]Pack_signal:{%s} ",c,str);// DEBUG
-	      break;
+		*str = 0;
+		//printf ("1 - %s ",istr);
+		strcat(str, Signal_Array[n].Name);	//firstly USE strcpy, for erase buffer
+		strcat(str, ":");	//next use strcat for cuncatinate strings
 
-	    case 2:
-	      strcat (str, Signal_Array[n].Val_Type);	//type of signal bit or int
-	      strcat (str, ":");
-	      // printf("[#%i]Pack_signal:{%s} ",c,str);// DEBUG
-	      break;
+		strcat(str, Signal_Array[n].Val_Type);	//type of signal bit or int
+		strcat(str, ":");
 
-	    case 3:
-	      //printf ("%i - %s ",c,istr);
-	      //Signal_Array[n].MB_Id = atoi ( istr );
-	      itoa (Signal_Array[n].MB_Id, tmp);
-	      strcat (str, tmp);	//copy the number of ID
-	      strcat (str, ":");
-	      // printf("[#%i]Pack_signal:{%s} ",c,str);// DEBUG
-	      break;
+		itoa (Signal_Array[n].MB_Id, tmp);
+		strcat(str, tmp);	//copy the number of ID
+		strcat(str, ":");
 
-	    case 4:
-	      //printf ("%i - %s ",c,istr);
-	      //Signal_Array[n].MB_Reg_Num = atoi ( istr );
-	      itoa (Signal_Array[n].MB_Reg_Num, tmp);
-	      strcat (str, tmp);	//copy the number of MB register number 
-	      strcat (str, ":");
-	      //printf("[#%i]Pack_signal:{%s} ",c,str);// DEBUG
-	      break;
+		itoa (Signal_Array[n].MB_Reg_Num, tmp);
+		strcat(str, tmp);	//copy the number of MB register number 
+		strcat(str, ":");
 
-	    case 5:
-	      //printf ("%i - %s ",c,istr);
-	      //Signal_Array[n].Bit_Pos = atoi ( istr );
-	      itoa (Signal_Array[n].Bit_Pos, tmp);
-	      strcat (str, tmp);	//copy the number of Bit position
-	      strcat (str, ":");
-	      //printf("[#%i]Pack_signal:{%s} ",c,str);// DEBUG
-	      break;
+		itoa (Signal_Array[n].Bit_Pos, tmp);
+		strcat(str, tmp);	//copy the number of Bit position
+		strcat(str, ":");
 
-	    case 6:
-	      //printf ("%i - %s ",c,istr);
-	      //Signal_Array[n].Value[1] = atoi ( istr );
-	      itoa (Signal_Array[n].Value[1], tmp);
-	      strcat (str, tmp);	//copy the Value
-	      strcat (str, ":");
-	      //printf("[#%i]Pack_signal:{%s} ",c,str);// DEBUG
-	      break;
+		itoa (Signal_Array[n].Value[1], tmp);
+		strcat(str, tmp);	//copy the Value
+		strcat(str, ":");
 
-	    case 7:
-	    //Field TYPE R,W,RW for signal
-	      //printf ("%i - %s ",c,istr);
-	      //Signal_Array[n].TCP_Type = atoi ( istr );
-	      //itoa (Signal_Array[n].TCP_Type, tmp);
-	      strcat (str, Signal_Array[n].TCP_Type);	//
-	      strcat (str, ":");
-	      //printf("[#%i]Pack_signal:{%s} ",c,str);// DEBUG
-	      break;
+		strcat(str, Signal_Array[n].TCP_Type);	//
+		strcat(str, ":");
+		
+		itoa (Signal_Array[n].TCP_Addr, tmp);
+		strcat(str, tmp);	// TCP ADDR		
+		strcat(str, ":");
 
-	    case 8:
-	      //printf ("%i - %s ",c,istr);
-	      strcat (str, Signal_Array[n].TCP_Addr);	// TCP ADDR
-	      strcat (str, ":");
-	      //printf("[#%i]Pack_signal:{%s} ",c,str);// DEBUG
-	      break;
+		itoa (Signal_Array[n].Prio, tmp);
+		strcat(str, tmp);	//copy the Priority of signal
+		strcat(str, ":");
 
-	    case 9:
-	      //printf ("%i - %s ",c,istr);
-	      //Signal_Array[n].Prio = atoi ( istr );
-	      itoa (Signal_Array[n].Prio, tmp);
-	      strcat (str, tmp);	//copy the Priority of signal
-	      strcat (str, ":");
-	      //printf("[#%i]Pack_signal:{%s} ",c,str);// DEBUG
-	      break;
+		itoa (Signal_Array[n].Off, tmp);
+		strcat(str, tmp);	//copy the On or Off signal
+		strcat(str, ":");
 
-	    case 10:
-	      //printf ("%i - %s ",c,istr);
-	      //Signal_Array[n].Off = atoi ( istr );
-	      itoa (Signal_Array[n].Off, tmp);
-	      strcat (str, tmp);	//copy the On or Off signal
-	      strcat (str, ":");
-	      //printf("[#%i]Pack_signal:{%s} ",c,str);// DEBUG
-	      break;
-
-	    case 11:
-	      //printf ("%i - %s \n\r",c,istr);
-	      //Signal_Array[n].ExState = atoi ( istr );                 
-	      itoa (Signal_Array[n].ExState, tmp);
-	      strcat (str, tmp);	//copy the Execution state
-	      strcat (str, ";");
-	      //printf("[#%i]Pack_signal:{%s} -- \n\r \n\r ",c,str);// DEBUG
-	      break;
-
-	    default:
-	      printf ("Buffer assembly string {%s} \n\r", str);
-	      printf
-		(" ERROR: index [%i] more > then signals fields [11] TMP_STRING:[%s] \n\r",
-		 c, tmp);
-	    }
-
-	  c++;
-	  //istr = strtok (NULL, sep);
-	  //printf ("%i - %s ",c,istr);
+		itoa (Signal_Array[n].ExState, tmp);
+		strcat(str, tmp);	//copy the Execution state
+		strcat(str, ";");
 	}
-    }
-  return 0;
+	return 0;
 }
 
 int
@@ -561,7 +496,9 @@ sSerial_by_num (int n, char *pack_buf)
       strcat (pack_buf, ":");
 
       // if (strlen (Signal_Array[n].TCP_Addr) < 5 ) strcpy (Signal_Array[n].TCP_Addr,"127.0.0.1");
-      strcat (pack_buf, Signal_Array[n].TCP_Addr);
+      //strcat (pack_buf, Signal_Array[n].TCP_Addr);
+      itoa (Signal_Array[n].TCP_Addr, Value);
+      strcat (pack_buf, Value);
       strcat (pack_buf, ":");
 
 
@@ -843,7 +780,7 @@ print_signals_list (void)	//print all signals
 	  printf ("MB Register BitNum: %i\n", Signal_Array[t].Bit_Pos);
 
 	  printf ("TCP_Type: %s\n ", Signal_Array[t].TCP_Type);
-	  printf ("TCP_Addr: %s\n ", Signal_Array[t].TCP_Addr);
+	  printf ("TCP_Addr: %i\n ", Signal_Array[t].TCP_Addr);
 
 	  printf ("Values: [Hi: %i] [Low: %i]\n\n", Signal_Array[t].Value[0],
 		  Signal_Array[t].Value[1]);
@@ -880,7 +817,7 @@ print_by_name (char sName[100])	//print all signals
 	  printf ("MB Register Num: %i\n", Signal_Array[t].MB_Reg_Num);
 	  printf ("MB Register BitNum: %i\n", Signal_Array[t].Bit_Pos);
 	  printf ("TCP_Type: %s\n ", Signal_Array[t].TCP_Type);
-	  printf ("TCP_Addr: %s\n ", Signal_Array[t].TCP_Addr);
+	  printf ("TCP_Addr: %i\n ", Signal_Array[t].TCP_Addr);
 	  printf ("Values: [Hi: %i] [Low: %i]\n\n", Signal_Array[t].Value[0],
 		  Signal_Array[t].Value[1]);
 	  printf ("Priority mark: %i\n", Signal_Array[t].Prio);
@@ -901,58 +838,58 @@ print_by_name (char sName[100])	//print all signals
 int
 signals_file_load (void)
 {
-  FILE *fp;
-  char str[128];
-  char *row;
-  int c;
-  printf ("Load signals from signals.cfg\n");
-  fp = fopen ("signals.cfg", "r");
-  if (fp == NULL)
-    {
-      printf ("error open file\n");
-      return -1;
-    }
-  else
-    printf ("Read from file next signals:\n");
-  c = 0;
-
-  while (1)
-    {
-      row = fgets (str, sizeof (str), fp);
-      if (row == NULL)
+	FILE *fp;
+	char str[128];
+	char *row;
+	int c;
+	printf ("Load signals from signals.cfg\n");
+	fp = fopen ("signals.cfg", "r");
+	if (fp == NULL)
 	{
-	  if (feof (fp) != 0)
-	    {
-	      printf ("Read signals from file,complete.\n");
-	      break;
-	    }
-	  else
-	    {
-	      printf ("\n ERROR: read from file\n");
-	      break;
-	    }
+		printf ("error open file\n");
+		return -1;
 	}
-      printf ("->    %s", str);	//string from file
-      /*
-      text_parser (str, Signal_Array[c].Name, Signal_Array[c].Val_Type,
-		   Signal_Array[c].Reserv1, Signal_Array[c].Reserv2,
-		   Signal_Array[c].Reserv3);
-		   
-	*/
-      load_txt_signal(str,c);
-      //strcpy(Signal_Array[c].Name,str);
-      c++;
-    }
-  printf ("Close file: ");
-  if (fclose (fp) == EOF)
-    printf ("error close file \n");
-  else
-    printf ("complete\n");
+	else
+		printf ("Read from file next signals:\n");
+	c = 0;
+
+	while (1)
+	{
+		row = fgets(str, sizeof (str), fp);
+		if (row == NULL)
+		{
+			if (feof (fp) != 0)
+			{
+				printf ("Read signals from file,complete.\n");
+				break;
+			}
+			else
+			{
+				printf ("\n ERROR: read from file\n");
+				break;
+			}
+		}
+		printf ("->    %s", str);	//string from file
+		/*
+			 text_parser (str, Signal_Array[c].Name, Signal_Array[c].Val_Type,
+			 Signal_Array[c].Reserv1, Signal_Array[c].Reserv2,
+			 Signal_Array[c].Reserv3);
+
+		 */
+		load_txt_signal(str,c);
+		//strcpy(Signal_Array[c].Name,str);
+		c++;
+	}
+	printf ("Close file: ");
+	if (fclose (fp) == EOF)
+		printf ("error close file \n");
+	else
+		printf ("complete\n");
 
 
-  printf ("Loaded Signals: \n");
+	printf ("Loaded Signals: \n");
 
-  return 0;
+	return 0;
 }
 
 
@@ -976,72 +913,73 @@ signal_update (char sName[100], int sVal)
 }
 
 
-int load_txt_signal (char *str, int n)
+int load_txt_signal(char *str, int n)
 {				//unpack from buffer to signal parameters with name_id n
-  char sep[3] = ",";
-  char *istr;
-  unsigned int type_f=0;
-  //printf("Unpack Signal: [%s]\n\r",str);
+	char sep[3] = ",\n\r";
+	char *istr;
+	unsigned int type_f=0;
+	//printf("Unpack Signal: [%s]\n\r",str);
 
-  istr = strtok (str, sep);
-  if (istr != NULL)
-    {
-     // printf ("1 - %s ",istr);
-      int c = 1;
-      while (istr != NULL)
+	istr = strtok (str, sep);
+	if (istr != NULL)
 	{
-	  switch (c)
-	    {
-	    case 1:
-	     printf ("%i - %s ",c,istr);
-	      strcpy (Signal_Array[n].Name, istr);
-	      break;
+		// printf ("1 - %s ",istr);
+		int c = 1;
+		while (istr != NULL)
+		{
+			switch (c)
+			{
+				case 1:
+					printf ("%i - %s ",c,istr);
+					strcpy (Signal_Array[n].Name, istr);
+					break;
 
-	    case 2:
-	      printf ("%i - %s ",c,istr);
-	      strcpy (Signal_Array[n].Val_Type, istr);
-	      if (istr[0]=='b') type_f=1; //for bit type flag
-	      if (istr[0]=='i') type_f=2; //for int type flag
-	      break;
+				case 2:
+					printf ("%i - %s ",c,istr);
+					strcpy (Signal_Array[n].Val_Type, istr);
+					if (istr[0]=='b') type_f=1; //for bit type flag
+					if (istr[0]=='i') type_f=2; //for int type flag
+					break;
 
-	    case 3:
-	      printf (" MB_id %i - %s[%i] ",c,istr,atoi(istr));
-	      Signal_Array[n].MB_Id = atoi (istr);
-	     // printf(" #N%i SA[id]=%i ",n,Signal_Array[n].MB_Id);
-	      break;
+				case 3:
+					printf (" MB_id %i - %s[%i] ",c,istr,atoi(istr));
+					Signal_Array[n].MB_Id = atoi (istr);
+					// printf(" #N%i SA[id]=%i ",n,Signal_Array[n].MB_Id);
+					break;
 
-	    case 4:
-	     printf (" %i - %s ",c,istr,atoi(istr));
-	      Signal_Array[n].MB_Reg_Num = atoi (istr);
-	      break;
+				case 4:
+					printf (" %i - %s ",c,istr,atoi(istr));
+					Signal_Array[n].MB_Reg_Num = atoi (istr);
+					break;
 
-	    case 5:
-	      printf ("%i - %s ",c,istr);
-	      
-	      if (type_f == 2)  //if signal is INT type
-	         {
-	          strcpy(Signal_Array[n].TCP_Type,  istr);
-	         } else Signal_Array[n].Bit_Pos = atoi (istr);
-	      break;
+				case 5:
+					printf ("%i - %s ",c,istr);
 
-	    case 6:
-	      printf ("%i - %s ",c,istr);	      
-	      strcpy(Signal_Array[n].TCP_Type,istr);
-	      break;
+					if (type_f == 2)  //if signal is INT type
+					{
+						strcpy(Signal_Array[n].TCP_Type,  istr);
+					} else Signal_Array[n].Bit_Pos = atoi (istr);
+					break;
 
-	    default:
-	      printf ("Input_string {%s} ", str);
-	      printf
-		(" LOAD_TXT_SIGNAL ERR!!! index more then fields 6 < [%i]\n\r",c);
+				case 6:
+					printf ("%i - %s ",c,istr);	      
+					strcpy(Signal_Array[n].TCP_Type,istr);
+					break;
 
-	    }
+				default:
+					printf ("Skipping extra symbols\n");
+					//printf ("Input_string {%s} ", str);
+					//printf
+						//(" LOAD_TXT_SIGNAL ERR!!! index more then fields 6 < [%i]\n\r",c);
 
-	  c++;
-	  istr = strtok (NULL, sep);
-	  //printf ("%i - %s ",c,istr);
+			}
+
+			c++;
+			istr = strtok (NULL, sep);
+			//printf ("%i - %s ",c,istr);
+		}
 	}
-    }
-  return 0;
+	return 0;
 }
 
 

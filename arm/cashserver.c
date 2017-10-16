@@ -100,6 +100,9 @@ int main(int argc , char *argv[])
 			break;
 		}
 		Signal_Array[sc].Srv_id_num = sc;
+		if(Signal_Array[sc].TCP_Type[0] == 'r') {
+			Signal_Array[sc].ExState = 1;
+		}
 		hash_add_by_prefix(prefix_hash, Signal_Array, sc);
 		hash_add(name_hash, Signal_Array, sc);
 	}
@@ -145,7 +148,7 @@ int main(int argc , char *argv[])
 	pthread_attr_init(&threadAttr);
 	pthread_attr_setdetachstate(&threadAttr, PTHREAD_CREATE_DETACHED);
 
-	if(pthread_create( &sniffer_thread, &threadAttr,  connection_handler, (void*) client_sock) < 0)
+	if(pthread_create(&sniffer_thread, &threadAttr, connection_handler, (void*) client_sock) < 0)
 	{
 		perror("SERVER: Could not create thread");
 		return (ERROR_CREATE_THREAD);
@@ -154,7 +157,8 @@ int main(int argc , char *argv[])
 	char *evbuf = "w";
 
 	while( (client_sock = accept(socket_desc, (struct sockaddr *)&client, (socklen_t*)&c)) )
-	{   printf("\n\r ***TCPSERVER: \n\r");
+	{
+		printf("\n\r ***TCPSERVER: \n\r");
 		puts("Connection accepted");
 		printf("\n\r>>>>>    (MAIN While) CLient socket ID[#%i] \n\r",client_sock); 
 
@@ -257,11 +261,11 @@ int Read_operation(char tst[MAX_MESS], char to_send[MAX_MESS]){
 	char *istr;                
 	char sep_comma[4]=";";
 	int found=0;  
-	printf("[recived >CMD READ] read_signal \n\r");		    
+	//printf("[recived >CMD READ] read_signal \n\r");		    
 	size_t xx=0;
 	size_t cnt=0;
 	struct hash_item_s *item;
-	printf ("SERVER: recive from client: [%s]\n\r",tst);
+	//printf ("SERVER: recive from client: [%s]\n\r",tst);
 	istr = strtok(tst,sep_comma);
 	if (istr != NULL){
 		printf ("SERVER: GET the NAME [%s]\n\r",istr);
@@ -283,7 +287,7 @@ int Read_operation(char tst[MAX_MESS], char to_send[MAX_MESS]){
 	} else {
 		int len = strlen(istr);
 		item = hash_find_by_prefix(prefix_hash, istr);
-		printf("Hash items found: %p\n", item);
+		//printf("Hash items found: %p\n", item);
 
 		while(item) {
 			if(strncmp(Signal_Array[item->idx].Name, istr, len) == 0) {
@@ -296,7 +300,7 @@ int Read_operation(char tst[MAX_MESS], char to_send[MAX_MESS]){
 		}
 	}
 
-	printf("Signals READ [%s] found [%i]! \n\r", istr, found);
+	//printf("Signals READ [%s] found [%i]! \n\r", istr, found);
 	//if (found == 0) ShowAllSignals();
 	return found; //founded signal counter
 }
@@ -315,48 +319,48 @@ int Write_operation (char tst[MAX_MESS]){
 	size_t xx=0;
 	size_t cnt=0;					    
 
-	printf("[recived >CMD WRITE] write_signal \n\r");
+	//printf("[recived >CMD WRITE] write_signal \n\r");
 	int sn=1; //number of signals started from 1, because before while we get 1 signal
 
-	if (DEBUG == 1) printf ("SERVER: recive from client WRITE Req [%s]\n\r",tst);
-	istr =strtok(tst,";");			            
-	if ( istr != NULL ){
-		strcpy (buf_signals[0],istr);
+	//if (DEBUG == 1) printf ("SERVER: recive from client WRITE Req [%s]\n\r",tst);
+	istr = strtok(tst, ";");			            
+	if (istr != NULL) {
+		strcpy(buf_signals[0],istr);
 	} else {printf ("Not found delimiter [;]\n\r");}
 
 	while ( istr != NULL ){
-		istr =strtok(NULL,";");
+		istr = strtok(NULL, ";");
 		if (istr == NULL) // defend from sigfault
 		{
-			printf(" End write to cachebuf, at position [%i]\n\r",sn);
+			//printf(" End write to cachebuf, at position [%i]\n\r",sn);
 			break;
 		} else {			            
 			strcpy(buf_signals[sn], istr);
-			if (DEBUG == 1) printf ("Explode ; to cachebuf [#%i]  NAME: [%s] \n\r",sn,buf_signals[sn]); //debug
+			//if (DEBUG == 1) printf ("Explode ; to cachebuf [#%i]  NAME: [%s] \n\r",sn,buf_signals[sn]); //debug
 		}
 
 		sn++;//????
 		//printf(">>>>>>>>>>>>>>>>>>>>>>>>SN [%i]\n\r",sn);
 	}
 
-	if (DEBUG == 1) printf("Signal_counter sn=%i\n\r",sn);		
+	//if (DEBUG == 1) printf("Signal_counter sn=%i\n\r",sn);		
 	int pr=0;
 	int utest;
+	printf("Signals written:\r\n");
 	for(pr=0; pr < sn; pr++) //cycle for signals
 	{ 
-		if(buf_signals[cnt][0] == 0) {
+		if(buf_signals[pr][0] == 0) {
 			break;
 		}
 
 		char tmpz[190]={0};
-		char *istrName;
-		strcpy(tmpz,buf_signals[pr]); //tmp buf
-		//printf("tmpz %s\n\r",tmpz);
-		istrName =strtok(tmpz,":"); //extract name			            
-		if ( istrName != NULL ){
+		char *istrName = strchr(buf_signals[pr], ':');
+
+		if(istrName != NULL){
 			//printf("istr %s \n\r",istrName);
-			strcpy (tmpz,istrName);
-			//printf("tmpz %s \n\r",tmpz);
+			*istrName = 0;
+			strcpy(tmpz, buf_signals[pr]);
+			*istrName = ':';
 		} else {
 			printf ("Not found Name in buf_signals[:]\n\r");
 			continue;
@@ -366,10 +370,10 @@ int Write_operation (char tst[MAX_MESS]){
 		if(s) {
 			found++;
 			utest = unpack_signal(buf_signals[pr], s->Srv_id_num); //unpack from field buffer to signal properties fields ????
-			printf("%s:%d\n", s->Name, s->ExState);
+			if(s->ExState == 2) printf("%s:%d:%d\n", s->Name, s->ExState, s->Value[1]);
 		}
 	}
-	printf("Signals WRITE  found [%i]! \n\r",found);
+	//printf("Signals WRITE  found [%i]! \n\r",found);
 	return found; //return number of written signals
 }
 //**************************************************************************************
@@ -418,7 +422,7 @@ void* connection_handler(void *args)
 				continue;
 			}
 
-			printf(">>>> THREAD Socket ID[#%i] \n\r",sock);
+			//printf(">>>> THREAD Socket ID[#%i] \n\r",sock);
 			//
 			int read_size;
 			char *mesOk, *mesNo, *mesErr, *mesBad, *mesUnp;
@@ -439,11 +443,11 @@ void* connection_handler(void *args)
 			int iterration=0;
 			if( (read_size = recv(sock , client_message , MAX_MESS , 0) ) > 0 )
 			{
-				if (DEBUG == 1) iterration++;
+				//if (DEBUG == 1) iterration++;
 				int mess_length = sizeof(client_message) / sizeof(char);
-				if (DEBUG == 1) printf("\n\r {inTHREAD_sock[%i] Cycle %i} \n\r [SRV received: %i bytes] client_message_read: [%s]\r\n",sock,iterration,read_size ,client_message);
-				if (strlen(client_message) < 30) printf(">>>[Sock %i] Recived from client[%s]\n\r",sock,client_message);
-				printf("Received %d bytes from socket %d\n", read_size, i);
+				//if (DEBUG == 1) printf("\n\r {inTHREAD_sock[%i] Cycle %i} \n\r [SRV received: %i bytes] client_message_read: [%s]\r\n",sock,iterration,read_size ,client_message);
+				//if (strlen(client_message) < 30) printf(">>>[Sock %i] Recived from client[%s]\n\r",sock,client_message);
+				//printf("Received %d bytes from socket %d\n", read_size, i);
 
 
 				//********************************* COMMAND SELECTION AND EXECUTION ******************************/
@@ -453,19 +457,16 @@ void* connection_handler(void *args)
 				//pthread_mutex_unlock(&mutex); //unlock mutex
 
 				if (rd_wr < 0) {
-					printf ("\n ===============================================================\n");
-					printf ("----------------------> FRAME_UNPACK ERROR!!!!!: %i \n\r",rd_wr);
-					if (DEBUG > 0) printf("\n\rSOCKET_ID[%i] {Cycle %i} \n\r [SRV received: %i bytes] client_message: [%s]\r\n",sock,iterration,read_size ,client_message);
-					printf ("\n ===============================================================\n");
+					//printf ("\n ===============================================================\n");
+					//printf ("----------------------> FRAME_UNPACK ERROR!!!!!: %i \n\r",rd_wr);
+					//if (DEBUG > 0) printf("\n\rSOCKET_ID[%i] {Cycle %i} \n\r [SRV received: %i bytes] client_message: [%s]\r\n",sock,iterration,read_size ,client_message);
+					//printf ("\n ===============================================================\n");
 					write(sock, mesUnp, strlen(mesUnp));
 					close (sock); // close socket before exit
-					printf("Drop the socet[%i] and close connection. \n\r",sock);
+					printf("Drop the socket[%i] and close connection. \n\r",sock);
 					return 0; 
-				} else {
-					if (DEBUG == 1) printf("Thread_sock[%i] [FRAMEUNPACK: rd_wr[%i]]   Unpacked: [%s] \r\n",sock, rd_wr, tst);	   
 				}
 
-				//All mutex opertion moved inside function Read_operation/Write_operation
 				switch (rd_wr){
 					case 1:  //READ OPERATION
 						if (DEBUG == 1) speedtest_start();
@@ -477,13 +478,13 @@ void* connection_handler(void *args)
 
 
 							frame_pack("Ok!",client_message,result2); //pack all info to FRAME
-							if (DEBUG == 1) printf ("result2: {%s}",result2);
+							//if (DEBUG == 1) printf ("result2: {%s}",result2);
 							int msg_len = strlen(result2);
 							int write_ok;
 							// pthread_mutex_unlock(&mutex); //unlock mutex
 
 							write_ok = write(sock, result2, msg_len ); //send packet to client			
-							if (DEBUG == 1) printf("\n\rTry to Write,  Sendded bytes: [%i] \n\r",write_ok);
+							//if (DEBUG == 1) printf("\n\rTry to Write,  Sendded bytes: [%i] \n\r",write_ok);
 
 							if (write_ok < 0){
 								printf("TCP SEND Error description is : %s\n",strerror(errno));			    
@@ -491,33 +492,26 @@ void* connection_handler(void *args)
 							memset (client_message, 0, mess_length);
 
 						} else {  // if signals not found
-							printf("CMD_READ: Signal not found \n\r");
+							//printf("CMD_READ: Signal not found \n\r");
 							write(sock, mesErr, strlen(mesErr));			
 							memset(client_message, 0, mess_length);
 						}
-						if (DEBUG == 1) printf(" ++++++++++++++++++++++++==>   SPEEDTEST TCPCache READ_REQ Time: [ %ld ] ms. \n\r", speedtest_stop());
+						//if (DEBUG == 1) printf(" ++++++++++++++++++++++++==>   SPEEDTEST TCPCache READ_REQ Time: [ %ld ] ms. \n\r", speedtest_stop());
 
 						break;
-
-
-
 
 					case 2:  //WRITE OPERATION
 						if (DEBUG == 1)  speedtest_start();
 						//pthread_mutex_lock(&mutex); // block mutex 
-						if (strlen (tst)< 30 ) printf ("tst[%s]\n\r",tst);
-						if (Write_operation(tst) > 0) { //if recived siggnals founded and writed into server
+						//if (strlen (tst)< 30 ) printf ("tst[%s]\n\r",tst);
+						if(Write_operation(tst) > 0) { //if recived siggnals founded and writed into server
 							//pthread_mutex_unlock(&mutex); //unlock mutex
 							write(sock, mesOk, strlen(mesOk));
 							memset(client_message, 0, mess_length);
-
 						} else {
 							write(sock, mesErr, strlen(mesErr));			
 							memset(client_message, 0, mess_length); //erase the buffer						 
 						}
-
-						if (DEBUG == 1) printf(" ++++++++++++++++++++++++==>   SPEEDTEST TCPCache WRITE_REQ Time: [ %ld ] ms. \n\r", speedtest_stop());
-
 						break;
 
 					default: //Error section
@@ -525,8 +519,6 @@ void* connection_handler(void *args)
 						printf("\n >>>>>>>> Unformatted Client Message -1!!!! \n\r");
 						write(sock, mesBad, strlen(mesBad));
 						memset(client_message, 0, mess_length);
-
-
 				}  //end switch                                                                                                                                                   
 			} //end while
 
