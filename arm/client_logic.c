@@ -168,10 +168,25 @@ int Set_Signal_Param (int Signal_Array_id, int Ex ,int val){
 	return  0;
 }
 
-int Set_Signal_Ex (int ID, int Ex){
-	// && (Signal_Array[ID].ExState!=WR)
-	Send_ID[ID]=1;
-	Signal_Array[ID].ExState = Ex;        
+int Set_Signal_Ex (int ID, int Ex){        
+        if (Ex==RD)
+           { 
+	    if  (Signal_Array[ID].TCP_Type[0]=='w')           
+              {
+	         Send_ID[ID]=1;
+		 Signal_Array[ID].ExState = Ex;                      
+              }
+           }
+           
+        if (Ex==WR)
+           {
+	    if  (Signal_Array[ID].TCP_Type[0]=='w')
+	        {
+	         Send_ID[ID]=1;
+		 Signal_Array[ID].ExState = Ex;        
+	        }
+	   }
+	
 	return  0;
 }
 
@@ -443,6 +458,11 @@ int main(int argc , char *argv[])
 			case 31:  //WORK mestno
 				Set_Signal_Ex_Val("485.rsrs.rm_u1_on1", WR,1); //write bit
 				Set_Signal_Ex_Val("485.rsrs.rm_u2_on2", WR,1); //write bit
+				        SetVal("485.rsrs2.state_sound2_led",1,WR); //Sound Warning2	                                     	                                     	                               
+					SetVal("485.rsrs2.state_sound1_led",1,WR); //Sound Warning1	                   	                                                                                       
+					SetVal("wago.oc_mdo1.ka7_1",1,WR); //KOntaktor QF1
+					SetVal("wago.oc_mdo1.ka4_1",1,WR); //Hydro pump M5	                                     
+					SetVal("wago.oc_mdo1.woter1",1,WR); //hydro
 
 				//if (sTrigger_Ex (z, "485.kb.key.start_hydratation", OK ) && sTrigger_Val (z, "485.kb.key.start_hydratation", 1 ) ) // start Hydratation
 				if ((strstr(Signal_Array[z].Name,"485.kb.key.start_hydratation")!=NULL)&&(Signal_Array[z].Value[1]==1))
@@ -470,7 +490,7 @@ int main(int argc , char *argv[])
 				while(item) {
 					if(strncmp(Signal_Array[item->idx].Name, "485.kb.", 7) == 0)
 						Set_Signal_Ex (item->idx, RD); //cmd read keyboard modbus device and put result signals in Signal_Array            
-					if(strncmp(Signal_Array[item->idx].Name, "485.rsrs.", 7) == 0)
+					if(strncmp(Signal_Array[item->idx].Name, "485.rsrs.", 9) == 0)
 						Set_Signal_Ex (item->idx, RD); //cmd read keyboard modbus device and put result signals in Signal_Array            						
 					item = item->next;
 				}
