@@ -27,6 +27,7 @@ void hash_destroy(struct hash_s **hash) {
 struct hash_item_s *hash_add(struct hash_s *hash, struct Signal *signal_array, int idx) {
 	struct hash_item_s *item = malloc(sizeof(struct hash_item_s));
 	item->idx = idx;
+	strcpy(item->name, signal_array[idx].Name);
 	item->hash_value = hash_function(signal_array[idx].Name, 0);
 	item->next = NULL;
 	if(hash->hash_table[item->hash_value]) {
@@ -43,9 +44,8 @@ struct Signal *hash_find(struct hash_s *hash, struct Signal *signal_array, char 
 	int function = hash_function(name, 0);
 	struct hash_item_s *first_item = hash->hash_table[function];
 	while(first_item) {
-		struct Signal *s = &signal_array[first_item->idx];
-		if(!strcmp(s->Name, name)) {
-			return s;
+		if(!strcmp(first_item->name, name)) {
+			return &signal_array[first_item->idx];
 		}
 		first_item = first_item->next;
 	}
@@ -58,6 +58,7 @@ struct hash_item_s *hash_add_by_prefix(struct hash_s *hash, struct Signal *signa
 	int i;
 	item->idx = idx;
 	item->hash_value = hash_function(signal_array[idx].Name, dot);
+	strcpy(item->name, signal_array[idx].Name);
 	item->next = NULL;
 	if(hash->hash_table[item->hash_value]) {
 		item->next = hash->hash_table[item->hash_value];

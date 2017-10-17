@@ -34,6 +34,6 @@ echo "preassembly assembly"
 #gcc -o client client.o signals.o 
 
 echo "final assembly"
-/opt/freescale/usr/local/gcc-4.4.4-glibc-2.11.1-multilib-1.0/arm-fsl-linux-gnueabi/bin/arm-fsl-linux-gnueabi-gcc   $(pkg-config --libs --cflags /home/opc/Kombain/libmodbus-3.0.6/libmodbus.pc) -o client_pcsens_arm client_pcsens_arm.o signals_arm.o virtmb_arm.o speedtest.o network_arm.o
+/opt/freescale/usr/local/gcc-4.4.4-glibc-2.11.1-multilib-1.0/arm-fsl-linux-gnueabi/bin/arm-fsl-linux-gnueabi-gcc   $(pkg-config --libs --cflags /home/opc/Kombain/libmodbus-3.0.6/libmodbus.pc) -o client_pcsens_arm signalhash.c client_pcsens_arm.o signals_arm.o virtmb_arm.o speedtest.o network_arm.o
 #gcc -Wall -g  $(pkg-config --libs --cflags /home/opc/Kombain/libmodbus-3.0.6/libmodbus.pc) -o client_pcsens client_pcsens.o signals.o virtmb.o
 #./client_pcsens

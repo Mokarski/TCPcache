@@ -3,6 +3,28 @@
 #include <stdlib.h>
 #include <string.h>
 
+int Hashes_Initialized = 0;
+
+void init_signals_hash(void) {
+	int sc = 0;
+
+	if(Hashes_Initialized)
+		return;
+
+	hash_create(&Signal_Name_Hash);
+	hash_create(&Signal_Prefix_Hash);
+
+	for(sc = 0; sc < MAX_Signals; sc ++) {
+		if(Signal_Array[sc].Name[0] == 0) {
+			break;
+		}
+
+		Signal_Array[sc].Srv_id_num = sc;
+		hash_add(Signal_Name_Hash, Signal_Array, sc);
+		hash_add_by_prefix(Signal_Prefix_Hash, Signal_Array, sc);
+	}
+}
+
  /* reverse:  переворачиваем строку s на месте */
 void
 reverse (char s[])
@@ -404,11 +426,10 @@ int
 pack_signal (int n, char *str)
 {				//pack from Signaal_id[n] to buffer 
 	char tmp[9];
-	char *istr;
 	//printf("Unpack Signal: [%s]\n\r",str);
 
 	//istr = strtok (str, sep);
-	if (istr != NULL)
+	if (str != NULL)
 	{
 		*str = 0;
 		//printf ("1 - %s ",istr);

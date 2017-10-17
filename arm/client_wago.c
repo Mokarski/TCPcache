@@ -8,7 +8,7 @@
 #include <stdlib.h>
 #include "/home/opc/Kombain/test/include/modbus/modbus.h"
 //3
-#define DEBUG 0 // may be set to 0,1,2,3,4
+#define DEBUG 1 // may be set to 0,1,2,3,4
 #include "network.h"
 #include "signals.h"
 #include "virtmb.h"
@@ -338,6 +338,7 @@ int tcpresult = 0;
          }
     
       int signals_found = 0;
+      if (DEBUG == 1) printf ("TCP Recived [%s]\n\r", tst);
       signals_found = Data_to_sName (tst); //extract all signals from buffer and put into Signal.Name field
       printf("FOUNDED SIGNALS {%i}\n\r",signals_found);
       if (signals_found == 0) {

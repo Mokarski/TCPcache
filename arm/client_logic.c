@@ -14,15 +14,21 @@
 #include <errno.h>
 #include <unistd.h>
 #include "signalhash.h"
+#include "ringbuffer.h"
 
 #define Devices 40
 #define SignalsPerDev 100
 
-#define INIT 0
-#define RD  1
-#define WR  2
-#define OK  3
-#define ERR 4
+#define CONTROL_MASK		0x3
+#define CONTROL_RADIO		0x1
+#define	CONTROL_MANU		0x2
+#define CONTROL_CABLE		0x3
+
+#define MODE_MASK				(0x03 << 2)
+#define MODE_DIAG				(0x01 << 2)
+#define MODE_PUMP				(0x02 << 2)
+#define MODE_NORM				(0x03 << 2)
+
 /*
 	 struct WriteBuffer (
 	 unsigned int ID;
@@ -49,9 +55,6 @@
 	 }
  */
 unsigned int Send_ID[MAX_Signals];
-int hash_inited = 0;
-struct hash_s *name_hash;
-struct hash_s *prefix_hash;
 
 int Init_Send_ID() {
 	int x=0;
@@ -143,42 +146,33 @@ int ShowDevCache(){
 	return 0;
 }
 
-int sTrigger_Ex (int Signal_Array_id, char *SearchedName, int wait_ExState ){
-	if ( strstr(Signal_Array[Signal_Array_id].Name,SearchedName) != NULL)
-	{
-		if (Signal_Array[Signal_Array_id].ExState == wait_ExState) return 1;        
-	}
-	return 0;
-}
-
-int sTrigger_Val (int Signal_Array_id, char *SearchedName, int wait_Val ){
-	if ( strstr(Signal_Array[Signal_Array_id].Name,SearchedName) != NULL)
-	{
-		if (Signal_Array[Signal_Array_id].Value[1] == wait_Val) return 1;        
-	}
-	return 0;
-}
-
 //char SignalHash[MAX_Signals][MAX_Signals]; //array for store index of Signals
+int Get_Signal_Idx(char *name) {
+	struct Signal *s;
+	s = hash_find(Signal_Name_Hash, Signal_Array, name);
+	if(s) {
+		//printf(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>GETVAL Name{%s} Val{%i} \n\r",s->Name,s->Value[1]);		
+		return s->Srv_id_num;
+	}
+	
+	return -1;
+}
 
-int Set_Signal_Param (int Signal_Array_id, int Ex ,int val){
-
-	Signal_Array[Signal_Array_id].ExState = Ex;
-	Signal_Array[Signal_Array_id].Value[1] = val; 
-	return  0;
+int Get_Signal_Ex(int ID) {
+	return Signal_Array[ID].ExState;
 }
 
 int Set_Signal_Ex (int ID, int Ex){        
 	if(Ex==RD)
 	{ 
-		if  (Signal_Array[ID].TCP_Type[0]=='r')           
+		if((Signal_Array[ID].TCP_Type[0]=='r') && (Signal_Array[ID].ExState != Ex))
 		{
 			Send_ID[ID]=1;
 			Signal_Array[ID].ExState = Ex;                      
 		}
 	}
 
-	if (Ex==WR)
+	if(Ex==WR)
 	{
 		if(Signal_Array[ID].TCP_Type[0]=='w')
 		{
@@ -190,15 +184,14 @@ int Set_Signal_Ex (int ID, int Ex){
 	return  0;
 }
 
-int Set_Signal_Ex_Val (char *name, int Ex, int Val){
+int Set_Signal_Ex_Val(int idx, int Ex, int Val){
 	if(Ex == RD) {
 		return -1;
 	}
 	// && (Signal_Array[ID].ExState!=WR)
-	struct Signal *s;
-	s = hash_find(name_hash, Signal_Array, name);
+	struct Signal *s = &Signal_Array[idx];
 	if(s) {
-		if(s->TCP_Type[0] != 'w')
+		if(s->TCP_Type[0] != 'w' || (s->Value[1] == Val && s->ExState == Ex))
 		{
 			return -1;
 		}
@@ -212,7 +205,7 @@ int Set_Signal_Ex_Val (char *name, int Ex, int Val){
 
 int GetVal(char *Signal ){
 	struct Signal *s;
-	s = hash_find(name_hash, Signal_Array, Signal);
+	s = hash_find(Signal_Name_Hash, Signal_Array, Signal);
 	if(s) {
 		//printf(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>GETVAL Name{%s} Val{%i} \n\r",s->Name,s->Value[1]);		
 		return 	s->Value[1];
@@ -231,23 +224,23 @@ int FillSignalIndex(void){ //fill the id of signals in cyrrent signals list;
 	return 0;
 }
 
-int get_state(){
+int Get_State(){
 	int state=0;
 	int x = 0;
 	struct Signal *s;
 	int mode1, mode2, control1,control2,alarm_stop1,alarm_stop2,alarm_stop3;
 
 
-	s = hash_find(name_hash, Signal_Array, "485.kb.kei1.mode1");
+	s = hash_find(Signal_Name_Hash, Signal_Array, "485.kb.kei1.mode1");
 	if(s) mode1 = s->Value[1];
-	s = hash_find(name_hash, Signal_Array, "485.kb.kei1.mode2");
+	s = hash_find(Signal_Name_Hash, Signal_Array, "485.kb.kei1.mode2");
 	if(s) mode2 = s->Value[1];
 
-	s = hash_find(name_hash, Signal_Array, "485.kb.kei1.stop_alarm"); //gribok stop
+	s = hash_find(Signal_Name_Hash, Signal_Array, "485.kb.kei1.stop_alarm"); //gribok stop
 	if(s) alarm_stop1 = s->Value[1];
-	s = hash_find(name_hash, Signal_Array, "485.rpdu485.kei.crit_stop"); //gribok stop
+	s = hash_find(Signal_Name_Hash, Signal_Array, "485.rpdu485.kei.crit_stop"); //gribok stop
 	if(s) alarm_stop2 = s->Value[1];
-	s = hash_find(name_hash, Signal_Array, "485.pukonv485c.kei.stop_alarm"); //gribok stop
+	s = hash_find(Signal_Name_Hash, Signal_Array, "485.pukonv485c.kei.stop_alarm"); //gribok stop
 	if(s) alarm_stop3 = s->Value[1];
 
 	control1 = GetVal("485.kb.kei1.control1");
@@ -259,9 +252,11 @@ int get_state(){
 		printf(" *GRIBOK STOP!!!| ");
 	}
 
-	if ((control1== 0) && ( control2==1)) state =31; //Mestno
-	if ((control1== 1) && ( control2==1)) state =32; //Provod	        
-	if ((control1== 1) && ( control2==0)) state =33; //Radio	        
+	state = control1 | (control2 << 1) | (mode1 << 2) | (mode2 << 3);
+
+	//if ((control1== 0) && ( control2==1)) state =31; //Mestno
+	//if ((control1== 1) && ( control2==1)) state =32; //Provod	        
+	//if ((control1== 1) && ( control2==0)) state =33; //Radio	        
 
 	return state;
 }
@@ -292,16 +287,54 @@ int GetSignals() {
 		strcpy (buffer, Signal_Array[z].Name);
 		test = unpack_signal(buffer, z); //from buffer to signal with number Z
 		Signal_Array[z].Srv_id_num = z;
-
-		if(!hash_inited) {
-			if(Signal_Array[z].Name[0] != 0) {
-				hash_add(name_hash, Signal_Array, z);
-				hash_add_by_prefix(prefix_hash, Signal_Array, z);
-			}
-		}
 	}
 
-	hash_inited = 1;
+	INIT_HASH_MAPS();
+}
+
+int Init (){
+/*
+485.kb.kei1.power  // SWITCH POWER on
+wago.oc_mdi.err_phase //if ZEERO all is FINE
+wago.bki_k1.M1
+wago.bki_k2.M2
+wago.bki_k3_k4.M3_M4
+wago.bki_k5.M5
+wago.bki_k6.M6
+wago.bki_k7.M7
+wago.oc_mui1.Uin_PhaseA //Input Voltage 1140 V -INT
+wago.oc_mui1.Uin_PhaseB //Input Voltage 1140 V -INT
+wago.oc_mui1.Uin_PhaseC //Input Voltage 1140 V -INT
+*/
+
+	int init_state=0;
+
+	struct Signal *s;
+	s = hash_find(Signal_Name_Hash, Signal_Array, "485.kb.kei1.power");
+	if(s) init_state =10+ init_state + s->Value[1];
+
+	s = hash_find(Signal_Name_Hash, Signal_Array, "wago.oc_mdi.err_phase");
+	if(s) init_state =20+ init_state + s->Value[1];
+
+	s = hash_find(Signal_Name_Hash, Signal_Array, "wago.bki_k1.M1");
+	if(s) init_state =30+ init_state + s->Value[1];
+
+	s = hash_find(Signal_Name_Hash, Signal_Array, "wago.bki_k2.M2");
+	if(s) init_state =40+ init_state + s->Value[1];	
+
+	s = hash_find(Signal_Name_Hash, Signal_Array, "wago.bki_k3_k4.M3_M4");
+	if(s) init_state =50+ init_state + s->Value[1];	
+
+	s = hash_find(Signal_Name_Hash, Signal_Array, "wago.bki_k5.M5");
+	if(s) init_state =60+ init_state + s->Value[1];
+
+	s = hash_find(Signal_Name_Hash, Signal_Array, "wago.bki_k6.M6");
+	if(s) init_state =70+ init_state + s->Value[1];
+
+	s = hash_find(Signal_Name_Hash, Signal_Array, "wago.bki_k7.M7");
+	if(s) init_state =80+ init_state + s->Value[1];
+
+	return init_state;
 }
 
 int main(int argc , char *argv[])
@@ -319,7 +352,7 @@ int main(int argc , char *argv[])
 
 	printf("> Server ip:{%s} \n\r",argv[1]);
 
-
+	ring_buffer_init(&Signal_Mod_Buffer);
 
 	if (socket_init(argv[1]) !=0){
 		printf ("No Connection to server\n\r");
@@ -333,38 +366,41 @@ int main(int argc , char *argv[])
 	int RqTCPSend=0;
 	char tst[MAX_MESS]={0};
 	int tcpresult;
+	int workerInitialized = 0;
 	Init_Send_ID();
 
-	hash_create(&name_hash);
-	hash_create(&prefix_hash);
-
 	while (1){
-		printf("THIS IS LoGiC \n\r");
+		//printf("THIS IS LoGiC \n\r");
 
 		speedtest_start(); //time start
 
 		//======================== read all 485 signals from server create signals and virtual devices ===================
 
-		if ( DEBUG == 1 )        printf(" ================================ *** ====================================\n\r");    		    
+		//if ( DEBUG == 1 )        printf(" ================================ *** ====================================\n\r");    		    
 
 		GetSignals();
 
+		if(!workerInitialized) {
+			Init_Worker();
+			workerInitialized = 1;
+		}
+
 		/////////////////////////////////////////////////////// COMMAND/////////////////////////////////////////////////////////////
 
-		if ( DEBUG == 1 )    printf("=================== ==>  START SWITCH ============================= \n\r");         
+		//if ( DEBUG == 1 )    printf("=================== ==>  START SWITCH ============================= \n\r");         
 
 		// Check state
-		STATE = get_state();
-
 		int hydr=0;
 
 		struct hash_item_s *item;
 		struct Signal *s;
 
-		printf("\n\rAnalyzing state %d\n\r", STATE);
+		STATE = Get_State();
+		//printf("\n\rAnalyzing state %x", STATE);
+		//printf("\n\r          mode  %x (%x)\n\r", STATE & MODE_MASK, MODE_PUMP);
 
 		// Read keyboard
-		item = hash_find_by_prefix(prefix_hash, "485.");
+		item = hash_find_by_prefix(Signal_Prefix_Hash, "485.");
 		while(item) {
 			if(strncmp(Signal_Array[item->idx].Name, "485.kb.", 7) == 0)
 				Set_Signal_Ex(item->idx, RD); //cmd read keyboard modbus device and put result signals in Signal_Array            
@@ -372,92 +408,55 @@ int main(int argc , char *argv[])
 				Set_Signal_Ex(item->idx, RD); //cmd read keyboard modbus device and put result signals in Signal_Array            						
 			item = item->next;
 		}
-		item = hash_find_by_prefix(prefix_hash, "wago.");
+		item = hash_find_by_prefix(Signal_Prefix_Hash, "wago.");
 		while(item) {
 			Set_Signal_Ex(item->idx, RD); //read wago	                               
-			//printf("Modified Signal [%s]; %s ExState: %d; \n", Signal_Array[item->idx].Name, Signal_Array[item->idx].TCP_Type, Signal_Array[item->idx].ExState);
 			item = item->next;
 		}
+		
 
-		switch (STATE){
-			case 0:  //INIT
-				if ( DEBUG == 1 ) printf("\n\r++++++++++++++++++++++++++++++>>>>MODE INIT\n\r");
-				item = hash_find_by_prefix(prefix_hash, "485.kb.");
-				while(item) {
-					Set_Signal_Ex(item->idx, RD); //read keyboard
-					//printf("Modified Signal [%s]; %s ExState: %d; \n", Signal_Array[item->idx].Name, Signal_Array[item->idx].TCP_Type, Signal_Array[item->idx].ExState);
-					item = item->next;
+		switch(STATE & MODE_MASK) {
+			case MODE_NORM:
+				switch(STATE & CONTROL_MASK){
+					case CONTROL_MANU:  //INIT
+						Process_Local_Kb();
+						break;         
+
+					case CONTROL_CABLE:  //INIT
+						Process_Cable_Kb();
+						break;
+
+					case CONTROL_RADIO:  //RESET 
+						Process_Radio_Kb();
+						break;	               
+
+					default:  //DEFAULT
+						if ( DEBUG == 1 )    printf("default state \n\r");  
 				}
-				break;         
-
-			case 1:  //INIT
 				break;
-
-
-			case 2:  //RESET 
-				break;	               
-
-
-			case 31:  //WORK mestno
-				item = hash_find_by_prefix(prefix_hash, "485.kb.");
-				while(item) {
-					if(strncmp(Signal_Array[item->idx].Name, "485.rsrs.rm_u", 13) == 0)
-						Set_Signal_Ex_Val(Signal_Array[item->idx].Name, WR,1); //write bit
-					item = item->next;
-				}
-
-
-				//if (sTrigger_Ex (z, "485.kb.key.start_hydratation", OK ) && sTrigger_Val (z, "485.kb.key.start_hydratation", 1 ) ) // start Hydratation
-				if ((GetVal("485.kb.key.start_hydratation")) > 0)
-				{
-					// if ( DEBUG == 1 )     printf("\n\r====================================================>>>>START Hydrotation\n\r");	                                   	                                    
-					printf("\n\r====================================================>>>>Button Hydrotation\n\r");	
-					hydr=1;                                   	                                    					
-				Set_Signal_Ex_Val("485.rsrs.rm_u1_on0", WR, 1);
-				Set_Signal_Ex_Val("485.rsrs2.state_sound2_led", WR, 1); //Sound Warning2	                                     	                                     	                               
-				Set_Signal_Ex_Val("485.rsrs2.state_sound1_led", WR, 1); //Sound Warning1	                   	                                                                                       
-				Set_Signal_Ex_Val("wago.oc_mdo1.ka7_1", WR, 1); //KOntaktor QF1
-				Set_Signal_Ex_Val("wago.oc_mdo1.ka4_1", WR, 1); //Hydro pump M5	                                     
-				Set_Signal_Ex_Val("wago.oc_mdo1.woter1", WR, 1); //hydro					
-				}
-
+			case MODE_PUMP:
+				Process_Pumping();
 				break;
-
-			case 32:  //WORK provod
-				if ( DEBUG == 1 )    printf("\n\r++++++++++++++++++++++++++++++>>>>MODE WORK PROVOD\n\r");
-
-
+			case MODE_DIAG:
+				Process_Diag();
 				break;
+		}
 
-			case 33:  //WORK radio
-				if ( DEBUG == 1 )   printf("\n\r++++++++++++++++++++++++++++++>>>>MODE WORK RADIO\n\r");
-
-				break;
-
-			case 4:  //STOP 
-				if ( DEBUG == 1 )  printf("\n\r++++++++++++++++++++++++++++++>>>>MODE SOTP !!!!!!!1\n\r");	                      
-				break;
-
-			case 5:  //DIAGNOSTIC
-				if ( DEBUG == 1 )  printf("\n\r++++++++++++++++++++++++++++++>>>>MODE DIAGNOSTIC !!!!!!!1\n\r");	                                                    
-				break;
-
-			case 6:  //ERROR 
-				if ( DEBUG == 1 )  printf("\n\r++++++++++++++++++++++++++++++>>>>MODE ERROR !!!!!!!1\n\r");	                                                    
-				break;
-
-			default:  //DEFAULT
-				if ( DEBUG == 1 )    printf("default state \n\r");  
-				//STATE = get_state();
-		} //end switch
-		if ( DEBUG == 1 ) printf("\n\rAnalyzing state done\n\r");
+		int idx, value, st;
+		while(ring_buffer_pop(Signal_Mod_Buffer, &idx, &value, &st)) {
+			if(st == RD)
+				Set_Signal_Ex(idx, st);
+			else
+				Set_Signal_Ex_Val(idx, st, value);
+		}
 
 		////////////////////////=========  SEND all signals to TCPCache =======//////////////////////////////////////
 
-		if ( DEBUG == 1 )  speedtest_start ();       //time start
+		if(DEBUG == 1) speedtest_start(); //time start
 		int x = 0;
 		//     socket_init();
-		memset(message, 0, sizeof(message));     //erase buffer
+		message[0] = 0;
+		//memset(message, 0, sizeof(message));     //erase buffer
 		//printf("1Must be empty buffer - MESSAGE:[%s] \n\r",message);
 		char tmpz[150]={0};
 		int Send_Ready=0;
@@ -469,33 +468,23 @@ int main(int argc , char *argv[])
 			}
 
 			if(Send_ID[x]){                
-				pack_signal (x, tmpz);
-				//printf ("Signal[%s] tmpz[%s]\n\r",Signal_Array[x].Name,tmpz);
-				strcat (message, tmpz);                 
-				//printf ("MESSAGE[%s]\n",message);
+				pack_signal(x, tmpz);
+				if (DEBUG==1) printf("Pack_Signal {%s}\n\r",tmpz);
+				strcat(message, tmpz);                 
 				Send_Ready=1;
 			}
 
 			Send_ID[x]=0;
 		}
 		if (Send_Ready == 1){
-			if ( DEBUG == 1 )   printf("=================== ==>  Buffer assembly TIME: [ %ld ] ms. \n\r", speedtest_stop());         
-			if ( DEBUG == 1 )   speedtest_start ();       //time start
 			memset(tst, 0, sizeof(tst));
 			frame_pack ("wr", message, tst);
-			if ( DEBUG == 1 )  printf("=================== ==>  Calculate PACK TIME: [ %ld ] ms. \n\r", speedtest_stop());         
-			if ( DEBUG == 1 )  speedtest_start ();       //time start
 			tcpresult = frame_tcpreq (tst);
-			if (DEBUG == 1) printf ("\n\r SEND TST^[%s] \n\r", tst);
-			if ( DEBUG == 1 )  printf ("Status of TCP SEND: [%i]\n\r", tcpresult);
-			//tcpsignal_packet_write(message);
-			//printf("Send to TCPCache:[%s] \n\r",tst);
-			//break;
 		}
 
-		printf("=================== ==>  Calculate TCP SEND to SRV TIME: [ %ld ] ms. \n\r", speedtest_stop());         
+		//printf("=================== ==>  Calculate TCP SEND to SRV TIME: [ %ld ] ms. \n\r", speedtest_stop());         
 
-		if ( DEBUG == 1 )    printf("end iteration.. \n\r");     
+		//if ( DEBUG == 1 )    printf("end iteration.. \n\r");     
 	}
 
 	//*************CLOSE SOCKET***************

@@ -5,44 +5,57 @@
 #define STR_LEN_TXT 100
 #define MAX_Signals 400
 
+#define INIT 0
+#define RD  1
+#define WR  2
+#define OK  3
+#define ERR 4
+
 //char packed_txt_string[40000];
 
 struct Signal {
- int Srv_id_num;         // server number in server list. Assigned by server.
- char Name[150];         // Name signal
+	int Srv_id_num;         // server number in server list. Assigned by server.
+	char Name[150];         // Name signal
 
-//if modbus signals type
-    int  MB_Id;          // Modbus device ID
-    int  MB_Reg_Num;     // Mb register number
-    char Val_Type[10];   // type of value int or bit
-    int  Bit_Pos;        // bit position
+	//if modbus signals type
+	int  MB_Id;          // Modbus device ID
+	int  MB_Reg_Num;     // Mb register number
+	char Val_Type[10];   // type of value int or bit
+	int  Bit_Pos;        // bit position
 
-//if signals tcp
-    int   TCP_Mb;         // TCP Modbus or tcp flow
-    char  TCP_Type[3];       // TCP flag if set to 1 then tcp if set to 0 modbus rtu
-    int   TCP_Addr;       // TCP address of signals 192.168.255.255 max size 18 digits
+	//if signals tcp
+	int   TCP_Mb;         // TCP Modbus or tcp flow
+	char  TCP_Type[3];       // TCP flag if set to 1 then tcp if set to 0 modbus rtu
+	int   TCP_Addr;       // TCP address of signals 192.168.255.255 max size 18 digits
 
-//values 
- int  Value[2];          // value 2 int
- char Reserv1[10];       // type of value int or bit
- char Reserv2[10];       // type of value int or bit
- char Reserv3[10];       // type of value int or bit
- 
- //Arbitrage and on/off
- int Prio;               // Priority of signal 0 - no priority
- int TypeTrigger;        // signal has trigger state on/off 
- int Off;                // Signal not used if OFF = 1;
- 
- //debug parametrs
- int  ExState;           // 0-not executed/unknown 1-for execution,2-executed,3-expired,4-dropped  Thread Arbitrage
- char Ex_Hw;             // Execution Hardware mark PcProc =1 Panel 43=2 Panel 10=3 | soft_class
- char Ex_Sf[100];        // Execution Software mark ModBusMaster_RTU =1 Modbus_Master_TCP=2 CoreSignal=100
+	//values 
+	int  Value[2];          // value 2 int
+	char Reserv1[10];       // type of value int or bit
+	char Reserv2[10];       // type of value int or bit
+	char Reserv3[10];       // type of value int or bit
 
- };
+	//Arbitrage and on/off
+	int Prio;               // Priority of signal 0 - no priority
+	int TypeTrigger;        // signal has trigger state on/off 
+	int Off;                // Signal not used if OFF = 1;
 
+	//debug parametrs
+	int  ExState;           // 0-not executed/unknown 1-for execution,2-executed,3-expired,4-dropped  Thread Arbitrage
+	char Ex_Hw;             // Execution Hardware mark PcProc =1 Panel 43=2 Panel 10=3 | soft_class
+	char Ex_Sf[100];        // Execution Software mark ModBusMaster_RTU =1 Modbus_Master_TCP=2 CoreSignal=100
+
+};
+
+#include "signalhash.h"
+
+int Hashes_Initialized;
 struct Signal Signal_Array[MAX_Signals];
-                          
-                     
+struct hash_s *Signal_Name_Hash;
+struct hash_s *Signal_Prefix_Hash;
+
+void init_signals_hash(void);
+#define INIT_HASH_MAPS()	if(!Hashes_Initialized) { init_signals_hash(); }
+
 void init_signals_list (void);
 void print_signals_list (void);
 void print_by_name (char *sName);

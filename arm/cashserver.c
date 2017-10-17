@@ -19,7 +19,7 @@
 #include<time.h>      // for time_t
 #include<errno.h>     // for print errors
 
-#define DEBUG 0       // 0 -not debug  1,2,3,4,5- debug
+#define DEBUG 1       // 0 -not debug  1,2,3,4,5- debug
 #include "signals.h"
 #include "network.h"
 #include "speedtest.h"
@@ -62,8 +62,6 @@ typedef struct Discrete_Signals { // store one  signal state
 //Discrete_Signals_t args; // Create array of Tasks to control signals by threads
 Discrete_Signals_t args; // init for pthread can read and write global Signal_Array                         
 int client_sockets[MAX_CONN];
-struct hash_s *prefix_hash;
-struct hash_s *name_hash;
 
 
 void * getglobalsignals() { return (void*)&args; }
@@ -92,19 +90,15 @@ int main(int argc , char *argv[])
 	//Load signals
 	init_signals_list();
 	signals_file_load();
-	hash_create(&prefix_hash);
-	hash_create(&name_hash);
+	INIT_HASH_MAPS();
 
 	for(sc = 0; sc < MAX_Signals; sc ++) {
 		if(Signal_Array[sc].Name[0] == 0) {
 			break;
 		}
-		Signal_Array[sc].Srv_id_num = sc;
 		if(Signal_Array[sc].TCP_Type[0] == 'r') {
 			Signal_Array[sc].ExState = 1;
 		}
-		hash_add_by_prefix(prefix_hash, Signal_Array, sc);
-		hash_add(name_hash, Signal_Array, sc);
 	}
 
 	printf("Signals:\n\n\r");
@@ -286,7 +280,7 @@ int Read_operation(char tst[MAX_MESS], char to_send[MAX_MESS]){
 		}
 	} else {
 		int len = strlen(istr);
-		item = hash_find_by_prefix(prefix_hash, istr);
+		item = hash_find_by_prefix(Signal_Prefix_Hash, istr);
 		//printf("Hash items found: %p\n", item);
 
 		while(item) {
@@ -366,11 +360,13 @@ int Write_operation (char tst[MAX_MESS]){
 			continue;
 		}
 
-		struct Signal *s = hash_find(name_hash, Signal_Array, tmpz);
+		struct Signal *s = hash_find(Signal_Name_Hash, Signal_Array, tmpz);
 		if(s) {
 			found++;
 			utest = unpack_signal(buf_signals[pr], s->Srv_id_num); //unpack from field buffer to signal properties fields ????
-			if(s->ExState == 2) printf("%s:%d:%d\n", s->Name, s->Value[1], s->ExState);
+			//if(s->ExState == 2) printf("%s:%d:%d\n", s->Name, s->Value[1], s->ExState);
+				if(strstr(s->Name,"485.kb.kbl.start_hydratation")!=NULL) printf("%s:%d:%d\n", s->Name, s->Value[1], s->ExState);
+				if(strstr(s->Name,"control")!=NULL) printf("%s:%d:%d\n", s->Name, s->Value[1], s->ExState);
 		}
 	}
 	//printf("Signals WRITE  found [%i]! \n\r",found);

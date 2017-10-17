@@ -171,7 +171,7 @@ int Data_to_sName( char* tcp_buffer ){ //extract from tcp buffer signal and put 
 
 		if ( istr == NULL ) 
 		{
-			printf ("[#%i] End list \n\r",signal_counter);
+			//printf ("[#%i] End list \n\r",signal_counter);
 			return signal_counter;
 		}
 
@@ -232,7 +232,7 @@ int tcpsignal_read(char *message_in){
 	  //break;
 	}
 	if ( strstr (pSR,"Ok!") != NULL ){
-	    printf("SERVER reply: Ok!\n\r");
+	    //printf("SERVER reply: Ok!\n\r");
 	   }
 	memset(server_reply, 0, sizeof(server_reply) / sizeof(server_reply[0]));
     //}
@@ -274,7 +274,7 @@ int frame_read_s (char *message_in, short int signals_count){
     strcat(message,c_count);
     
     strcat (message, Frame_Container.data);
-    if (DEBUG == 1) printf("Constructed Frame^[%s] \n\r",message);
+    //if (DEBUG == 1) printf("Constructed Frame^[%s] \n\r",message);
 return 0;
 }
 
@@ -287,7 +287,7 @@ int frame_tcpreq (char *msg){
             puts("Send request to CacheServer failed!!!");
             return -1;
             //break;
-         } else { if (DEBUG == 1) printf ("[ Send to SRV ]: {%s} \n\r",msg); } //debug info
+         }// else { if (DEBUG == 1) printf ("[ Send to SRV ]: {%s} \n\r",msg); } //debug info
         
         //Receive a reply from the server
         if( recv(sock , server_reply , MAX_MESS , 0) < 0) // recive message from server and put into global array
@@ -313,7 +313,7 @@ int frame_tcpreq (char *msg){
 	}
 	
 	if ( strstr (pSR,"Ok!") != NULL ){
-	    printf("SERVER reply: Ok!\n\r");
+	    //printf("SERVER reply: Ok!\n\r");
 	    ret = 3;
 	   }
 	memset(server_reply, 0, sizeof(server_reply) / sizeof(server_reply[0]));
@@ -331,7 +331,7 @@ int frame_tcpsend (char *msg){
             puts("Send request to CacheServer failed!!!");
             return -1;
             //break;
-         } else { printf ("[ Send to SRV ]: {%s} \n\r",msg); }
+         } //else { printf ("[ Send to SRV ]: {%s} \n\r",msg); }
         
         //Receive a reply from the server
         int cnt=0;
@@ -343,7 +343,7 @@ int frame_tcpsend (char *msg){
             puts("recv from CacheServer failed!!!");
             return -1;
             //break;
-            } else { printf ("[ SRV reply ]: {%s} \n\r",server_reply); ret=1; }
+            } //else { printf ("[ SRV reply ]: {%s} \n\r",server_reply); ret=1; }
         
           if ( strlen (server_reply) > 5){ //if response from server more then 4 symbols, then we get signals
               strcpy(signal_parser_buf, server_reply); //copy to global array 
@@ -358,7 +358,7 @@ int frame_tcpsend (char *msg){
 	      }
 	
 	    if ( strstr (pSR,"Ok!") != NULL ){
-	        printf("SERVER reply: Ok!\n\r");
+	        //printf("SERVER reply: Ok!\n\r");
 	        ret = 3;
 	       }
 	     cnt++;
@@ -519,8 +519,8 @@ int frame_pack (char *type, char *message_in, char *message_out) { //construct f
     strcat (message_out,message_in);
     strcat (message_out,";\0"); //*
 //    strcat (message_out,";\0");
-    if (DEBUG == 1) printf("Constructed Frame^[%s]\n\n\r",message_out);
-    if ( strlen(message_out ) < 30) printf("Constructed Frame^[%s]\n\n\r",message_out);
+    //if (DEBUG == 1) printf("Constructed Frame^[%s]\n\n\r",message_out);
+    //if ( strlen(message_out ) < 30) printf("Constructed Frame^[%s]\n\n\r",message_out);
     return 0;
 }
 
@@ -545,9 +545,9 @@ int frame_unpack (char *srvr_reply, char *dat){ // copy serialized signals into 
 		*istr = 0;
 		istr ++;
 
-		printf("Header^{%s}\n\r",header);
+		//printf("Header^{%s}\n\r",header);
 		if(strlen(header)<100) {
-			if ( strlen(header) < 30 ) printf("(len<30) Header^{%s}\n\r",header);
+			//if ( strlen(header) < 30 ) printf("(len<30) Header^{%s}\n\r",header);
 		} else {
 			printf("ERR HEADER TOO BIG[%i] \n\r",strlen(header));
 		}
@@ -569,7 +569,7 @@ int frame_unpack (char *srvr_reply, char *dat){ // copy serialized signals into 
 		*c_len = 0;
 		c_len ++;
 
-		printf("Type^{%s}\n\r",type);
+		//printf("Type^{%s}\n\r",type);
 		if(!strcmp(type,"rd")) ret_rd_wr=1;  //read request
 		if(!strcmp(type,"wr")) ret_rd_wr=2;  //write request
 		if(!strcmp(type,"Ok!")) ret_rd_wr=3; //ack - ok
@@ -582,7 +582,7 @@ int frame_unpack (char *srvr_reply, char *dat){ // copy serialized signals into 
 			return -1;
 		}
 
-		printf("Len^{%s}\n\r",c_len);
+		//printf("Len^{%s}\n\r",c_len);
 
 		int r1= atoi(c_len); //number bytes in packet;
 		int r2= strlen(dat); //bad solution packet len - 1  "*"

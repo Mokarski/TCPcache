@@ -6,6 +6,7 @@
 
 struct hash_item_s {
 	int idx;
+	char name[150];
 	unsigned hash_value;
 	struct hash_item_s *next;
 };

@@ -104,7 +104,7 @@ int virt_mb_filldev( char *sName, int mb_id, int mb_reg, int inExState){ //fill 
 	strcpy(Device_Array[i].Name, sName); //fill the name
 	Device_Array[i].MB_Id = mb_id;
 	//Device_Array[i].ExState = inExState; //very bad idea
-	printf(">>>>>>Create device [%s] EX=%i\n\r",sName,inExState);
+	//printf(">>>>>>Create device [%s] EX=%i\n\r",sName,inExState);
 	if (inExState == 1) Device_Array[i].Rd=1;  //mark device to read
 	if (inExState == 2) {
 		Device_Array[i].Wr=1;  //mark device  to write
