@@ -74,9 +74,9 @@ return tab_reg[0];
 int virt_mb_filldev( char *sName, int mb_id, int mb_reg, int inExState){ //fill unic dev to virt
 	int i=0;
 	//int reg_counter[VirtDevRegs]; //temporary array for count number of regs
-	 printf("MB_FILL_DEVICES EX[%i] \n\r",inExState);
+	// printf("MB_FILL_DEVICES EX[%i] \n\r",inExState);
 	
-	if (inExState == 2) printf("MB_FILL_DEVICES EX[%i] \n\r",inExState);
+	//if (inExState == 2) printf("MB_FILL_DEVICES EX[%i] \n\r",inExState);
 	
 	for (i=0; i < VirtDev; i++){
 		if (Device_Array[i].Name[0] == 0) {

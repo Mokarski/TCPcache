@@ -370,7 +370,7 @@ int Write_operation (char tst[MAX_MESS]){
 		if(s) {
 			found++;
 			utest = unpack_signal(buf_signals[pr], s->Srv_id_num); //unpack from field buffer to signal properties fields ????
-			if(s->ExState == 2) printf("%s:%d:%d\n", s->Name, s->ExState, s->Value[1]);
+			if(s->ExState == 2) printf("%s:%d:%d\n", s->Name, s->Value[1], s->ExState);
 		}
 	}
 	//printf("Signals WRITE  found [%i]! \n\r",found);

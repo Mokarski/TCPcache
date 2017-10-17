@@ -382,7 +382,7 @@ int main(int argc , char *argv[])
 		switch (STATE){
 			case 0:  //INIT
 				if ( DEBUG == 1 ) printf("\n\r++++++++++++++++++++++++++++++>>>>MODE INIT\n\r");
-				item = hash_find_by_prefix(prefix_hash, "485.");
+				item = hash_find_by_prefix(prefix_hash, "485.kb.");
 				while(item) {
 					Set_Signal_Ex(item->idx, RD); //read keyboard
 					//printf("Modified Signal [%s]; %s ExState: %d; \n", Signal_Array[item->idx].Name, Signal_Array[item->idx].TCP_Type, Signal_Array[item->idx].ExState);
@@ -399,18 +399,13 @@ int main(int argc , char *argv[])
 
 
 			case 31:  //WORK mestno
-				item = hash_find_by_prefix(prefix_hash, "485.");
+				item = hash_find_by_prefix(prefix_hash, "485.kb.");
 				while(item) {
 					if(strncmp(Signal_Array[item->idx].Name, "485.rsrs.rm_u", 13) == 0)
 						Set_Signal_Ex_Val(Signal_Array[item->idx].Name, WR,1); //write bit
 					item = item->next;
 				}
-				Set_Signal_Ex_Val("485.rsrs.rm_u1_on0", WR, 1);
-				Set_Signal_Ex_Val("485.rsrs2.state_sound2_led", WR, 1); //Sound Warning2	                                     	                                     	                               
-				Set_Signal_Ex_Val("485.rsrs2.state_sound1_led", WR, 1); //Sound Warning1	                   	                                                                                       
-				Set_Signal_Ex_Val("wago.oc_mdo1.ka7_1", WR, 1); //KOntaktor QF1
-				Set_Signal_Ex_Val("wago.oc_mdo1.ka4_1", WR, 1); //Hydro pump M5	                                     
-				Set_Signal_Ex_Val("wago.oc_mdo1.woter1", WR, 1); //hydro
+
 
 				//if (sTrigger_Ex (z, "485.kb.key.start_hydratation", OK ) && sTrigger_Val (z, "485.kb.key.start_hydratation", 1 ) ) // start Hydratation
 				if ((GetVal("485.kb.key.start_hydratation")) > 0)
@@ -418,6 +413,12 @@ int main(int argc , char *argv[])
 					// if ( DEBUG == 1 )     printf("\n\r====================================================>>>>START Hydrotation\n\r");	                                   	                                    
 					printf("\n\r====================================================>>>>Button Hydrotation\n\r");	
 					hydr=1;                                   	                                    					
+				Set_Signal_Ex_Val("485.rsrs.rm_u1_on0", WR, 1);
+				Set_Signal_Ex_Val("485.rsrs2.state_sound2_led", WR, 1); //Sound Warning2	                                     	                                     	                               
+				Set_Signal_Ex_Val("485.rsrs2.state_sound1_led", WR, 1); //Sound Warning1	                   	                                                                                       
+				Set_Signal_Ex_Val("wago.oc_mdo1.ka7_1", WR, 1); //KOntaktor QF1
+				Set_Signal_Ex_Val("wago.oc_mdo1.ka4_1", WR, 1); //Hydro pump M5	                                     
+				Set_Signal_Ex_Val("wago.oc_mdo1.woter1", WR, 1); //hydro					
 				}
 
 				break;
@@ -469,7 +470,7 @@ int main(int argc , char *argv[])
 
 			if(Send_ID[x]){                
 				pack_signal (x, tmpz);
-				printf ("Signal[%s] tmpz[%s]\n\r",Signal_Array[x].Name,tmpz);
+				//printf ("Signal[%s] tmpz[%s]\n\r",Signal_Array[x].Name,tmpz);
 				strcat (message, tmpz);                 
 				//printf ("MESSAGE[%s]\n",message);
 				Send_Ready=1;

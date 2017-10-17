@@ -43,13 +43,13 @@ virt_mb_ReadtoCache (int dIndex, int reg_count)
 	modbus_get_response_timeout (ctx, &old_response_timeout);
 
 	/* Define a new and too short timeout! */
-	/* response_timeout.tv_sec = 1;
-		 response_timeout.tv_usec = 80;
-		 byte_timeout.tv_sec = 1;
-		 byte_timeout.tv_usec = 300;
+	 response_timeout.tv_sec = 0;
+	 response_timeout.tv_usec = 200000;
+	//	 byte_timeout.tv_sec = 1;
+	//	 byte_timeout.tv_usec = 300;
 		 modbus_set_byte_timeout (ctx, &byte_timeout);
-		 modbus_set_response_timeout(ctx, &response_timeout);
-	 */
+
+	 
 	//modbus_set_byte_timeout(ctx, struct timeval *timeout);
 	//modbus_rtu_set_rts_delay(ctx,40);
 
@@ -133,13 +133,15 @@ virt_mb_CachetoDev (int dIndex, int reg_count)
   modbus_get_response_timeout (ctx, &old_response_timeout);
 
   /* Define a new and too short timeout! */
-  /* response_timeout.tv_sec = 1;
-     response_timeout.tv_usec = 80;
-     byte_timeout.tv_sec = 1;
-     byte_timeout.tv_usec = 300;
-     modbus_set_byte_timeout (ctx, &byte_timeout);
+   response_timeout.tv_sec = 0;
+   response_timeout.tv_usec = 200000;
+//     byte_timeout.tv_sec = 1;
+//     byte_timeout.tv_usec = 300;
+//     modbus_set_byte_timeout (ctx, &byte_timeout);
+
      modbus_set_response_timeout(ctx, &response_timeout);
-   */
+
+       
   //modbus_set_byte_timeout(ctx, struct timeval *timeout);
   //modbus_rtu_set_rts_delay(ctx,40);
 
