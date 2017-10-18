@@ -191,7 +191,7 @@ int Set_Signal_Ex_Val(int idx, int Ex, int Val){
 	// && (Signal_Array[ID].ExState!=WR)
 	struct Signal *s = &Signal_Array[idx];
 	if(s) {
-		if(s->TCP_Type[0] != 'w' || (s->Value[1] == Val && s->ExState == Ex))
+		if(s->TCP_Type[0] != 'w')// || (s->Value[1] == Val && s->ExState == Ex))
 		{
 			return -1;
 		}
@@ -365,7 +365,7 @@ int main(int argc , char *argv[])
 	int STATE=0;
 	int RqTCPSend=0;
 	char tst[MAX_MESS]={0};
-	int tcpresult;
+	int tcpresult, oldMode = 0;
 	int workerInitialized = 0;
 	Init_Send_ID();
 
@@ -398,25 +398,15 @@ int main(int argc , char *argv[])
 		STATE = Get_State();
 		//printf("\n\rAnalyzing state %x", STATE);
 		//printf("\n\r          mode  %x (%x)\n\r", STATE & MODE_MASK, MODE_PUMP);
-
-		// Read keyboard
-		item = hash_find_by_prefix(Signal_Prefix_Hash, "485.");
-		while(item) {
-			if(strncmp(Signal_Array[item->idx].Name, "485.kb.", 7) == 0)
-				Set_Signal_Ex(item->idx, RD); //cmd read keyboard modbus device and put result signals in Signal_Array            
-			if(strncmp(Signal_Array[item->idx].Name, "485.rsrs.", 9) == 0)
-				Set_Signal_Ex(item->idx, RD); //cmd read keyboard modbus device and put result signals in Signal_Array            						
-			item = item->next;
-		}
-		item = hash_find_by_prefix(Signal_Prefix_Hash, "wago.");
-		while(item) {
-			Set_Signal_Ex(item->idx, RD); //read wago	                               
-			item = item->next;
-		}
 		
+		if(oldMode != STATE & MODE_MASK) {
+			Process_Mode_Change();
+			oldMode = STATE & MODE_MASK;
+		}
 
 		switch(STATE & MODE_MASK) {
 			case MODE_NORM:
+				Process_Normal();
 				switch(STATE & CONTROL_MASK){
 					case CONTROL_MANU:  //INIT
 						Process_Local_Kb();
@@ -442,12 +432,31 @@ int main(int argc , char *argv[])
 				break;
 		}
 
+		// Read keyboard
+		item = hash_find_by_prefix(Signal_Prefix_Hash, "485.");
+		while(item) {
+			if(strncmp(Signal_Array[item->idx].Name, "485.kb.", 7) == 0)
+				Set_Signal_Ex(item->idx, RD); //cmd read keyboard modbus device and put result signals in Signal_Array            
+			if(strncmp(Signal_Array[item->idx].Name, "485.rsrs.", 9) == 0)
+				Set_Signal_Ex(item->idx, RD); //cmd read keyboard modbus device and put result signals in Signal_Array            						
+			item = item->next;
+		}
+		item = hash_find_by_prefix(Signal_Prefix_Hash, "wago.");
+		while(item) {
+			Set_Signal_Ex(item->idx, RD); //read wago	                               
+			item = item->next;
+		}
+
 		int idx, value, st;
-		while(ring_buffer_pop(Signal_Mod_Buffer, &idx, &value, &st)) {
+		while(ring_buffer_get(Signal_Mod_Buffer, &idx, &value, &st)) {
+			if(idx < 0) continue;
 			if(st == RD)
 				Set_Signal_Ex(idx, st);
-			else
+			else {
+				printf("Writing signal %s: %d\n", Signal_Array[idx].Name, value);
 				Set_Signal_Ex_Val(idx, st, value);
+			}
+			ring_buffer_pop(Signal_Mod_Buffer);
 		}
 
 		////////////////////////=========  SEND all signals to TCPCache =======//////////////////////////////////////
@@ -469,7 +478,7 @@ int main(int argc , char *argv[])
 
 			if(Send_ID[x]){                
 				pack_signal(x, tmpz);
-				if (DEBUG==1) printf("Pack_Signal {%s}\n\r",tmpz);
+				if(Signal_Array[x].ExState == WR) printf("Pack_Signal {%s}\n\r",tmpz);
 				strcat(message, tmpz);                 
 				Send_Ready=1;
 			}

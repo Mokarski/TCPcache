@@ -34,7 +34,7 @@ int ring_buffer_push(struct ring_buffer_s *buf, int Index, int Value, int ExStat
 	return 1;
 }
 
-int ring_buffer_pop(struct ring_buffer_s *buf, int *Index, int *Value, int *ExState) {
+int ring_buffer_get(struct ring_buffer_s *buf, int *Index, int *Value, int *ExState) {
 	pthread_mutex_lock(&buf->mutex);
 	if(buf->end == buf->start) {
 		pthread_mutex_unlock(&buf->mutex);
@@ -44,6 +44,17 @@ int ring_buffer_pop(struct ring_buffer_s *buf, int *Index, int *Value, int *ExSt
 	*Index = buf->buffer[buf->start].Index;
 	*Value = buf->buffer[buf->start].Value;
 	*ExState = buf->buffer[buf->start].ExState;
+	pthread_mutex_unlock(&buf->mutex);
+	return 1;
+}
+
+int ring_buffer_pop(struct ring_buffer_s *buf) {
+	pthread_mutex_lock(&buf->mutex);
+	if(buf->end == buf->start) {
+		pthread_mutex_unlock(&buf->mutex);
+		return 0;
+	}
+
 	buf->start = WRAP(buf->start + 1);
 	pthread_mutex_unlock(&buf->mutex);
 	return 1;

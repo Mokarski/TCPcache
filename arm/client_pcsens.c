@@ -15,10 +15,9 @@
 #include "speedtest.h"
 #include <errno.h>
 
+int Send_Signal[MAX_Signals] = {0};
 
-
-int
-virt_mb_ReadtoCache (int dIndex, int reg_count)
+int virt_mb_ReadtoCache (int dIndex, int reg_count)
 {				//read from real devices to cache by virtual devices Index and regcount
 	int connected;
 	modbus_t *ctx;
@@ -43,13 +42,13 @@ virt_mb_ReadtoCache (int dIndex, int reg_count)
 	modbus_get_response_timeout (ctx, &old_response_timeout);
 
 	/* Define a new and too short timeout! */
-	 response_timeout.tv_sec = 0;
-	 response_timeout.tv_usec = 200000;
+	response_timeout.tv_sec = 0;
+	response_timeout.tv_usec = 200000;
 	//	 byte_timeout.tv_sec = 1;
 	//	 byte_timeout.tv_usec = 300;
-		 modbus_set_byte_timeout (ctx, &byte_timeout);
+	modbus_set_byte_timeout (ctx, &byte_timeout);
 
-	 
+
 	//modbus_set_byte_timeout(ctx, struct timeval *timeout);
 	//modbus_rtu_set_rts_delay(ctx,40);
 
@@ -106,129 +105,129 @@ virt_mb_ReadtoCache (int dIndex, int reg_count)
 }
 
 
-int
+	int
 virt_mb_CachetoDev (int dIndex, int reg_count)
 {				//read from VIRTUAL devices to REAL devices 
-  int connected;
-  modbus_t *ctx;
-  uint16_t tab_reg[VirtDevRegs];
-  int rc;
-  int i;
-  int fl;
-  int ret;
+	int connected;
+	modbus_t *ctx;
+	uint16_t tab_reg[VirtDevRegs];
+	int rc;
+	int i;
+	int fl;
+	int ret;
 
-  ctx = modbus_new_rtu ("/dev/ttySP0", 115200, 'N', 8, 1);
+	ctx = modbus_new_rtu ("/dev/ttySP0", 115200, 'N', 8, 1);
 
-  if (ctx == NULL)
-    {
-      fprintf (stderr, "Unable to create the libmodbus context\n");
-      return 4;
-      ret =4;
-    }
-  struct timeval old_response_timeout;
-  struct timeval response_timeout;
-  struct timeval byte_timeout;
+	if (ctx == NULL)
+	{
+		fprintf (stderr, "Unable to create the libmodbus context\n");
+		return 4;
+		ret =4;
+	}
+	struct timeval old_response_timeout;
+	struct timeval response_timeout;
+	struct timeval byte_timeout;
 
-  /* Save original timeout */
-  modbus_get_response_timeout (ctx, &old_response_timeout);
+	/* Save original timeout */
+	modbus_get_response_timeout (ctx, &old_response_timeout);
 
-  /* Define a new and too short timeout! */
-   response_timeout.tv_sec = 0;
-   response_timeout.tv_usec = 200000;
-//     byte_timeout.tv_sec = 1;
-//     byte_timeout.tv_usec = 300;
-//     modbus_set_byte_timeout (ctx, &byte_timeout);
+	/* Define a new and too short timeout! */
+	response_timeout.tv_sec = 0;
+	response_timeout.tv_usec = 200000;
+	//     byte_timeout.tv_sec = 1;
+	//     byte_timeout.tv_usec = 300;
+	//     modbus_set_byte_timeout (ctx, &byte_timeout);
 
-     modbus_set_response_timeout(ctx, &response_timeout);
+	modbus_set_response_timeout(ctx, &response_timeout);
 
-       
-  //modbus_set_byte_timeout(ctx, struct timeval *timeout);
-  //modbus_rtu_set_rts_delay(ctx,40);
 
-  int ID;
-  ID = Device_Array[dIndex].MB_Id;
-  printf ("WR ID[%i] from virtdev list, regs to write [%i] \n\r", ID, reg_count);
-  modbus_set_slave (ctx, ID);
-  connected = modbus_connect (ctx);
+	//modbus_set_byte_timeout(ctx, struct timeval *timeout);
+	//modbus_rtu_set_rts_delay(ctx,40);
 
-  if (connected == -1){
-      printf ("WR - Connection failed %i\n", ID);
-      ret=4;
-     }
-    
-  if (connected == 0){
-      printf ("WR - connected %i\n", ID);
-      ret=4;
-     }
-     
-  int cn = 0;
+	int ID;
+	ID = Device_Array[dIndex].MB_Id;
+	printf ("WR ID[%i] from virtdev list, regs to write [%i] \n\r", ID, reg_count);
+	modbus_set_slave (ctx, ID);
+	connected = modbus_connect (ctx);
 
-  int n;
-  
-     n=0;
-     for (n=0; n < VirtDevRegs; n++ ){     
-          if ( Device_Array[dIndex].WR_MB_reg_counter[n] == 1 ){
-              uint16_t tab_reg2[1];
-              tab_reg2[0] = Device_Array[dIndex].WR_MB_Registers[n]; //dIndex - incoming index of used device in DEVICE_ARRAY
-               printf (">>>>>>>>>> intValue tabreg2[0]=%i Number_reg=%i \n\r",tab_reg2[0],n);
-               rc = modbus_write_registers (ctx, n, 1, tab_reg2); //write in device by register
-                                                                   }
-    }
-                                                                         
-  /*
-  for (n=0; n < reg_count; n++ ){ //copy virt dev registers to tab_reg
-      //tab_reg[n] = Device_Array[dIndex].WR_MB_Registers[n] | Device_Array[dIndex].MB_Registers[n];
-      tab_reg[n] = Device_Array[dIndex].WR_MB_Registers[n];
-      printf (">>>>>>>>>>>>>>>>>>>>>>>   WR----REG[%i] = %i \n\r",n,Device_Array[dIndex].WR_MB_Registers[n]);
-      //printf("=========================>>>> WRite REGS[%i] = %i Read REG=%i Or REG= %i \n\r ",n,Device_Array[dIndex].WR_MB_Registers[n],Device_Array[dIndex].MB_Registers[n], Device_Array[dIndex].WR_MB_Registers[n]|Device_Array[dIndex].MB_Registers[n]);
-  } 
-    rc = modbus_write_registers (ctx, 0, reg_count, tab_reg);
-    */
+	if (connected == -1){
+		printf ("WR - Connection failed %i\n", ID);
+		ret=4;
+	}
+
+	if (connected == 0){
+		printf ("WR - connected %i\n", ID);
+		ret=4;
+	}
+
+	int cn = 0;
+
+	int n;
+
+	n=0;
+	for (n=0; n < VirtDevRegs; n++ ){     
+		if ( Device_Array[dIndex].WR_MB_reg_counter[n] == 1 ){
+			uint16_t tab_reg2[1];
+			tab_reg2[0] = Device_Array[dIndex].WR_MB_Registers[n]; //dIndex - incoming index of used device in DEVICE_ARRAY
+			printf (">>>>>>>>>> intValue tabreg2[0]=%i Number_reg=%i \n\r",tab_reg2[0],n);
+			rc = modbus_write_registers (ctx, n, 1, tab_reg2); //write in device by register
+		}
+	}
+
+	/*
+		 for (n=0; n < reg_count; n++ ){ //copy virt dev registers to tab_reg
+//tab_reg[n] = Device_Array[dIndex].WR_MB_Registers[n] | Device_Array[dIndex].MB_Registers[n];
+tab_reg[n] = Device_Array[dIndex].WR_MB_Registers[n];
+printf (">>>>>>>>>>>>>>>>>>>>>>>   WR----REG[%i] = %i \n\r",n,Device_Array[dIndex].WR_MB_Registers[n]);
+//printf("=========================>>>> WRite REGS[%i] = %i Read REG=%i Or REG= %i \n\r ",n,Device_Array[dIndex].WR_MB_Registers[n],Device_Array[dIndex].MB_Registers[n], Device_Array[dIndex].WR_MB_Registers[n]|Device_Array[dIndex].MB_Registers[n]);
+} 
+rc = modbus_write_registers (ctx, 0, reg_count, tab_reg);
+	 */
 //  rc = modbus_write_registers (ctx, 0, reg_count, Device_Array[dIndex].WR_MB_Registers);
 
-  if (rc == -1)
-    {
-      printf ("WR [MB_ID #%i]  Connection failed !\n", ID);
-      fprintf (stderr, "WR MB_READ: %s\n", modbus_strerror (errno));
-      ret=4;
-      return ret;
-    } else ret=3; //3 - executed OK!
+if (rc == -1)
+{
+	printf ("WR [MB_ID #%i]  Connection failed !\n", ID);
+	fprintf (stderr, "WR MB_READ: %s\n", modbus_strerror (errno));
+	ret=4;
+	return ret;
+} else ret=3; //3 - executed OK!
 
 
-  //strcpy(Device_Array[dIndex].Name,Name);
-  //Device_Array[dIndex].MB_Id=ID;                                 //Modbus device ID
+//strcpy(Device_Array[dIndex].Name,Name);
+//Device_Array[dIndex].MB_Id=ID;                                 //Modbus device ID
 /*  int cx = 0;
-  for (cx = 0; cx < reg_count; cx++)
-    {
-      Device_Array[dIndex].MB_Registers[cx] = tab_reg[cx];	//Mb register number
-    }
-*/
+		for (cx = 0; cx < reg_count; cx++)
+		{
+		Device_Array[dIndex].MB_Registers[cx] = tab_reg[cx];	//Mb register number
+		}
+ */
 
 
-  usleep (5 * 1000);		//delay for Mod bus restore functional     
+usleep (5 * 1000);		//delay for Mod bus restore functional     
 
-  modbus_flush (ctx);
+modbus_flush (ctx);
 
-  modbus_close (ctx);
-  modbus_free (ctx);		//close COM ?
+modbus_close (ctx);
+modbus_free (ctx);		//close COM ?
 
 
-  return ret;
+return ret;
 }
 
 
 
-int
+	int
 CheckBit (uint sigReg, int iBit)
 {
-  int result;
-  if ((sigReg & (1 << iBit)) != 0)
-    {
-      result = 1;
-    }
-  else
-    result = 0;
-  return result;
+	int result;
+	if ((sigReg & (1 << iBit)) != 0)
+	{
+		result = 1;
+	}
+	else
+		result = 0;
+	return result;
 }
 
 int virtdev_to_signals (void)
@@ -269,42 +268,42 @@ int virtdev_to_signals (void)
 
 int signals_to_virtdev (void) //write signals with flag Ex=1 and Ex=2 into VirtDev regs
 {			
-  int c, x;
-  for (c = 0; c < VirtDev; c++)
-    {				// cycle for divices 
+	int c, x;
+	for (c = 0; c < VirtDev; c++)
+	{				// cycle for divices 
 
-      for (x = 0; x < MAX_Signals; x++)
-	{			//cycle for signals
-	  if ( (Signal_Array[x].MB_Id == Device_Array[c].MB_Id) && (Signal_Array[x].ExState ==2 ) ) //ExState = 2 signal to write
-	    {			// if founded modbus id = virtual modbus ID
-              
-	      if (strstr (Signal_Array[x].Val_Type, "int") != NULL)
-		{		// if value int
+		for (x = 0; x < MAX_Signals; x++)
+		{			//cycle for signals
+			if ( (Signal_Array[x].MB_Id == Device_Array[c].MB_Id) && (Signal_Array[x].ExState ==2 ) ) //ExState = 2 signal to write
+			{			// if founded modbus id = virtual modbus ID
 
-		  Device_Array[c].WR_MB_Registers[Signal_Array[x].MB_Reg_Num] = Signal_Array[x].Value[1];
-		  Device_Array[c].Wr = Signal_Array[x].ExState; // for write device marker
-		  printf("-->> WR INT SIGNAL [Name: %s] [Value:%i] \n\r",Signal_Array[x].Name, Signal_Array[x].Value[1]); //DEBUG
-		  printf("-->> WR INT Val[%i] \n\r",Device_Array[c].WR_MB_Registers[Signal_Array[x].MB_Reg_Num]);
-		 }
+				if (strstr (Signal_Array[x].Val_Type, "int") != NULL)
+				{		// if value int
 
-	      if (strstr (Signal_Array[x].Val_Type, "bit") != NULL)
-		{		// if value bit
-		  //get register from virt
-		  //check bit_pos and state of bit
-		  //return result to Signal.Value
-		  
-		  Device_Array[c].Wr = Signal_Array[x].ExState; // for write device marker
-		  int reg;
-		  reg =  Device_Array[c].WR_MB_Registers[Signal_Array[x].MB_Reg_Num]; //take before write register state		  
-                  Device_Array[c].WR_MB_Registers[Signal_Array[x].MB_Reg_Num] = bit_mask(Signal_Array[x].Value[1],Signal_Array[x].Bit_Pos,reg);                  
-		  printf("-->> WR BIT SIGNAL [Name: %s] [Value:%i] \n\r",Signal_Array[x].Name, Signal_Array[x].Value[1]);     //DEBUG  
-		  printf("-->> WR BIT Val[%i] \n\r",Device_Array[c].WR_MB_Registers[Signal_Array[x].MB_Reg_Num]);		  
+					Device_Array[c].WR_MB_Registers[Signal_Array[x].MB_Reg_Num] = Signal_Array[x].Value[1];
+					Device_Array[c].Wr = Signal_Array[x].ExState; // for write device marker
+					printf("-->> WR INT SIGNAL [Name: %s] [Value:%i] \n\r",Signal_Array[x].Name, Signal_Array[x].Value[1]); //DEBUG
+					printf("-->> WR INT Val[%i] \n\r",Device_Array[c].WR_MB_Registers[Signal_Array[x].MB_Reg_Num]);
+				}
+
+				if (strstr (Signal_Array[x].Val_Type, "bit") != NULL)
+				{		// if value bit
+					//get register from virt
+					//check bit_pos and state of bit
+					//return result to Signal.Value
+
+					Device_Array[c].Wr = Signal_Array[x].ExState; // for write device marker
+					int reg;
+					reg =  Device_Array[c].WR_MB_Registers[Signal_Array[x].MB_Reg_Num]; //take before write register state		  
+					Device_Array[c].WR_MB_Registers[Signal_Array[x].MB_Reg_Num] = bit_mask(Signal_Array[x].Value[1],Signal_Array[x].Bit_Pos,reg);                  
+					printf("-->> WR BIT SIGNAL [Name: %s] [Value:%i] \n\r",Signal_Array[x].Name, Signal_Array[x].Value[1]);     //DEBUG  
+					printf("-->> WR BIT Val[%i] \n\r",Device_Array[c].WR_MB_Registers[Signal_Array[x].MB_Reg_Num]);		  
+				}
+			}
 		}
-	    }
 	}
-    }
 
-  return 0;
+	return 0;
 }
 
 
@@ -361,6 +360,9 @@ int Read_Op(){
 
 		if ( DEBUG == 1 ) printf(">>mb_fill Nmae[%s] Id[%i] Register[%i] Ex[%i]\n\r",Signal_Array[z].Name, Signal_Array[z].MB_Id, Signal_Array[z].MB_Reg_Num, Signal_Array[z].ExState);
 
+		if(Signal_Array[z].ExState == RD || Signal_Array[z].ExState == WR) {
+			Send_Signal[z] = 1;
+		}
 		virt_mb_filldev (Signal_Array[z].Name, Signal_Array[z].MB_Id, Signal_Array[z].MB_Reg_Num, Signal_Array[z].ExState );	//init virtual device list and copy ExState
 
 		if ( ( Signal_Array[z].ExState ==1 ) || (  Signal_Array[z].ExState ==2 ) ) { //flag to SRV send ex=1 read request ex=2 write request
@@ -417,61 +419,62 @@ int Read_Op(){
 
 //*********************************Write_Op ****************************************
 int Write_Op(){
-  int tcpresult = 0;
-  char tst[MAX_MESS];      
-  char send_buf[MAX_MESS]; 
-  char tmpz[150];     
-  
-      speedtest_start ();	//time start     
-      int x = 0;
-      int ready_to_send_tcp=0;
+	int tcpresult = 0;
+	char tst[MAX_MESS];      
+	char send_buf[MAX_MESS]; 
+	char tmpz[150];     
 
-      strcpy (message, "");	//erase buffer     
-      strcpy (tst, "");
-      for (x = 0; x < MAX_Signals; x++)
+	speedtest_start ();	//time start     
+	int x = 0;
+	int ready_to_send_tcp=0;
+
+	strcpy (message, "");	//erase buffer     
+	strcpy (tst, "");
+	for (x = 0; x < MAX_Signals; x++)
 	{
-	       if ( (Signal_Array[x].Value[1] > 0) || (Signal_Array[x].ExState > 0) )
-	          if ( DEBUG == 3 )  printf ("[%i]TO_SRV  <<-- Name:[%s] Value:[%i] ExState:[%i]\n\r ", x,Signal_Array[x].Name, Signal_Array[x].Value[1], Signal_Array[x].ExState);
-	          
-	       if  (Signal_Array[x].Value[1] > 0) 
-	         if ( DEBUG == 1 )  printf ("[%i]TO_SRV  <<-- Name:[%s] Value:[%i] ExState:[%i]\n\r ", x,Signal_Array[x].Name, Signal_Array[x].Value[1], Signal_Array[x].ExState);
-	         
-	       if  (Signal_Array[x].Value[1] > 0) 
-	         if ( DEBUG == 4 )  printf ("[%i]TO_SRV  <<-- Name:[%s] Value:[%i] ExState:[%i]\n\r ", x,Signal_Array[x].Name, Signal_Array[x].Value[1], Signal_Array[x].ExState);
-	         
-	  if (strlen (Signal_Array[x].Name) > 2) //write if Name not empty
-	    {		
-	      pack_signal (x, tmpz);
-	      strcat (tst, tmpz);
-	      ready_to_send_tcp=1;
-            }
-	  //else
-	  //    break;		// signals list is end
-	}
-	
-      //printf("SEND_BUFFER[%s]\n\r",tst);
-      if (strlen(tst) > 0){
-          //strcpy (tst, send_buf);
-          //strcpy(send_buf,"");
-          frame_pack ("wr",tst, send_buf);
-          //printf("FRAME_PACK[%s]\n\r",send_buf);
-          if (ready_to_send_tcp == 1) {
-              tcpresult = frame_tcpreq (send_buf); //send to srv
-              /*  
-               if( send(sock , tst , strlen(tst) , 0) < 0)
-                 {
-                          puts("ERR!!! Send request to CacheServer failed!!!");
-                          printf("Send_Buffer[%s]\n\r",message);
-                 } //else  printf ("[ Send to SRV ]: {%s} \n\r",msg); } //debug info
-              */
+		if ( (Signal_Array[x].Value[1] > 0) || (Signal_Array[x].ExState > 0) )
+			if ( DEBUG == 3 )  printf ("[%i]TO_SRV  <<-- Name:[%s] Value:[%i] ExState:[%i]\n\r ", x,Signal_Array[x].Name, Signal_Array[x].Value[1], Signal_Array[x].ExState);
 
-             }
-         }else printf("ERR!!! Send_Buffer is empty! \n\r");
-         
-      if (DEBUG == 3) printf ("\n\r SEND WRITE request TST^[%s] \n\r", send_buf);
-      printf ("Status of TCP SEND: [%i]\n\r", tcpresult);
-      printf
-	(" ++++++++++++++++++++++++==>   SPEEDTEST Send to TCPCache Time: [ %ld ] ms. \n\r",	 speedtest_stop ());
+		if  (Signal_Array[x].Value[1] > 0) 
+			if ( DEBUG == 1 )  printf ("[%i]TO_SRV  <<-- Name:[%s] Value:[%i] ExState:[%i]\n\r ", x,Signal_Array[x].Name, Signal_Array[x].Value[1], Signal_Array[x].ExState);
+
+		if  (Signal_Array[x].Value[1] > 0) 
+			if ( DEBUG == 4 )  printf ("[%i]TO_SRV  <<-- Name:[%s] Value:[%i] ExState:[%i]\n\r ", x,Signal_Array[x].Name, Signal_Array[x].Value[1], Signal_Array[x].ExState);
+
+		if (strlen (Signal_Array[x].Name) > 2 && Send_Signal[x]) //write if Name not empty
+		{		
+			pack_signal (x, tmpz);
+			strcat (tst, tmpz);
+			ready_to_send_tcp=1;
+			Send_Signal[x] = 0;
+		}
+		//else
+		//    break;		// signals list is end
+	}
+
+	//printf("SEND_BUFFER[%s]\n\r",tst);
+	if (strlen(tst) > 0){
+		//strcpy (tst, send_buf);
+		//strcpy(send_buf,"");
+		frame_pack ("wr",tst, send_buf);
+		//printf("FRAME_PACK[%s]\n\r",send_buf);
+		if (ready_to_send_tcp == 1) {
+			tcpresult = frame_tcpreq (send_buf); //send to srv
+			/*  
+					if( send(sock , tst , strlen(tst) , 0) < 0)
+					{
+					puts("ERR!!! Send request to CacheServer failed!!!");
+					printf("Send_Buffer[%s]\n\r",message);
+					} //else  printf ("[ Send to SRV ]: {%s} \n\r",msg); } //debug info
+			 */
+
+	}
+}else printf("ERR!!! Send_Buffer is empty! \n\r");
+
+if (DEBUG == 3) printf ("\n\r SEND WRITE request TST^[%s] \n\r", send_buf);
+printf ("Status of TCP SEND: [%i]\n\r", tcpresult);
+printf
+(" ++++++++++++++++++++++++==>   SPEEDTEST Send to TCPCache Time: [ %ld ] ms. \n\r",	 speedtest_stop ());
 
 return tcpresult;
 }

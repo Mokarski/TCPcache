@@ -112,6 +112,10 @@ int main(int argc , char *argv[])
 	}
 	puts("Socket created");
 
+	int reuse = 1;
+
+	setsockopt(socket_desc, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse));
+
 	//Prepare the sockaddr_in structure
 	server.sin_family = AF_INET;
 	server.sin_addr.s_addr = INADDR_ANY;

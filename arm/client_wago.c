@@ -16,6 +16,8 @@
 #include <errno.h>
 
 
+int Send_Signal[MAX_Signals] = {0};
+
 
 int virt_mb_ReadtoCache (int dIndex, int reg_count)
 {				//read from real devices to cache by virtual devices Index and regcount
@@ -358,8 +360,12 @@ int tcpresult = 0;
 	  test = unpack_signal (buffer, z);	//UnPACK Signal from buffer to signal with number Z
 
 	  if ( DEBUG == 1 ) printf(">>mb_fill Nmae[%s] Id[%i] Register[%i] Ex[%i]\n\r",Signal_Array[z].Name, Signal_Array[z].MB_Id, Signal_Array[z].MB_Reg_Num, Signal_Array[z].ExState);
+
+		if(Signal_Array[z].ExState == RD || Signal_Array[z].ExState == WR) {
+			Send_Signal[z] = 1;
+		}
 	  
-          virt_mb_filldev (Signal_Array[z].Name, Signal_Array[z].MB_Id, Signal_Array[z].MB_Reg_Num, Signal_Array[z].ExState );	//init virtual device list and copy ExState
+		virt_mb_filldev (Signal_Array[z].Name, Signal_Array[z].MB_Id, Signal_Array[z].MB_Reg_Num, Signal_Array[z].ExState );	//init virtual device list and copy ExState
           
 	  if ( ( Signal_Array[z].ExState ==1 ) || (  Signal_Array[z].ExState ==2 ) ) { //flag to SRV send ex=1 read request ex=2 write request
 	                ret  = 8;              //flag to SRV send 
@@ -477,17 +483,18 @@ int Write_Op(){
 	         
 	       if  (Signal_Array[x].Value[1] > 0) 
 	         if ( DEBUG == 4 )  printf ("[%i]TO_SRV  <<-- Name:[%s] Value:[%i] ExState:[%i]\n\r ", x,Signal_Array[x].Name, Signal_Array[x].Value[1], Signal_Array[x].ExState);
-	         
-	  if (strlen (Signal_Array[x].Name) > 2) //write if Name not empty
-	    {		
-	      pack_signal (x, tmpz);
-	      strcat (tst, tmpz);
-	      ready_to_send_tcp=1;
-            }
-	  else
-	      break;		// signals list is end
+
+		if (strlen (Signal_Array[x].Name) > 2 && Send_Signal[x]) //write if Name not empty
+		{		
+			pack_signal (x, tmpz);
+			strcat (tst, tmpz);
+			ready_to_send_tcp=1;
+			Send_Signal[x] = 0;
+		}
+		else
+			break;		// signals list is end
 	}
-	
+
       //printf("SEND_BUFFER[%s]\n\r",tst);
       if (strlen(tst) > 0){
           frame_pack ("wr",tst, send_buf);

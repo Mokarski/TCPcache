@@ -1,27 +1,27 @@
 #include "signals.h"
 #include "keyboard.h"
 #include "ringbuffer.h"
+#define __USE_UNIX98
 #include <pthread.h>
 #include <time.h>
 #include <stdio.h>
 #include <inttypes.h>
 
 #define MODE_IDLE			0
-#define MODE_PUMPING			1
+#define MODE_PUMPING	1
 #define MODE_DIAG			2
 #define MODE_NORM			3
-#define MODE_RELOADER			4
-#define MODE_CONV			5
 
-extern int Get_Signal_Ex(int ID);
-extern int Get_Signal_Idx(char *name);
-extern int Set_Signal_Ex_Val(int idx, int Ex, int Val);
-extern int Set_Signal_Ex(int idx, int Ex);
+#define B_OVERLOAD_START	0
+#define B_OVERLOAD_STOP		1
+#define B_CONV_START	2
+#define B_CONV_STOP		3
 
 pthread_mutex_t g_waitMutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t g_waitCond = PTHREAD_COND_INITIALIZER;
-pthread_t worker;
-static int g_mode = 0, g_workStarted = 0;
+pthread_t g_worker;
+static volatile int g_mode = 0, g_workStarted = 0;
+volatile int buttons[64] = {};
 
 int Get_Signal(char *name) {
 	struct Signal *s = hash_find(Signal_Name_Hash, Signal_Array, name);
@@ -33,19 +33,21 @@ int Get_Signal(char *name) {
 	return -1;
 }
 
-static void Worker_Set_Mode(int mode) {
+void Worker_Set_Mode(int mode) {
 	if(g_mode == mode) {
 		return;
 	}
 	if(g_mode == MODE_IDLE) {
-		while(g_workStarted != 0)
+		while(g_workStarted != 0 && pthread_self() != g_worker)
 			pthread_yield();
 		pthread_mutex_lock(&g_waitMutex);
 		g_mode = mode;
 		pthread_mutex_unlock(&g_waitMutex);
 		pthread_cond_signal(&g_waitCond);
-		while(g_workStarted == 0)
+		printf("Waiting for work start\n", g_mode);
+		while(g_workStarted == 0 && pthread_self() != g_worker)
 			pthread_yield();
+		printf("Set mode: %d\n", g_mode);
 		return;
 	} else {
 		if(mode != MODE_IDLE) {
@@ -53,11 +55,13 @@ static void Worker_Set_Mode(int mode) {
 			Worker_Set_Mode(mode);
 			return;
 		}
-		pthread_mutex_lock(&g_waitMutex);
+		//pthread_mutex_lock(&g_waitMutex);
 		g_mode = mode;
-		pthread_mutex_unlock(&g_waitMutex);
-		while(g_workStarted != 0)
+		//pthread_mutex_unlock(&g_waitMutex);
+		printf("Set mode: %d; waiting for stop\n", g_mode);
+		while(g_workStarted != 0 && pthread_self() != g_worker)
 			pthread_yield();
+		printf("Process stopped\n", g_mode);
 	}
 }
 
@@ -65,194 +69,37 @@ void Process_RED_BUTTON() {
 	Worker_Set_Mode(MODE_IDLE);
 }
 
+void Process_Mode_Change() {
+	Worker_Set_Mode(MODE_IDLE);
+}
+
 void Process_Local_Kb() {
-/*
-485.kb.kbl.start_reloader
-485.kb.kbl.start_conveyor
-485.kb.kbl.start_stars
-485.kb.kbl.start_oil_station
-485.kb.kbl.start_hydratation
-485.kb.kbl.start_exec_dev
-
-*/
-#define CRIT_STOP		"485.kb.kei1.stop_alarm"
-#define START_RELOADER		"485.kb.key.start_reloader"
-#define START_CONV		"485.kb.key.start_conveyor"
-#define START_STARS		"485.kb.key.start_stars"
-#define START_OIL_ST		"485.kb.key.start_oil_station"
-#define START_HYDRO		"485.kb.key.start_hydratation"
-#define START_EXECDEV		"485.kb.key.start_exec_dev"
-#define START_ALL		"485.kb.kei1.start_all"
-
-#define CONV_STOP		"485.kb.key.stop_conveyor"
-#define RELOADER_STOP		"485.kb.key.stop_reloader"
-#define STARS_STOP		"485.kb.key.stop_stars"
-#define OIL_ST_STOP		"485.kb.key.stop_oil_station"
-#define HYDRO_STOP		"485.kb.key.stop_hydratation"
-#define EXECDEV_STOP		"485.kb.key.stop_exec_dev"
-#define ALL_STOP		"485.kb.kei1.stop_all"
-
-
-//int start_stars = Get_Signal(START_STARS), stop_stars = Get_Signal(STARS_STOP);
-int start_reloader = Get_Signal(START_RELOADER), stop_reloader = Get_Signal(RELOADER_STOP);
-	if(stop_reloader > 0) {
-		printf("Stop_stars button pressed\n");
-		ring_buffer_push(Signal_Mod_Buffer, Get_Signal_Idx("485.kb.kbl.led_contrast"), 1, WR);
-		ring_buffer_push(Signal_Mod_Buffer, Get_Signal_Idx("485.kb.kbl.start_reloader"), 0, WR); //led is off
-	        ring_buffer_push(Signal_Mod_Buffer, Get_Signal_Idx("wago.oc_mdo1.ka6_1"), 0, WR);
-		Worker_Set_Mode(MODE_IDLE);
-	} else if(start_reloader > 0) {
-		printf("Start_stars button pressed\n");
-		ring_buffer_push(Signal_Mod_Buffer, Get_Signal_Idx("485.kb.kbl.led_contrast"), 50, WR);
-		ring_buffer_push(Signal_Mod_Buffer, Get_Signal_Idx("485.kb.kbl.start_reloader"), 1, WR); //led is on
-		ring_buffer_push(Signal_Mod_Buffer, Get_Signal_Idx("wago.oc_mdo1.ka6_1"), 1, WR); // rm U2  bit 7
-		Worker_Set_Mode(MODE_IDLE);
-	}
-
-/*
-int start_reloader = Get_Signal(START_RELOADER), stop_reloader = Get_Signal(RELOADER_STOP);
-	if(stop_reloader > 0) {
-		printf("Stop_reloader button pressed\n");
-		ring_buffer_push(Signal_Mod_Buffer, Get_Signal_Idx("485.kb.kbl.led_contrast"), 1, WR);
-		ring_buffer_push(Signal_Mod_Buffer, Get_Signal_Idx("485.kb.kbl.start_reloader"), 0, WR); //led is off
-	        ring_buffer_push(Signal_Mod_Buffer, Get_Signal_Idx("wago.oc_mdo1.ka6_1"), 0, WR);
-	        
-		Worker_Set_Mode(MODE_IDLE);
-	} else if(start_reloader > 0) {
-		printf("Start_reloader button pressed\n");
-		//if(g_mode != MODE_NORM) {
-			printf("Starting\n");
-				ring_buffer_push(Signal_Mod_Buffer, Get_Signal_Idx("485.kb.kbl.led_contrast"), 50, WR);
-				ring_buffer_push(Signal_Mod_Buffer, Get_Signal_Idx("485.kb.kbl.start_reloader"), 1, WR);
-			Set_Signal_Ex(Get_Signal_Idx("wago.bki_k6.M6"), RD); //????
-			Set_Signal_Ex(Get_Signal_Idx("wago.oc_temp.pt100_m6"), RD); //???
-			
-			/*
-			wago.bki_k6.M6	  // if =1 -> 
-			wago.bki_R_k6_M6
-			wago.oc_mdi1.oc_w_k5 	// if =0 ->
-			wago.oc_mui7.current_m6a
-			wago.oc_mui7.current_m6b
-			wago.oc_mui7.current_m6c
-			*/
-			Set_Signal_Ex(Get_Signal_Idx("wago.oc_mdi1.oc_w_qf1"), RD); 
-			Set_Signal_Ex(Get_Signal_Idx("wago.oc_mdo1.ka5_1"), RD);
-			//Set_Signal_Ex_Val(Get_Signal_Idx("485.kb.kbl.start_oil_pump"), WR, 1);
-	                ring_buffer_push(Signal_Mod_Buffer, Get_Signal_Idx("wago.oc_mdo1.ka6_1"), 1, WR);
-			Worker_Set_Mode(MODE_IDLE);
-		//}
-	}
-*/
-int start_conv = Get_Signal(START_CONV), stop_conv = Get_Signal(CONV_STOP);
-	if(stop_conv > 0) {
-		printf("Stop_conv button pressed\n");
-		ring_buffer_push(Signal_Mod_Buffer, Get_Signal_Idx("485.kb.kbl.led_contrast"), 1, WR);
-		ring_buffer_push(Signal_Mod_Buffer, Get_Signal_Idx("485.kb.kbl.start_conveyor"), 0, WR); //led is off
-	        ring_buffer_push(Signal_Mod_Buffer, Get_Signal_Idx("wago.oc_mdo1.ka3_1"), 0, WR);
-		Worker_Set_Mode(MODE_IDLE);
-	} else if(start_conv > 0) {
-		printf("Start_conv button pressed\n");
-		                ring_buffer_push(Signal_Mod_Buffer, Get_Signal_Idx("485.kb.kbl.led_contrast"), 50, WR);
-				ring_buffer_push(Signal_Mod_Buffer, Get_Signal_Idx("485.kb.kbl.start_conveyor"), 1, WR);
-				ring_buffer_push(Signal_Mod_Buffer, Get_Signal_Idx("wago.oc_mdo1.ka3_1"), 1, WR);
-		Worker_Set_Mode(MODE_IDLE);
-		/*
-		if(g_mode != MODE_CONV) {
-			printf("Starting\n");
-				ring_buffer_push(Signal_Mod_Buffer, Get_Signal_Idx("485.kb.kbl.led_contrast"), 50, WR);
-				ring_buffer_push(Signal_Mod_Buffer, Get_Signal_Idx("485.kb.kbl.start_conveyor"), 1, WR);
-			Set_Signal_Ex(Get_Signal_Idx("wago.bki_k3_k4.M3_M4"), RD); //????
-			Set_Signal_Ex(Get_Signal_Idx("wago.oc_temp.pt100_m6"), RD); //???
-			
-			
-			//wago.bki_k6.M6	  // if =1 -> 
-			//wago.bki_R_k6_M6
-			//wago.oc_mdi1.oc_w_k5 	// if =0 ->
-			//wago.oc_mui7.current_m6a
-			//wago.oc_mui7.current_m6b
-			//wago.oc_mui7.current_m6c
-			
-			Set_Signal_Ex(Get_Signal_Idx("wago.oc_mdi1.oc_w_qf1"), RD); 
-			Set_Signal_Ex(Get_Signal_Idx("wago.oc_mdo1.ka3_1"), RD);
-			//Set_Signal_Ex_Val(Get_Signal_Idx("485.kb.kbl.start_oil_pump"), WR, 1);
-			Worker_Set_Mode(MODE_CONV);
-		}
-			*/
-		
-	}
-
-int start_stars = Get_Signal(START_STARS), stop_stars = Get_Signal(STARS_STOP);
-	if(stop_stars > 0) {
-		printf("Stop_stars button pressed\n");
-		ring_buffer_push(Signal_Mod_Buffer, Get_Signal_Idx("485.kb.kbl.led_contrast"), 1, WR);
-		ring_buffer_push(Signal_Mod_Buffer, Get_Signal_Idx("485.kb.kbl.start_stars"), 0, WR); //led is off
-	        ring_buffer_push(Signal_Mod_Buffer, Get_Signal_Idx("485.rsrs.rm_u2_on7"), 0, WR);
-		Worker_Set_Mode(MODE_IDLE);
-	} else if(start_stars > 0) {
-		printf("Start_stars button pressed\n");
-		ring_buffer_push(Signal_Mod_Buffer, Get_Signal_Idx("485.kb.kbl.led_contrast"), 50, WR);
-		ring_buffer_push(Signal_Mod_Buffer, Get_Signal_Idx("485.kb.kbl.start_stars"), 1, WR); //led is on
-		ring_buffer_push(Signal_Mod_Buffer, Get_Signal_Idx("485.rsrs.rm_u2_on7"), 1, WR); // rm U2  bit 7
-		Worker_Set_Mode(MODE_IDLE);
-	}
-
-
-int start_oil_st = Get_Signal(START_OIL_ST), stop_oil_st = Get_Signal(OIL_ST_STOP);
-	if(stop_oil_st > 0) {
-		printf("Stop_Oil_station button pressed\n");
-		ring_buffer_push(Signal_Mod_Buffer, Get_Signal_Idx("485.kb.kbl.led_contrast"), 1, WR);
-		ring_buffer_push(Signal_Mod_Buffer, Get_Signal_Idx("485.kb.kbl.start_oil_station"), 0, WR); //led is off
-	        ring_buffer_push(Signal_Mod_Buffer, Get_Signal_Idx("wago.oc_mdo1.ka2_1"), 0, WR);
-		Worker_Set_Mode(MODE_IDLE);
-	} else if(start_oil_st > 0) {
-		printf("Start_Oil_station button pressed\n");
-		ring_buffer_push(Signal_Mod_Buffer, Get_Signal_Idx("485.kb.kbl.led_contrast"), 50, WR);
-		ring_buffer_push(Signal_Mod_Buffer, Get_Signal_Idx("485.kb.kbl.start_oil_station"), 1, WR); //led is on
-		ring_buffer_push(Signal_Mod_Buffer, Get_Signal_Idx("wago.oc_mdo1.ka2_1"), 1, WR); // rm U2  bit 7
-		Worker_Set_Mode(MODE_IDLE);
-	}
-
-
-int start_hydro = Get_Signal(START_HYDRO), stop_hydro = Get_Signal(HYDRO_STOP);
-	if(stop_hydro > 0) {
-		printf("Stop_Hydro button pressed\n");
-		ring_buffer_push(Signal_Mod_Buffer, Get_Signal_Idx("485.kb.kbl.led_contrast"), 1, WR);
-		ring_buffer_push(Signal_Mod_Buffer, Get_Signal_Idx("485.kb.kbl.start_hydratation"), 0, WR); //led is off
-	        ring_buffer_push(Signal_Mod_Buffer, Get_Signal_Idx("wago.oc_mdo1.ka4_1"), 0, WR);
-		Worker_Set_Mode(MODE_IDLE);
-	} else if(start_hydro > 0) {
-		printf("Start_Hydro button pressed\n");
-		ring_buffer_push(Signal_Mod_Buffer, Get_Signal_Idx("485.kb.kbl.led_contrast"), 50, WR);
-		ring_buffer_push(Signal_Mod_Buffer, Get_Signal_Idx("485.kb.kbl.start_hydratation"), 1, WR); //led is on
-		ring_buffer_push(Signal_Mod_Buffer, Get_Signal_Idx("wago.oc_mdo1.ka4_1"), 1, WR); // rm U2  bit 7
-		Worker_Set_Mode(MODE_IDLE);
-	}
-
-
-
-int start_execdev = Get_Signal(START_EXECDEV), stop_execdev = Get_Signal(EXECDEV_STOP);
-	if(stop_execdev > 0) {
-		printf("Stop_ExecDev button pressed\n");
-		ring_buffer_push(Signal_Mod_Buffer, Get_Signal_Idx("485.kb.kbl.led_contrast"), 1, WR);
-		ring_buffer_push(Signal_Mod_Buffer, Get_Signal_Idx("485.kb.kbl.start_exec_dev"), 0, WR); //led is off		
-	        ring_buffer_push(Signal_Mod_Buffer, Get_Signal_Idx("wago.oc_mdo1.ka1_1"), 0, WR);
-		Worker_Set_Mode(MODE_IDLE);
-	} else if(start_execdev > 0) {
-		printf("Start_ExecDev button pressed\n");
-		ring_buffer_push(Signal_Mod_Buffer, Get_Signal_Idx("485.kb.kbl.led_contrast"), 50, WR);
-		ring_buffer_push(Signal_Mod_Buffer, Get_Signal_Idx("A485.kb.kbl.start_exec_dev"), 1, WR); //led is on
-		ring_buffer_push(Signal_Mod_Buffer, Get_Signal_Idx("wago.oc_mdo1.ka1_1"), 1, WR); // rm U2  bit 7
-		Worker_Set_Mode(MODE_IDLE);
-	}
-
-
-
+	buttons[B_OVERLOAD_START] |= Get_Signal("485.kb.key.start_reloader");
+	buttons[B_CONV_START] 	  |= Get_Signal("485.kb.key.start_conveyor");
+	buttons[B_OVERLOAD_STOP]  |= Get_Signal("485.kb.key.stop_reloader");
+	buttons[B_CONV_STOP] 			|= Get_Signal("485.kb.key.stop_conveyor");
+	//Get_Signal("485.kb.key.stop_oil_pump");
+	//Get_Signal("485.kb.key.start_check");
+	//Get_Signal("485.kb.key.start_oil_pump");
+	//Get_Signal("485.kb.key.stop_check");
+	//Get_Signal("485.kb.key.start_stars");
+	//Get_Signal("485.kb.key.start_oil_station");
+	//Get_Signal("485.kb.key.start_hydratation");
+	//Get_Signal("485.kb.key.stop_stars");
+	//Get_Signal("485.kb.key.start_exec_dev");
+	//Get_Signal("485.kb.key.stop_oil_station");
+	//Get_Signal("485.kb.key.stop_hydratation");
+	//Get_Signal("485.kb.key.stop_exec_dev");
 }
 
 void Process_Cable_Kb() {
 }
 
 void Process_Radio_Kb() {
+}
+
+void Process_Normal() {
+	Worker_Set_Mode(MODE_NORM);
 }
 
 void Process_Pumping() {
@@ -262,21 +109,23 @@ void Process_Pumping() {
 
 	if(stop > 0) {
 		printf("Stop button pressed\n");
-		ring_buffer_push(Signal_Mod_Buffer, Get_Signal_Idx("485.kb.kbl.led_contrast"), 1, WR);
-		ring_buffer_push(Signal_Mod_Buffer, Get_Signal_Idx("485.kb.kbl.start_oil_pump"), 0, WR);
-	        ring_buffer_push(Signal_Mod_Buffer, Get_Signal_Idx("wago.oc_mdo1.ka7_1"), 0, WR);		
+		//ring_buffer_push(Signal_Mod_Buffer, Get_Signal_Idx("wago.oc_mdo1.ka7_1"), 0, WR);		
+		printf("Setting idle mode\n");
 		Worker_Set_Mode(MODE_IDLE);
 	} else if(start > 0) {
 		printf("Start button pressed\n");
 		if(g_mode != MODE_PUMPING) {
 			printf("Starting\n");
-				ring_buffer_push(Signal_Mod_Buffer, Get_Signal_Idx("485.kb.kbl.led_contrast"), 50, WR);
-				ring_buffer_push(Signal_Mod_Buffer, Get_Signal_Idx("485.kb.kbl.start_oil_pump"), 1, WR);
+			printf("Lighting the button contrast\n");
+			Set_Signal_Ex_Val(Get_Signal_Idx("485.kb.kbl.led_contrast"), WR, 50);
+			printf("Lighting the start oil pump button\n");
+			Set_Signal_Ex_Val(Get_Signal_Idx("485.kb.kbl.start_oil_pump"), WR, 1);
 			Set_Signal_Ex(Get_Signal_Idx("wago.oc_bki.M7"), RD);
 			//Set_Signal_Ex(Get_Signal_Idx("wago.oc_temp.pt100_m7"), RD);
 			Set_Signal_Ex(Get_Signal_Idx("wago.oc_mdi1.oc_w_qf1"), RD);
 			Set_Signal_Ex(Get_Signal_Idx("wago.oc_mdo1.ka7_1"), RD);
 			//Set_Signal_Ex_Val(Get_Signal_Idx("485.kb.kbl.start_oil_pump"), WR, 1);
+			printf("Setting mode\n");
 			Worker_Set_Mode(MODE_PUMPING);
 		}
 	}
@@ -290,7 +139,7 @@ void Process_Diag() {
 void Process_Timeout() {
 	struct timespec start, now;
 	printf("Processing timeout for mode %d\n", g_mode);
-	
+
 	ring_buffer_push(Signal_Mod_Buffer, Get_Signal_Idx("485.rsrs2.state_sound1_on"), 1, WR);
 	ring_buffer_push(Signal_Mod_Buffer, Get_Signal_Idx("485.rsrs2.state_sound1_led"), 1, WR);
 	ring_buffer_push(Signal_Mod_Buffer, Get_Signal_Idx("485.rsrs2.state_sound2_on"), 1, WR);
@@ -298,13 +147,18 @@ void Process_Timeout() {
 
 	printf("Getting time\n", g_mode);
 	clock_gettime(CLOCK_REALTIME, &start);
-	printf("Got time.\n");
+	printf("Got time\n");
 	while(g_mode != 0) {
 		clock_gettime(CLOCK_REALTIME, &now);
-		if((now.tv_sec > start.tv_sec + 5) || (now.tv_sec == start.tv_sec + 5) && (now.tv_nsec >= start.tv_nsec)) {
+		if((now.tv_sec > (start.tv_sec + 5)) || (now.tv_sec == (start.tv_sec + 5)) && (now.tv_nsec >= start.tv_nsec)) {
+			printf("Exiting by timeout\n");
 			break;
 		}
 		usleep(1000);
+	}
+
+	if(g_mode == 0) {
+		printf("Mode changed!!!!!!!!!!!!!!!!!!!!!!\n");
 	}
 
 	ring_buffer_push(Signal_Mod_Buffer, Get_Signal_Idx("485.rsrs2.state_sound1_on"), 0, WR);
@@ -314,258 +168,101 @@ void Process_Timeout() {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
-void Work_Conv(){
-#define CHECK_MODE_CONV() if(g_mode != MODE_CONV) { return; }
-	int exState;
-	printf("Checkpoint1\n");
-	do {
-		exState = Get_Signal_Ex(Get_Signal_Idx("wago.bki_k3_k4.M3_M4"));
-		if(exState == RD) pthread_yield();
-		CHECK_MODE_CONV();
-	} while(exState != RD);
-	do {    
-		exState = Get_Signal_Ex(Get_Signal_Idx("wago.oc_temp.pt100_m3"));
-		if(exState == RD) pthread_yield();
-		CHECK_MODE_CONV();
-	} while(exState == RD);
-	do {    
-		exState = Get_Signal_Ex(Get_Signal_Idx("wago.oc_temp.pt100_m4"));
-		if(exState == RD) pthread_yield();
-		CHECK_MODE_CONV();
-	} while(exState == RD);
-	do {
-		exState = Get_Signal_Ex(Get_Signal_Idx("wago.oc_mdo1.ka3_1"));
-		if(exState == RD) pthread_yield();
-		CHECK_MODE_CONV();
-	} while(exState == RD);
-	do {
-		exState = Get_Signal_Ex(Get_Signal_Idx("wago.oc_mdi1.oc_w_qf1"));
-		if(exState == RD) pthread_yield();
-		CHECK_MODE_CONV();
-	} while(exState == RD);
-	printf("Checkpoint2\n");
-	int tMotorM3 = Get_Signal("wago.oc_temp.pt100_m3");
-	int tMotorM4 = Get_Signal("wago.oc_temp.pt100_m4");
-	int bki = Get_Signal("wago.bki_R_k3_k4.M3_M4");
-	int eugenAllowance = !Get_Signal("wago.oc_mdo1.ka3_1");
-        printf("bki: %d\n",bki);
-	printf("Eugen: %d; bki: %d\n", eugenAllowance,  bki);
-	printf("Checkpoint3\n");
-	ring_buffer_push(Signal_Mod_Buffer, Get_Signal_Idx("wago.oc_mdo1.ka3_1"), 1, WR);
-	        /*
-	do {  	
-			exState = Get_Signal_Ex(Get_Signal_Idx("wago.oc_mdo1.ka7_1"));
-			if(exState != 3) usleep(10000);
-		} while(bki != 0);
-		*/
-		
-	while(g_mode == MODE_CONV) {
-	/*
-	wago.oc_mui4.current_m3a
-	wago.oc_mui4.current_m3b
-	wago.oc_mui4.current_m3c
-	wago.oc_mui5.current_m4a
-	wago.oc_mui5.current_m4b
-	wago.oc_mui5.current_m4c
-	*/
-		ring_buffer_push(Signal_Mod_Buffer, Get_Signal_Idx("wago.oc_mui4.current_m3a"), 0, RD);
-		ring_buffer_push(Signal_Mod_Buffer, Get_Signal_Idx("wago.oc_mui4.current_m3b"), 0, RD);
-		ring_buffer_push(Signal_Mod_Buffer, Get_Signal_Idx("wago.oc_mui4.current_m3c"), 0, RD);
-		ring_buffer_push(Signal_Mod_Buffer, Get_Signal_Idx("wago.oc_mui5.current_m4a"), 0, RD);
-		ring_buffer_push(Signal_Mod_Buffer, Get_Signal_Idx("wago.oc_mui5.current_m4b"), 0, RD);
-		ring_buffer_push(Signal_Mod_Buffer, Get_Signal_Idx("wago.oc_mui5.current_m4c"), 0, RD);
-		do {
-			exState = Get_Signal_Ex(Get_Signal_Idx("wago.oc_mui4.current_m3a"));
-			if(exState != 3) usleep(10000);
-		} while(exState != 3);
-		do {
-			exState = Get_Signal_Ex(Get_Signal_Idx("wago.oc_mui4.current_m3b"));
-			if(exState != 3) usleep(10000);
-		} while(exState != 3);
-		do {
-			exState = Get_Signal_Ex(Get_Signal_Idx("wago.oc_mui4.current_m3c"));
-			if(exState != 3) usleep(10000);
-		} while(exState != 3);
-
-		do {
-			exState = Get_Signal_Ex(Get_Signal_Idx("wago.oc_mui5.current_m4a"));
-			if(exState != 3) usleep(10000);
-		} while(exState != 3);
-		do {
-			exState = Get_Signal_Ex(Get_Signal_Idx("wago.oc_mui5.current_m4b"));
-			if(exState != 3) usleep(10000);
-		} while(exState != 3);
-		do {
-			exState = Get_Signal_Ex(Get_Signal_Idx("wago.oc_mui5.current_m4c"));
-			if(exState != 3) usleep(10000);
-		} while(exState != 3);
-
-		int m3a = Get_Signal("wago.oc_mui4.current_m3a");
-		int m3b = Get_Signal("wago.oc_mui4.current_m3b");
-		int m3c = Get_Signal("wago.oc_mui4.current_m3c");
-		int m4a = Get_Signal("wago.oc_mui5.current_m4a");
-		int m4b = Get_Signal("wago.oc_mui5.current_m4b");
-		int m4c = Get_Signal("wago.oc_mui5.current_m4c");
-		printf("m3a: %d; m3b: %d; m3c: %d m4a: %d; m4b: %d; m4c: %d\n", m3a,m3b,m3c, m4a,m4b,m4c);
-	}
-	printf("Checkpoint end\n");		
-}
-
-
 void Work_Norm(){
-#define CHECK_MODE_NORM() if(g_mode != MODE_NORM) { return; }
-	int exState;
-	printf("Checkpoint1\n");
-	do {
-		exState = Get_Signal_Ex(Get_Signal_Idx("wago.bki_R_k6_M6"));
-		if(exState == RD) pthread_yield();
-		CHECK_MODE_NORM();
-	} while(exState != RD);
-	do {    
-		exState = Get_Signal_Ex(Get_Signal_Idx("wago.oc_temp.pt100_m6"));
-		if(exState == RD) pthread_yield();
-		CHECK_MODE_NORM();
-	} while(exState == RD);
-	
-	do {
-		exState = Get_Signal_Ex(Get_Signal_Idx("wago.oc_mdo1.ka5_1"));
-		if(exState == RD) pthread_yield();
-		CHECK_MODE_NORM();
-	} while(exState == RD);
-	do {
-		exState = Get_Signal_Ex(Get_Signal_Idx("wago.oc_mdi1.oc_w_qf1"));
-		if(exState == RD) pthread_yield();
-		CHECK_MODE_NORM();
-	} while(exState == RD);
-	printf("Checkpoint2\n");
-	int tMotor = Get_Signal("wago.oc_temp.pt100_m6");
-	int bki = Get_Signal("wago.bki_R_k6_M6");
-	int eugenAllowance = !Get_Signal("wago.oc_mdo1.ka5_1");
-        printf("bki: %d\n",bki);
-	printf("Eugen: %d; bki: %d\n", eugenAllowance,  bki);
-	printf("Checkpoint3\n");
-	ring_buffer_push(Signal_Mod_Buffer, Get_Signal_Idx("wago.oc_mdo1.ka5_1"), 1, WR);
-	        /*
-	do {  	
-			exState = Get_Signal_Ex(Get_Signal_Idx("wago.oc_mdo1.ka7_1"));
-			if(exState != 3) usleep(10000);
-		} while(bki != 0);
-		*/
-		
+	printf("Working in normal mode\n");
 	while(g_mode == MODE_NORM) {
-		ring_buffer_push(Signal_Mod_Buffer, Get_Signal_Idx("wago.oc_mui7.current_m6a"), 0, RD);
-		ring_buffer_push(Signal_Mod_Buffer, Get_Signal_Idx("wago.oc_mui7.current_m6b"), 0, RD);
-		ring_buffer_push(Signal_Mod_Buffer, Get_Signal_Idx("wago.oc_mui7.current_m6c"), 0, RD);
-
-		do {
-			exState = Get_Signal_Ex(Get_Signal_Idx("wago.oc_mui7.current_m6a"));
-			if(exState != 3) usleep(10000);
-		} while(exState != 3);
-		do {
-			exState = Get_Signal_Ex(Get_Signal_Idx("wago.oc_mui7.current_m6b"));
-			if(exState != 3) usleep(10000);
-		} while(exState != 3);
-		do {
-			exState = Get_Signal_Ex(Get_Signal_Idx("wago.oc_mui7.current_m6c"));
-			if(exState != 3) usleep(10000);
-		} while(exState != 3);
-
-		int m6a = Get_Signal("wago.oc_mui7.current_m6a");
-		int m6b = Get_Signal("wago.oc_mui7.current_m6b");
-		int m6c = Get_Signal("wago.oc_mui7.current_m6c");
-		printf("m7a: %d; m7b: %d; m7c: %d\n", m6a,m6b,m6c);
+		if(buttons[B_OVERLOAD_STOP]) {
+			stop_Overloading();
+			buttons[B_OVERLOAD_START] = buttons[B_OVERLOAD_STOP] = 0;
+		} else if(buttons[B_OVERLOAD_START]) {
+			start_Overloading();
+			buttons[B_OVERLOAD_START] = 0;
+		}
+		if(buttons[B_CONV_STOP]) {
+			stop_Conveyor();
+			buttons[B_CONV_START] = buttons[B_CONV_STOP] = 0;
+		} else if(buttons[B_CONV_START]) {
+			start_Conveyor();
+			buttons[B_CONV_START] = 0;
+		}
+		control_all();
+		usleep(10000);
 	}
-	printf("Checkpoint end\n");		
+
+	printf("Exiting normal mode\n");
+	stop_all();
 }
 
 void Work_Pumping() {
 #define CHECK_MODE_PUMPING() if(g_mode != MODE_PUMPING) { return; }
 	int exState;
 
-	printf("Checkpoint1\n");
+	Process_Timeout();
+	CHECK_MODE_PUMPING();
+
 	do {
 		exState = Get_Signal_Ex(Get_Signal_Idx("wago.bki_R_k7_M7"));
 		if(exState == RD) pthread_yield();
 		CHECK_MODE_PUMPING();
-	} while(exState != RD);
+	} while((g_mode == MODE_PUMPING) && exState != RD && !RB_EMPTY());
 	do {    
 		exState = Get_Signal_Ex(Get_Signal_Idx("wago.oc_temp.pt100_m7"));
 		if(exState == RD) pthread_yield();
 		CHECK_MODE_PUMPING();
-	} while(exState == RD);
-	
-	do {
-		exState = Get_Signal_Ex(Get_Signal_Idx("wago.oc_mdo1.ka7_1"));
-		if(exState == RD) pthread_yield();
-		CHECK_MODE_PUMPING();
-	} while(exState == RD);
+	} while((g_mode == MODE_PUMPING) && exState == RD && !RB_EMPTY());
 	do {
 		exState = Get_Signal_Ex(Get_Signal_Idx("wago.oc_mdi1.oc_w_qf1"));
 		if(exState == RD) pthread_yield();
 		CHECK_MODE_PUMPING();
-	} while(exState == RD);
-	printf("Checkpoint2\n");
+	} while((g_mode == MODE_PUMPING) && exState == RD && !RB_EMPTY());
 
 	int tMotor = Get_Signal("wago.oc_temp.pt100_m7");
-	int bki = Get_Signal("wago.bki_R_k7_M7");
-	int eugenAllowance = !Get_Signal("wago.oc_mdo1.ka7_1");
-        printf("bki: %d\n",bki);
-        /*
-        do {
-			exState = Get_Signal_Ex(Get_Signal_Idx("wago.bki_R_k7_M7"));
-			if(exState != 3) usleep(10000);
-		} while(bki != 0);
-		
-	if(bki != 0) { //!eugenAllowance || tMotor >= 70 || bki != 0) {
-		printf("Eugen: %d; bki: %d\n", eugenAllowance,  bki);
-		printf("Eugen: %d; tMotor: %d; bki: %d\n", eugenAllowance, tMotor, bki);
+	int bki = Get_Signal("wago.bki_k7.M7");
+
+	if(bki != 0) { // || tMotor >= 70) {
+		printf("tMotor: %d; bki: %d\n", tMotor, bki);
 		Worker_Set_Mode(MODE_IDLE);
 		return;
 	}
-	*/
-        printf("Eugen: %d; bki: %d\n", eugenAllowance,  bki);
-	printf("Checkpoint3\n");
-	ring_buffer_push(Signal_Mod_Buffer, Get_Signal_Idx("wago.oc_mdo1.ka7_1"), 1, WR);
-      /*
-	ring_buffer_push(Signal_Mod_Buffer, Get_Signal_Idx("wago.oc_mdi1.oc_w_k6"), 0, RD);
-	do {
-		exState = Get_Signal_Ex(Get_Signal_Idx("wago.oc_mdi1.oc_w_k6"));
-		if(exState == RD) usleep(10000);
-	} while(exState == RD && (g_mode == MODE_PUMPING));
+	printf("Waiting feedback for 3 sec\n");
+	ring_buffer_push(Signal_Mod_Buffer, Get_Signal_Idx("wago.oc_mdo1.ka6_1"), 1, WR);
+	RB_FLUSH();
 
-	int oc  = Get_Signal("wago.oc_mdi1.oc_w_k6");       
-	if(oc != 1) {
-		//Worker_Set_Mode(MODE_IDLE);
+	int oc  = 0;       
+	struct timespec start, now;
+	clock_gettime(CLOCK_REALTIME, &start);
+
+	while(!oc) {
+		ring_buffer_push(Signal_Mod_Buffer, Get_Signal_Idx("wago.oc_mdi1.oc_w_k6"), 0, RD);
+		do {
+			exState = Get_Signal_Ex(Get_Signal_Idx("wago.oc_mdi1.oc_w_k6"));
+			if(exState == RD) usleep(10000);
+		} while(exState == RD && (g_mode == MODE_PUMPING) && !RB_EMPTY());
+		clock_gettime(CLOCK_REALTIME, &now);
+		if((now.tv_sec > start.tv_sec + 3) || (now.tv_sec == start.tv_sec + 3) && (now.tv_nsec >= start.tv_nsec)) {
+			break;
+		}
+		oc  = Get_Signal("wago.oc_mdi1.oc_w_k6");       
 	}
-      */
-	printf("Checkpoint4\n");
-	/*
+
+	if(oc == 0) {
+		printf("No Feedback!\n");
+		Worker_Set_Mode(MODE_IDLE);
+	}
+
+	printf("Pumping started\n");
 	while(g_mode == MODE_PUMPING) {
-		ring_buffer_push(Signal_Mod_Buffer, Get_Signal_Idx("wago.oc_mui8.current_m7a"), 0, RD);
-		ring_buffer_push(Signal_Mod_Buffer, Get_Signal_Idx("wago.oc_mui8.current_m7b"), 0, RD);
-		ring_buffer_push(Signal_Mod_Buffer, Get_Signal_Idx("wago.oc_mui8.current_m7c"), 0, RD);
-
-		do {
-			exState = Get_Signal_Ex(Get_Signal_Idx("wago.oc_mui8.current_m7a"));
-			if(exState != 3) usleep(10000);
-		} while(exState != 3);
-		do {
-			exState = Get_Signal_Ex(Get_Signal_Idx("wago.oc_mui8.current_m7b"));
-			if(exState != 3) usleep(10000);
-		} while(exState != 3);
-		do {
-			exState = Get_Signal_Ex(Get_Signal_Idx("wago.oc_mui8.current_m7c"));
-			if(exState != 3) usleep(10000);
-		} while(exState != 3);
-
 		int m7a = Get_Signal("wago.oc_mui8.current_m7a");
 		int m7b = Get_Signal("wago.oc_mui8.current_m7b");
 		int m7c = Get_Signal("wago.oc_mui8.current_m7c");
-		//printf("m7a: %d; m7b: %d; m7c: %d\n", m7a,m7b,m7c);
+		// Check currents
 	}
-	*/
-	//ring_buffer_push(Signal_Mod_Buffer, Get_Signal_Idx("wago.oc_mdo1.ka7_1"), 0, WR);
-	
+	printf("Pumping stopped\n");
+	ring_buffer_push(Signal_Mod_Buffer, Get_Signal_Idx("wago.oc_mdo1.ka6_1"), 0, WR);
+	printf("Dimming the button contrast\n");
+	ring_buffer_push(Signal_Mod_Buffer, Get_Signal_Idx("485.kb.kbl.led_contrast"), 1, WR);
+	printf("Dimming the start oil pump button\n");
+	ring_buffer_push(Signal_Mod_Buffer, Get_Signal_Idx("485.kb.kbl.start_oil_pump"), 0, WR);
 }
 
 void *Worker(void* arg) {
@@ -578,30 +275,28 @@ void *Worker(void* arg) {
 			pthread_mutex_lock(&g_waitMutex);
 			g_workStarted = 0;
 			pthread_cond_wait(&g_waitCond, &g_waitMutex);
-			g_workStarted = 1;
 			pthread_mutex_unlock(&g_waitMutex);
 		}
 
+		g_workStarted = 1;
 		printf("Mode switched to %d\n", g_mode);
 
-		if(oldMode != g_mode && oldMode == 0) {
-			printf("Processing timeout\n");
-			oldMode = g_mode;
-			Process_Timeout();
-		}
-
-		if(MODE_CHANGED) {
-			continue;
-		}
-
 		switch(g_mode) {
-		case MODE_PUMPING:
-			Work_Pumping();
-			break;
+			case MODE_PUMPING:
+				Work_Pumping();
+				break;
+
+			case MODE_NORM:
+				Work_Norm();
+				break;
 		}
 	}
 }
 
 void Init_Worker() {
-	pthread_create(&worker, NULL, &Worker, NULL);
+	pthread_mutexattr_t attr;
+	pthread_mutexattr_init(&attr);
+	pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE_NP);
+	pthread_mutex_init(&g_waitMutex, &attr);
+	pthread_create(&g_worker, NULL, &Worker, NULL);
 }

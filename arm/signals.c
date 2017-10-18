@@ -23,6 +23,9 @@ void init_signals_hash(void) {
 		hash_add(Signal_Name_Hash, Signal_Array, sc);
 		hash_add_by_prefix(Signal_Prefix_Hash, Signal_Array, sc);
 	}
+
+	Hashes_Initialized = 1;
+	printf("Hash maps initialized\n");
 }
 
  /* reverse:  переворачиваем строку s на месте */
