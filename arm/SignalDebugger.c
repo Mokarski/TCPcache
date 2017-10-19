@@ -83,7 +83,7 @@ int tcpresult = 0;
 	} //end for
 	 //****************** END UNPACK***************************************
      
-	      
+	printf("RqTime:[%ld]ms. \n\r",	 speedtest_stop ());
 
 
 return ret;
