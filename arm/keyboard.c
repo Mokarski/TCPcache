@@ -23,6 +23,32 @@ pthread_t g_worker;
 static volatile int g_mode = 0, g_workStarted = 0;
 volatile int buttons[64] = {};
 
+int Wait_For_Feedback(char *name, int expect, int timeout, volatile int *what) {
+	int oc  = Get_Signal(name);       
+	struct timespec start, now;
+	clock_gettime(CLOCK_REALTIME, &start);
+
+	printf("Waiting for feedback %d\n", expect);
+
+	while((oc != expect) && (*what)) {
+		int exState;
+		oc  = Get_Signal(name);
+		if(oc == expect) continue;
+		if(exState == RD)
+			usleep(10000);
+		else if(RB_EMPTY())
+			READ_SIGNAL(name);
+		clock_gettime(CLOCK_REALTIME, &now);
+		if((now.tv_sec > start.tv_sec + timeout) || (now.tv_sec == start.tv_sec + timeout) && (now.tv_nsec >= start.tv_nsec)) {
+			printf("Result: %d\n", oc);
+			return oc == expect;
+		}
+	}
+
+	printf("Result: %d\n", oc);
+	return oc == expect;
+}
+
 int Get_Signal(char *name) {
 	struct Signal *s = hash_find(Signal_Name_Hash, Signal_Array, name);
 
@@ -44,10 +70,6 @@ void Worker_Set_Mode(int mode) {
 		g_mode = mode;
 		pthread_mutex_unlock(&g_waitMutex);
 		pthread_cond_signal(&g_waitCond);
-		printf("Waiting for work start\n", g_mode);
-		while(g_workStarted == 0 && pthread_self() != g_worker)
-			pthread_yield();
-		printf("Set mode: %d\n", g_mode);
 		return;
 	} else {
 		if(mode != MODE_IDLE) {
@@ -58,10 +80,6 @@ void Worker_Set_Mode(int mode) {
 		//pthread_mutex_lock(&g_waitMutex);
 		g_mode = mode;
 		//pthread_mutex_unlock(&g_waitMutex);
-		printf("Set mode: %d; waiting for stop\n", g_mode);
-		while(g_workStarted != 0 && pthread_self() != g_worker)
-			pthread_yield();
-		printf("Process stopped\n", g_mode);
 	}
 }
 
@@ -228,25 +246,11 @@ void Work_Pumping() {
 	ring_buffer_push(Signal_Mod_Buffer, Get_Signal_Idx("wago.oc_mdo1.ka6_1"), 1, WR);
 	RB_FLUSH();
 
-	int oc  = 0;       
-	struct timespec start, now;
-	clock_gettime(CLOCK_REALTIME, &start);
-
-	while(!oc) {
-		ring_buffer_push(Signal_Mod_Buffer, Get_Signal_Idx("wago.oc_mdi1.oc_w_k6"), 0, RD);
-		do {
-			exState = Get_Signal_Ex(Get_Signal_Idx("wago.oc_mdi1.oc_w_k6"));
-			if(exState == RD) usleep(10000);
-		} while(exState == RD && (g_mode == MODE_PUMPING) && !RB_EMPTY());
-		clock_gettime(CLOCK_REALTIME, &now);
-		if((now.tv_sec > start.tv_sec + 3) || (now.tv_sec == start.tv_sec + 3) && (now.tv_nsec >= start.tv_nsec)) {
-			break;
-		}
-		oc  = Get_Signal("wago.oc_mdi1.oc_w_k6");       
-	}
-
-	if(oc == 0) {
+	int oc = Wait_For_Feedback("wago.oc_mdi1.oc_w_k6", 1, 3, &g_mode);
+	if(!oc) {
 		printf("No Feedback!\n");
+		printf("Feedback signal: %d\n", Get_Signal("wago.oc_mdi1.oc_w_k6"));
+		printf("Feedback register: %d\n", Get_Signal("wago.oc_mdi1.oc"));
 		Worker_Set_Mode(MODE_IDLE);
 	}
 
@@ -257,8 +261,12 @@ void Work_Pumping() {
 		int m7c = Get_Signal("wago.oc_mui8.current_m7c");
 		// Check currents
 	}
+	int forever = 1;
 	printf("Pumping stopped\n");
-	ring_buffer_push(Signal_Mod_Buffer, Get_Signal_Idx("wago.oc_mdo1.ka6_1"), 0, WR);
+	while(!Wait_For_Feedback("wago.oc_mdi1.oc_w_k6", 0, 3, &forever)) {
+		printf("Turning off wago\n");
+		WRITE_SIGNAL("wago.oc_mdo1.ka6_1", 0);
+	}
 	printf("Dimming the button contrast\n");
 	ring_buffer_push(Signal_Mod_Buffer, Get_Signal_Idx("485.kb.kbl.led_contrast"), 1, WR);
 	printf("Dimming the start oil pump button\n");

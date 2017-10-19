@@ -293,48 +293,58 @@ int GetSignals() {
 }
 
 int Init (){
-/*
-485.kb.kei1.power  // SWITCH POWER on
-wago.oc_mdi.err_phase //if ZEERO all is FINE
-wago.bki_k1.M1
-wago.bki_k2.M2
-wago.bki_k3_k4.M3_M4
-wago.bki_k5.M5
-wago.bki_k6.M6
-wago.bki_k7.M7
-wago.oc_mui1.Uin_PhaseA //Input Voltage 1140 V -INT
-wago.oc_mui1.Uin_PhaseB //Input Voltage 1140 V -INT
-wago.oc_mui1.Uin_PhaseC //Input Voltage 1140 V -INT
-*/
-
-	int init_state=0;
+	/*
+		 485.kb.kei1.power  // SWITCH POWER on
+		 wago.oc_mdi.err_phase //if ZEERO all is FINE
+		 wago.bki_k1.M1
+		 wago.bki_k2.M2
+		 wago.bki_k3_k4.M3_M4
+		 wago.bki_k5.M5
+		 wago.bki_k6.M6
+		 wago.bki_k7.M7
+		 wago.oc_mui1.Uin_PhaseA //Input Voltage 1140 V -INT
+		 wago.oc_mui1.Uin_PhaseB //Input Voltage 1140 V -INT
+		 wago.oc_mui1.Uin_PhaseC //Input Voltage 1140 V -INT
+	 */
 
 	struct Signal *s;
 	s = hash_find(Signal_Name_Hash, Signal_Array, "485.kb.kei1.power");
-	if(s) init_state =10+ init_state + s->Value[1];
 
-	s = hash_find(Signal_Name_Hash, Signal_Array, "wago.oc_mdi.err_phase");
-	if(s) init_state =20+ init_state + s->Value[1];
+	if(Get_Signal_Ex(Get_Signal_Idx("wago.oc_mdi.err_phase")) == RD)
+		return 0;
+	if(Get_Signal("wago.oc_mdi.err_phase")) {
+		printf("Phase error!\n");
+		return 0;
+	}
 
-	s = hash_find(Signal_Name_Hash, Signal_Array, "wago.bki_k1.M1");
-	if(s) init_state =30+ init_state + s->Value[1];
+	if(Get_Signal_Ex(Get_Signal_Idx("wago.bki_k1.M1")) == RD)
+		return 0;
+	if(Get_Signal_Ex(Get_Signal_Idx("wago.bki_k2.M2")) == RD)
+		return 0;
+	if(Get_Signal_Ex(Get_Signal_Idx("wago.bki_k3_k4.M3_M4")) == RD)
+		return 0;
+	if(Get_Signal_Ex(Get_Signal_Idx("wago.bki_k5.M5")) == RD)
+		return 0;
+	if(Get_Signal_Ex(Get_Signal_Idx("wago.bki_k7.M7")) == RD)
+		return 0;
+	if(Get_Signal("wago.bki_k1.M1") ||
+		 Get_Signal("wago.bki_k2.M2") ||
+		 Get_Signal("wago.bki_k3_k4.M3_M4") ||
+		 Get_Signal("wago.bki_k5.M5") ||
+		 Get_Signal("wago.bki_k7.M7"))
+	{
+		printf("BKI error!\n");
+		return 0;
+	}
 
-	s = hash_find(Signal_Name_Hash, Signal_Array, "wago.bki_k2.M2");
-	if(s) init_state =40+ init_state + s->Value[1];	
+	if(Get_Signal("wago.oc_mdi1.oc_w_qf1")) {
+		printf("Initialization completed!\n");
+		return 1;
+	}
 
-	s = hash_find(Signal_Name_Hash, Signal_Array, "wago.bki_k3_k4.M3_M4");
-	if(s) init_state =50+ init_state + s->Value[1];	
+	Set_Signal_Ex_Val(Get_Signal_Idx("wago.oc_mdo1.ka7_1"), WR, 1);
 
-	s = hash_find(Signal_Name_Hash, Signal_Array, "wago.bki_k5.M5");
-	if(s) init_state =60+ init_state + s->Value[1];
-
-	s = hash_find(Signal_Name_Hash, Signal_Array, "wago.bki_k6.M6");
-	if(s) init_state =70+ init_state + s->Value[1];
-
-	s = hash_find(Signal_Name_Hash, Signal_Array, "wago.bki_k7.M7");
-	if(s) init_state =80+ init_state + s->Value[1];
-
-	return init_state;
+	return 0;
 }
 
 int main(int argc , char *argv[])
@@ -359,6 +369,8 @@ int main(int argc , char *argv[])
 		return; //return 0 if all OK else return 1
 	}
 
+	printf("Initializing client logic\n");
+
 	//******************* WORK CYCLE *******************
 	int delay = 0; //1 cycle 1 ms
 	char packed_txt_string[MAX_MESS]={0};
@@ -367,6 +379,7 @@ int main(int argc , char *argv[])
 	char tst[MAX_MESS]={0};
 	int tcpresult, oldMode = 0;
 	int workerInitialized = 0;
+	int initialized = 0;
 	Init_Send_ID();
 
 	while (1){
@@ -383,6 +396,11 @@ int main(int argc , char *argv[])
 		if(!workerInitialized) {
 			Init_Worker();
 			workerInitialized = 1;
+		}
+
+		if(!initialized) {
+			initialized = Init();
+			goto UpdateSignals;
 		}
 
 		/////////////////////////////////////////////////////// COMMAND/////////////////////////////////////////////////////////////
@@ -432,6 +450,7 @@ int main(int argc , char *argv[])
 				break;
 		}
 
+UpdateSignals:
 		// Read keyboard
 		item = hash_find_by_prefix(Signal_Prefix_Hash, "485.");
 		while(item) {
@@ -450,9 +469,10 @@ int main(int argc , char *argv[])
 		int idx, value, st;
 		while(ring_buffer_get(Signal_Mod_Buffer, &idx, &value, &st)) {
 			if(idx < 0) continue;
-			if(st == RD)
+			if(st == RD) {
+				printf("Reading signal %s\n", Signal_Array[idx].Name);
 				Set_Signal_Ex(idx, st);
-			else {
+			} else {
 				printf("Writing signal %s: %d\n", Signal_Array[idx].Name, value);
 				Set_Signal_Ex_Val(idx, st, value);
 			}
@@ -478,7 +498,6 @@ int main(int argc , char *argv[])
 
 			if(Send_ID[x]){                
 				pack_signal(x, tmpz);
-				if(Signal_Array[x].ExState == WR) printf("Pack_Signal {%s}\n\r",tmpz);
 				strcat(message, tmpz);                 
 				Send_Ready=1;
 			}
