@@ -16,12 +16,47 @@
 #define B_OVERLOAD_STOP		1
 #define B_CONV_START	2
 #define B_CONV_STOP		3
+#define B_ORGAN_START	4
+#define B_ORGAN_STOP	5
+#define B_OIL_START		6
+#define B_OIL_STOP		7
+#define B_HYDRA_START	8
+#define B_HYDRA_STOP	9
+#define B_STARS_START	10
+#define B_STARS_STOP	11
+#define B_CHECK_START	12
+#define B_CHECK_STOP	13
+
+#define	J_CONVEYOR		0
+#define	J_ORGAN				1
+#define	J_LEFT_T			2
+#define	J_RIGHT_T			3
+#define	J_ACCEL				4
+#define	J_TELESCOPE		5
+#define	J_RESERVE			6
+#define	J_SUPPORT			7
+#define	J_SOURCER			8
+
+#define J_BIT_UP			0
+#define J_BIT_DOWN		1
+#define J_BIT_LEFT		2
+#define J_BIT_RIGHT		3
+#define JOYVAL_UP			0x1
+#define JOYVAL_DOWN		0x2
+#define JOYVAL_LEFT		0x4
+#define JOYVAL_RIGHT	0x8
+
+#define IS_UP(j)	((joystick[j] & JOYVAL_UP))
+#define IS_DOWN(j)	((joystick[j] & JOYVAL_DOWN))
+#define IS_LEFT(j)	((joystick[j] & JOYVAL_LEFT))
+#define IS_RIGHT(j)	((joystick[j] & JOYVAL_RIGHT))
 
 pthread_mutex_t g_waitMutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t g_waitCond = PTHREAD_COND_INITIALIZER;
 pthread_t g_worker;
 static volatile int g_mode = 0, g_workStarted = 0;
-volatile int buttons[64] = {};
+volatile int buttons[32] = {0};
+volatile int joystick[32] = {0};
 
 int Wait_For_Feedback(char *name, int expect, int timeout, volatile int *what) {
 	int oc  = Get_Signal(name);       
@@ -96,24 +131,51 @@ void Process_Local_Kb() {
 	buttons[B_CONV_START] 	  |= Get_Signal("485.kb.key.start_conveyor");
 	buttons[B_OVERLOAD_STOP]  |= Get_Signal("485.kb.key.stop_reloader");
 	buttons[B_CONV_STOP] 			|= Get_Signal("485.kb.key.stop_conveyor");
-	//Get_Signal("485.kb.key.stop_oil_pump");
-	//Get_Signal("485.kb.key.start_check");
-	//Get_Signal("485.kb.key.start_oil_pump");
-	//Get_Signal("485.kb.key.stop_check");
-	//Get_Signal("485.kb.key.start_stars");
-	//Get_Signal("485.kb.key.start_oil_station");
-	//Get_Signal("485.kb.key.start_hydratation");
-	//Get_Signal("485.kb.key.stop_stars");
-	//Get_Signal("485.kb.key.start_exec_dev");
-	//Get_Signal("485.kb.key.stop_oil_station");
-	//Get_Signal("485.kb.key.stop_hydratation");
-	//Get_Signal("485.kb.key.stop_exec_dev");
+	buttons[B_ORGAN_START]		|= Get_Signal("485.kb.key.start_exec_dev");
+	buttons[B_ORGAN_STOP] 		|= Get_Signal("485.kb.key.stop_exec_dev");
+	buttons[B_OIL_START] 			|= Get_Signal("485.kb.key.start_oil_station");
+	buttons[B_OIL_STOP] 			|= Get_Signal("485.kb.key.stop_oil_station");
+	buttons[B_HYDRA_START]		|= Get_Signal("485.kb.key.start_hydratation");
+	buttons[B_HYDRA_STOP]			|= Get_Signal("485.kb.key.stop_hydratation");
+	buttons[B_STARS_START]		|= Get_Signal("485.kb.key.start_stars");
+	buttons[B_STARS_STOP]			|= Get_Signal("485.kb.key.stop_stars");
+	buttons[B_CHECK_START]		|= Get_Signal("485.kb.key.start_check");
+	buttons[B_CHECK_STOP]			|= Get_Signal("485.kb.key.stop_check");
+
+	joystick[J_CONVEYOR] = (Get_Signal("485.kb.kei1.conveyor_left") << J_BIT_LEFT) | (Get_Signal("485.kb.kei1.conveyor_right") << J_BIT_RIGHT) |
+												 (Get_Signal("485.kb.kei1.conveyor_up") << J_BIT_UP) | (Get_Signal("485.kb.kei1.conveyor_down") << J_BIT_DOWN);
+	joystick[J_ORGAN] = (Get_Signal("485.kb.kei1.exec_dev_left") << J_BIT_LEFT) | (Get_Signal("485.kb.kei1.exec_dev_down") << J_BIT_DOWN) | 
+											(Get_Signal("485.kb.kei1.exec_dev_right") << J_BIT_RIGHT) | (Get_Signal("485.kb.kei1.exec_dev_up") << J_BIT_UP);
+	joystick[J_LEFT_T] = (Get_Signal("485.kb.kei1.left_truck_back") << J_BIT_DOWN) | (Get_Signal("485.kb.kei1.left_truck_forward") << J_BIT_UP);
+	joystick[J_RIGHT_T] = (Get_Signal("485.kb.kei1.right_truck_back") << J_BIT_DOWN) | (Get_Signal("485.kb.kei1.right_truck_forward") << J_BIT_UP);
+	joystick[J_ACCEL] = (Get_Signal("485.kb.kei1.acceleration") << J_BIT_UP);
+	joystick[J_TELESCOPE] = (Get_Signal("485.kb.kei1.telescope_up") << J_BIT_UP) | (Get_Signal("485.kb.kei1.telescope_down") << J_BIT_DOWN);
+	joystick[J_RESERVE] = (Get_Signal("485.kb.kei1.reserve_down") << J_BIT_DOWN) | (Get_Signal("485.kb.kei1.reserve_up") << J_BIT_UP);
+	joystick[J_SUPPORT] = (Get_Signal("485.kb.kei1.combain_support_down") << J_BIT_DOWN) | (Get_Signal("485.kb.kei1.combain_support_up") << J_BIT_UP);
+	joystick[J_SOURCER] = (Get_Signal("485.kb.kei1.sourcer_down") << J_BIT_DOWN) | (Get_Signal("485.kb.kei1.sourcer_up") << J_BIT_UP);
 }
 
 void Process_Cable_Kb() {
 }
 
 void Process_Radio_Kb() {
+	joystick[J_SUPPORT] = (Get_Signal("485.rpdu485.kei.support_down") << J_BIT_DOWN) | (Get_Signal("485.rpdu485.kei.support_up") << J_BIT_UP);
+	joystick[J_SOURCER] = (Get_Signal("485.kb.kei1.sourcer_down") << J_BIT_DOWN) | (Get_Signal("485.rpdu485.kei.sourcer_up") << J_BIT_UP);
+	joystick[J_ACCEL] = (Get_Signal("485.rpdu485.kei.acceleration_up") << J_BIT_UP);
+	joystick[J_TELESCOPE] = (Get_Signal("485.rpdu485.kei.telescope_up") << J_BIT_UP) | (Get_Signal("485.rpdu485.kei.telescope_down") << J_BIT_DOWN);
+
+	buttons[B_OVERLOAD_START] |= Get_Signal("485.rpdu485.kei.reloader_up");
+	buttons[B_OVERLOAD_STOP]  |= Get_Signal("485.rpdu485.kei.reloader_down");
+	buttons[B_CONV_START] 	  |= Get_Signal("485.rpdu485.kei.conveyor_up");
+	buttons[B_CONV_STOP] 			|= Get_Signal("485.rpdu485.kei.conveyor_down");
+	buttons[B_HYDRA_START]		 = buttons[B_ORGAN_START]		|= Get_Signal("485.rpdu485.kei.exec_dev_up");
+	buttons[B_HYDRA_STOP]			 = buttons[B_ORGAN_STOP] 		|= Get_Signal("485.rpdu485.kei.exec_dev_down");
+	buttons[B_OIL_START] 			|= Get_Signal("485.rpdu485.kei.oil_station_up");
+	buttons[B_OIL_STOP] 			|= Get_Signal("485.rpdu485.kei.oil_station_down");
+	//buttons[B_STARS_START]		|= Get_Signal("");
+	//buttons[B_STARS_STOP]			|= Get_Signal("");
+	//buttons[B_CHECK_START]		|= Get_Signal("");
+	//buttons[B_CHECK_STOP]			|= Get_Signal("");
 }
 
 void Process_Normal() {
@@ -186,6 +248,67 @@ void Process_Timeout() {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
+#define LEFT_TRACK_FW	0
+#define LEFT_TRACK_BW	1
+#define RIGHT_TRACK_FW	2
+#define RIGHT_TRACK_BW	3
+#define	ASSOCIATE_CONTROL(what, value, signal)	\
+if(joystick[what] & value) { \
+		if(!(controls[what] & value)) { \
+			controls[what] |= value; \
+			WRITE_SIGNAL(signal, 1); \
+		} \
+} else { \
+		if(controls[what] & value) { \
+			controls[what] &= ~value; \
+			WRITE_SIGNAL(signal, 0); \
+		} \
+}
+struct timespec last_moving;
+
+void Process_Joysticks() {
+	static int controls[16] = {0};
+
+	if(joystick[J_LEFT_T] && !controls[J_LEFT_T] && !controls[J_RIGHT_T] || 
+		 joystick[J_RIGHT_T] && !controls[J_RIGHT_T] && !controls[J_LEFT_T]) {
+		struct timespec now;
+		clock_gettime(CLOCK_REALTIME, &now);
+		if(now.tv_sec - last_moving.tv_sec > 6) {
+			Process_Timeout();
+		}
+	}
+
+	ASSOCIATE_CONTROL(J_LEFT_T, JOYVAL_UP, "485.rsrs.rm_u2_on10");
+	ASSOCIATE_CONTROL(J_LEFT_T, JOYVAL_DOWN, "485.rsrs.rm_u2_on11");
+	ASSOCIATE_CONTROL(J_RIGHT_T, JOYVAL_UP, "485.rsrs.rm_u2_on0");
+	ASSOCIATE_CONTROL(J_RIGHT_T, JOYVAL_DOWN, "485.rsrs.rm_u2_on1");
+
+	ASSOCIATE_CONTROL(J_ORGAN, JOYVAL_UP, "485.rsrs.rm_u1_on6");
+	ASSOCIATE_CONTROL(J_ORGAN, JOYVAL_DOWN, "485.rsrs.rm_u1_on7");
+	ASSOCIATE_CONTROL(J_ORGAN, JOYVAL_LEFT, "485.rsrs.rm_u1_on3");
+	ASSOCIATE_CONTROL(J_ORGAN, JOYVAL_RIGHT, "485.rsrs.rm_u1_on2");
+
+	ASSOCIATE_CONTROL(J_ACCEL, JOYVAL_UP, "485.rsrs.rm_u1_on0");
+
+	ASSOCIATE_CONTROL(J_TELESCOPE, JOYVAL_UP, "485.rsrs.rm_u1_on4");
+	ASSOCIATE_CONTROL(J_TELESCOPE, JOYVAL_DOWN, "485.rsrs.rm_u1_on5");
+
+	ASSOCIATE_CONTROL(J_SUPPORT, JOYVAL_UP, "485.rsrs.rm_u2_on8");
+	ASSOCIATE_CONTROL(J_SUPPORT, JOYVAL_DOWN, "485.rsrs.rm_u2_on9");
+
+	ASSOCIATE_CONTROL(J_SOURCER, JOYVAL_UP, "485.rsrs.rm_u1_on8");
+	ASSOCIATE_CONTROL(J_SOURCER, JOYVAL_DOWN, "485.rsrs.rm_u1_on9");
+
+	ASSOCIATE_CONTROL(J_CONVEYOR, JOYVAL_UP, "485.rsrs.rm_u2_on2");
+	ASSOCIATE_CONTROL(J_CONVEYOR, JOYVAL_DOWN, "485.rsrs.rm_u2_on3");
+	ASSOCIATE_CONTROL(J_CONVEYOR, JOYVAL_LEFT, "485.rsrs.rm_u2_on5");
+	ASSOCIATE_CONTROL(J_CONVEYOR, JOYVAL_RIGHT, "485.rsrs.rm_u2_on4");
+
+	if(controls[J_LEFT_T] || controls[J_RIGHT_T]) {
+		clock_gettime(CLOCK_REALTIME, &last_moving);
+	}
+}
+
 void Work_Norm(){
 	printf("Working in normal mode\n");
 	while(g_mode == MODE_NORM) {
@@ -203,6 +326,39 @@ void Work_Norm(){
 			start_Conveyor();
 			buttons[B_CONV_START] = 0;
 		}
+		if(buttons[B_ORGAN_STOP]) {
+			stop_Organ();
+			buttons[B_ORGAN_STOP] = 0;
+			buttons[B_ORGAN_START] = 0;
+		} else if(buttons[B_ORGAN_START]) {
+			start_Organ();
+			buttons[B_ORGAN_START] = 0;
+		}
+		if(buttons[B_OIL_STOP]) {
+			stop_Oil();
+			buttons[B_OIL_STOP] = 0;
+			buttons[B_OIL_START] = 0;
+		} else if(buttons[B_OIL_START]) {
+			start_Oil();
+			buttons[B_OIL_START] = 0;
+		}
+		if(buttons[B_HYDRA_STOP]) {
+			stop_Hydratation();
+			buttons[B_HYDRA_STOP] = 0;
+			buttons[B_HYDRA_START] = 0;
+		} else if(buttons[B_HYDRA_START]) {
+			start_Hydratation();
+			buttons[B_HYDRA_START] = 0;
+		}
+		if(buttons[B_STARS_STOP]) {
+			stop_Stars();
+			buttons[B_STARS_STOP] = 0;
+			buttons[B_STARS_START] = 0;
+		} else if(buttons[B_STARS_START]) {
+			start_Stars();
+			buttons[B_STARS_START] = 0;
+		}
+		Process_Joysticks();
 		control_all();
 		usleep(10000);
 	}

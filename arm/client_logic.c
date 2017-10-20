@@ -28,6 +28,7 @@
 #define MODE_DIAG				(0x01 << 2)
 #define MODE_PUMP				(0x02 << 2)
 #define MODE_NORM				(0x03 << 2)
+#define MODE_STOP				128
 
 /*
 	 struct WriteBuffer (
@@ -248,8 +249,8 @@ int Get_State(){
 
 	//printf (">>>>>>>>>>>>>>>>>>>>>> MODE STATE %i | mode1 %i, mode2 %i, control1 %i,control2 %i,alarm_stop1 %i,alarm_stop2 %i,alarm_stop3 %i   \n\r",state, mode1, mode2, control1,control2,alarm_stop1,alarm_stop2,alarm_stop3);
 	if ( ( alarm_stop1 + alarm_stop2 + alarm_stop3) > 0) {
-		state = 4; //ALARM stop
 		printf(" *GRIBOK STOP!!!| ");
+		return 128;
 	}
 
 	state = control1 | (control2 << 1) | (mode1 << 2) | (mode2 << 3);
@@ -293,20 +294,6 @@ int GetSignals() {
 }
 
 int Init (){
-	/*
-		 485.kb.kei1.power  // SWITCH POWER on
-		 wago.oc_mdi.err_phase //if ZEERO all is FINE
-		 wago.bki_k1.M1
-		 wago.bki_k2.M2
-		 wago.bki_k3_k4.M3_M4
-		 wago.bki_k5.M5
-		 wago.bki_k6.M6
-		 wago.bki_k7.M7
-		 wago.oc_mui1.Uin_PhaseA //Input Voltage 1140 V -INT
-		 wago.oc_mui1.Uin_PhaseB //Input Voltage 1140 V -INT
-		 wago.oc_mui1.Uin_PhaseC //Input Voltage 1140 V -INT
-	 */
-
 	struct Signal *s;
 	s = hash_find(Signal_Name_Hash, Signal_Array, "485.kb.kei1.power");
 
@@ -414,6 +401,10 @@ int main(int argc , char *argv[])
 		struct Signal *s;
 
 		STATE = Get_State();
+
+		if(STATE == MODE_STOP) {
+			Process_RED_BUTTON();
+		}
 		//printf("\n\rAnalyzing state %x", STATE);
 		//printf("\n\r          mode  %x (%x)\n\r", STATE & MODE_MASK, MODE_PUMP);
 		
@@ -470,7 +461,6 @@ UpdateSignals:
 		while(ring_buffer_get(Signal_Mod_Buffer, &idx, &value, &st)) {
 			if(idx < 0) continue;
 			if(st == RD) {
-				printf("Reading signal %s\n", Signal_Array[idx].Name);
 				Set_Signal_Ex(idx, st);
 			} else {
 				printf("Writing signal %s: %d\n", Signal_Array[idx].Name, value);

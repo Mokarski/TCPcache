@@ -15,51 +15,26 @@
 #include "speedtest.h"
 #include <errno.h>
 
-
+modbus_t *ctx;
 int Send_Signal[MAX_Signals] = {0};
 
 
 int virt_mb_ReadtoCache (int dIndex, int reg_count)
 {				//read from real devices to cache by virtual devices Index and regcount
 	int connected;
-	modbus_t *ctx;
 	uint16_t tab_reg[VirtDevRegs];
 	int rc;
 	int i;
 	int fl;
 	int ret=0;
 	//  ctx = modbus_new_rtu ("/dev/ttySP0", 115200, 'N', 8, 1);
-	ctx = modbus_new_tcp("192.168.1.150", 502);
-	if ( DEBUG > 0 ) printf ("\n \r >>>> READ real device [%i] from position [0] Number register to read [%i] Rd[%i] Wr[%i]\n\r",Device_Array[dIndex].MB_Id,reg_count, Device_Array[dIndex].Rd, Device_Array[dIndex].Wr);
-	if (ctx == NULL)
-	{
-		fprintf (stderr, "Unable to create the libmodbus context\n");
-		ret=-1;
-		return 4;
-	}
 	struct timeval old_response_timeout;
 	struct timeval response_timeout;
 	struct timeval byte_timeout;
 
-	/* Save original timeout */
-	modbus_get_response_timeout (ctx, &old_response_timeout);
-
-	/* Define a new and too short timeout! */
-	/* response_timeout.tv_sec = 1;
-		 response_timeout.tv_usec = 80;
-		 byte_timeout.tv_sec = 1;
-		 byte_timeout.tv_usec = 300;
-		 modbus_set_byte_timeout (ctx, &byte_timeout);
-		 modbus_set_response_timeout(ctx, &response_timeout);
-	 */
-	//modbus_set_byte_timeout(ctx, struct timeval *timeout);
-	//modbus_rtu_set_rts_delay(ctx,40);
-
 	int ID;
 	ID = Device_Array[dIndex].MB_Id;
 	printf ("ID from virtdev list %i \n\r", ID);
-	modbus_set_slave (ctx, 1);
-	connected = modbus_connect (ctx);
 
 	if (connected == -1)
 	{
@@ -94,15 +69,7 @@ int virt_mb_ReadtoCache (int dIndex, int reg_count)
 		Device_Array[dIndex].MB_Registers[cx] = tab_reg[cx];	//Mb register number
 	}
 
-
-
 	usleep (5 * 1000);		//delay for Mod bus restore functional     
-
-	modbus_flush (ctx);
-
-	modbus_close (ctx);
-	modbus_free (ctx);		//close COM ?
-
 
 	return ret;
 }
@@ -112,27 +79,17 @@ int virt_mb_ReadtoCache (int dIndex, int reg_count)
 virt_mb_CachetoDev (int dIndex, int reg_count)
 {				//read from VIRTUAL devices to REAL devices 
 	int connected;
-	modbus_t *ctx;
 	uint16_t tab_reg[VirtDevRegs];
 	int rc;
 	int i;
 	int fl;
 	int ret;
 
-	// ctx = modbus_new_rtu ("/dev/ttySP0", 115200, 'N', 8, 1);
-	ctx = modbus_new_tcp("192.168.1.150", 502);
-	if (ctx == NULL)
-	{
-		fprintf (stderr, "Unable to create the libmodbus context\n");
-		return 4;
-		ret =4;
-	}
 	struct timeval old_response_timeout;
 	struct timeval response_timeout;
 	struct timeval byte_timeout;
 
 	/* Save original timeout */
-	modbus_get_response_timeout (ctx, &old_response_timeout);
 
 	/* Define a new and too short timeout! */
 	/* response_timeout.tv_sec = 1;
@@ -148,9 +105,6 @@ virt_mb_CachetoDev (int dIndex, int reg_count)
 	int ID;
 	ID = Device_Array[dIndex].MB_Id;
 	printf ("WR ID[%i] from virtdev list, regs to write [%i] \n\r", ID, reg_count);
-	modbus_set_slave (ctx, 1);
-	connected = modbus_connect (ctx);
-
 	if (connected == -1){
 		printf ("WR - Connection failed %i\n", ID);
 		ret=4;
@@ -207,12 +161,6 @@ if (rc == -1)
 
 usleep (5 * 1000);		//delay for Mod bus restore functional     
 
-modbus_flush (ctx);
-
-modbus_close (ctx);
-modbus_free (ctx);		//close COM ?
-
-
 return ret;
 }
 
@@ -239,6 +187,7 @@ int virtdev_to_signals (void)
 
 		for (x = 0; x < MAX_Signals; x++)
 		{			//cycle for signals
+			if(Signal_Array[x].Name[0] == 0) break;
 			if (Signal_Array[x].MB_Id == Device_Array[c].MB_Id)
 			{			// if founded modbus id = virtual modbus ID
 
@@ -426,6 +375,15 @@ int Read_Op(){
 			printf ("VirtDev MbId [%i] Rd[%i] Wr[%i]  \n\r",Device_Array[c].MB_Id, Device_Array[c].Rd, Device_Array[c].Wr);
 			total_dev_regs = virt_mb_registers (c);	// get total registers count for virtual devices list
 
+			if (Device_Array[c].Wr > 0){ // separate write and read registers!!!
+				if ( DEBUG == 1 ) printf(" ====================================================------>>> Have signal to write! \n\r");
+				if ( DEBUG == 1 ) printf (">>>> WRITE TO DEVICE ID[%i] Total_REGS[%i] \n\r",Device_Array[c].MB_Id,total_dev_regs); // if signals empty 
+				//printf (">>>> WRITE TO DEVICE ID[%i] Total_REGS[%i] \n\r",Device_Array[c].MB_Id,total_dev_regs); 
+				Device_Array[c].ExState = virt_mb_CachetoDev (c, total_dev_regs);	// Write to Modbus real devices
+				Device_Array[c].Wr = 0;
+				Device_Array[c].Rd = 1;
+			}
+
 			if (Device_Array[c].Rd == 1){ // separate write and read registers!!! 
 				Device_Array[c].Rd =0;
 				Device_Array[c].ExState = virt_mb_ReadtoCache (c, total_dev_regs );	// read from real devices to virtual and Write ExState to virtual device/ if ExState = 4 or -1 ->  error connection	      
@@ -436,14 +394,6 @@ int Read_Op(){
 			printf("Registers: \n");
 			for(i = 0; i < total_dev_regs; i ++) {
 				printf("%d; ",Device_Array[c].MB_Registers[i]);
-			}
-
-			if (Device_Array[c].Wr > 0){ // separate write and read registers!!!
-				if ( DEBUG == 1 ) printf(" ====================================================------>>> Have signal to write! \n\r");
-				if ( DEBUG == 1 ) printf (">>>> WRITE TO DEVICE ID[%i] Total_REGS[%i] \n\r",Device_Array[c].MB_Id,total_dev_regs); // if signals empty 
-				//printf (">>>> WRITE TO DEVICE ID[%i] Total_REGS[%i] \n\r",Device_Array[c].MB_Id,total_dev_regs); 
-				Device_Array[c].ExState = virt_mb_CachetoDev (c, total_dev_regs);	// Write to Modbus real devices
-				Device_Array[c].Wr = 0;
 			}
 		} //else printf("No MB_ID device founded \n\r");
 	} //end for
@@ -539,6 +489,11 @@ int main (int argc, char *argv[])
 		return;
 	}
 
+	struct timeval old_response_timeout;
+	ctx = modbus_new_tcp("192.168.1.150", 502);
+	modbus_get_response_timeout(ctx, &old_response_timeout);
+	modbus_set_slave(ctx, 1);
+	int connected = modbus_connect (ctx);
 
 	while (1)
 	{
