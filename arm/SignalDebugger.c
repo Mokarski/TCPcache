@@ -56,7 +56,7 @@ int tcpresult = 0;
       int signals_found = 0;
       if (DEBUG == 1) printf ("TCP Recived [%s]\n\r", tst);
       signals_found = Data_to_sName (tst); //extract all signals from buffer and put into Signal.Name field
-      printf("FOUNDED SIGNALS {%i}\n\r",signals_found);
+      printf(" FOUNDED SIGNALS {%i}\n\r",signals_found);
       if (signals_found == 0) {
           printf("!!!ERR no signals found [%i] \n\r",signals_found);
           return -2 ; //no signals found
@@ -76,7 +76,7 @@ int tcpresult = 0;
 	  //if ( DEBUG == 1 ) printf(">>mb_fill Nmae[%s] Id[%i] Register[%i] Ex[%i]\n\r",Signal_Array[z].Name, Signal_Array[z].MB_Id, Signal_Array[z].MB_Reg_Num, Signal_Array[z].ExState);	
 	  if (strlen (Signal_Array[z].Name ) > 1)
 	     {
-	       printf ("#[%i]-Name:[%s] Val:[%i] Ex:[%i] Type[%s] \n\r ",z,Signal_Array[z].Name, Signal_Array[z].Value[1], Signal_Array[z].ExState,Signal_Array[z].TCP_Type);
+	       printf ("#[%i]-Name:[%s]  \t\t Val:[%i]  \t Ex:[%i] \t Type[%s] \t Version[%i] \n\r ",z,Signal_Array[z].Name, Signal_Array[z].Value[1], Signal_Array[z].ExState,Signal_Array[z].TCP_Type,Signal_Array[z].TCP_Addr);
 	     }
 	  Send_Signal[z] = 1;
 	
@@ -117,7 +117,7 @@ int Write_Op(){
 	         if ( DEBUG == 4 )  printf ("[%i]TO_SRV  <<-- Name:[%s] Value:[%i] ExState:[%i]\n\r ", x,Signal_Array[x].Name, Signal_Array[x].Value[1], Signal_Array[x].ExState);
 	         
 	         if (strlen (Signal_Array[x].Name) > 1){
-	             printf ("[%i]-- Name:[%s] Value:[%i] ExState:[%i] Type[%s]\n\r ", x,Signal_Array[x].Name, Signal_Array[x].Value[1], Signal_Array[x].ExState,Signal_Array[x].TCP_Type);
+	             printf ("[%i]-- Name:[%s] Value:[%i] ExState:[%i] Type[%s] Version[%i]\n\r ", x,Signal_Array[x].Name, Signal_Array[x].Value[1], Signal_Array[x].ExState,Signal_Array[x].TCP_Type,Signal_Array[x].TCP_Addr);
 	         }
 
 		if (strlen (Signal_Array[x].Name) > 2 && Send_Signal[x]) //write if Name not empty
@@ -204,7 +204,7 @@ printf ("***#SIGNAL DEBUGGER#****\n\r");
 
      if ( strlen(TestSignal[cnt])  > 2  )
         {
-         printf ("%s",TestSignal[cnt]);
+         printf (" %s ",TestSignal[cnt]);
          TCP_Ready_SEND = Read_Op(TestSignal[cnt]);
         } else  cnt=0;
      
