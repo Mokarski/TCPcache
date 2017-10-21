@@ -163,6 +163,11 @@ void Process_Radio_Kb() {
 	joystick[J_SOURCER] = (Get_Signal("485.kb.kei1.sourcer_down") << J_BIT_DOWN) | (Get_Signal("485.rpdu485.kei.sourcer_up") << J_BIT_UP);
 	joystick[J_ACCEL] = (Get_Signal("485.rpdu485.kei.acceleration_up") << J_BIT_UP);
 	joystick[J_TELESCOPE] = (Get_Signal("485.rpdu485.kei.telescope_up") << J_BIT_UP) | (Get_Signal("485.rpdu485.kei.telescope_down") << J_BIT_DOWN);
+	joystick[J_ORGAN] = (Get_Signal("485.rpdu485.kei.joy_exec_dev_left") << J_BIT_LEFT) | (Get_Signal("485.rpdu485.kei.joy_exec_dev_down") << J_BIT_DOWN) | 
+											(Get_Signal("485.rpdu485.kei.joy_exec_dev_right") << J_BIT_RIGHT) | (Get_Signal("485.rpdu485.kei.joy_exec_dev_up") << J_BIT_UP);
+	int jleft, jright, jup, jdown;
+	joystick[J_LEFT_T] = 0;
+	joystick[J_RIGHT_T] = 0;
 
 	buttons[B_OVERLOAD_START] |= Get_Signal("485.rpdu485.kei.reloader_up");
 	buttons[B_OVERLOAD_STOP]  |= Get_Signal("485.rpdu485.kei.reloader_down");

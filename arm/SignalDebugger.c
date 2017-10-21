@@ -26,7 +26,7 @@ int Send_Signal[MAX_Signals] = {0};
 //*********************************Read_Op ****************************************
 int Read_Op(char *str){
 
-	char tst[MAX_MESS];
+	char tst[MAX_MESS]={0};
 	int ret;
 	int rd_wr;
 	int tcpresult = 0;
@@ -37,7 +37,7 @@ int Read_Op(char *str){
 	//======================== read all 485 signals from server create signals and virtual devices ===================
 
 	frame_pack ("rd", str, message);
-	printf("Message: %s\n", message);
+	printf("Message: %s\n\n", message);
 	tcpresult = frame_tcpreq (message);
 	//ret=tcpresult; //return result of unpack
 
@@ -56,7 +56,7 @@ int Read_Op(char *str){
 
 	int signals_found = 0;
 	signals_found = Data_to_sName (tst); //extract all signals from buffer and put into Signal.Name field
-	if (signals_found == 0) {
+	if (signals_found < 1) {
 		printf("!!!ERR no signals found [%i] \n\r",signals_found);
 		return -2 ; //no signals found
 	}
@@ -203,8 +203,9 @@ int main (int argc, char *argv[])
 	{
 		if (i < cnt)
 		{
-			printf ("%s:\n",TestSignal[i]);
+			printf ("TEST SIGNAL:>>{%s}<<\n \n",TestSignal[i]);
 			TCP_Ready_SEND = Read_Op(TestSignal[i]);
+			if (TCP_Ready_SEND < 0) break;
 			i++;
 		} else {
 			//printf("\x1B[1;1H");

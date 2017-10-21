@@ -449,6 +449,8 @@ UpdateSignals:
 				Set_Signal_Ex(item->idx, RD); //cmd read keyboard modbus device and put result signals in Signal_Array            
 			if(strncmp(Signal_Array[item->idx].Name, "485.rsrs.", 9) == 0)
 				Set_Signal_Ex(item->idx, RD); //cmd read keyboard modbus device and put result signals in Signal_Array            						
+			if(strncmp(Signal_Array[item->idx].Name, "485.rpdu485.", 9) == 0)
+				Set_Signal_Ex(item->idx, RD); //cmd read keyboard modbus device and put result signals in Signal_Array            						
 			item = item->next;
 		}
 		item = hash_find_by_prefix(Signal_Prefix_Hash, "wago.");
