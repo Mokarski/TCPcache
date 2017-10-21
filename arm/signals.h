@@ -3,7 +3,7 @@
 
 //#define MAX 100
 #define STR_LEN_TXT 100
-#define MAX_Signals 400
+#define MAX_Signals 450
 
 #define INIT 0
 #define RD  1
