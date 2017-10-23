@@ -2,7 +2,7 @@
 
 void start_Overloading();
 void start_Conveyor();
-void start_Stars();
+void start_Stars(int reverse);
 void start_Oil();
 void start_Hydratation();
 void start_Organ();
@@ -23,3 +23,4 @@ void stop_Organ();
 
 void control_all();
 void stop_all();
+void set_Diagnostic(int val);

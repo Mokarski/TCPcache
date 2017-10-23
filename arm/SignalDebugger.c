@@ -155,8 +155,9 @@ int main (int argc, char *argv[])
 {
 	int TCP_Ready_SEND;
 	int TCP_State;
-	char TestSignal[MAX_Signals][50];
-
+	char TestSignal[MAX_Signals][50]={0};
+	char WRTestSignal[MAX_Signals][50]={0};
+  int  WriteValues[MAX_S]={0};
 	if (argc == 1) {
 		printf("No server ip! ip:{%s} \n\r USAGE example: client.exe 192.168.1.1\n\r",argv[1]);
 		return;
@@ -189,7 +190,9 @@ int main (int argc, char *argv[])
 		if (fgets(str, 126, fp)) {
 			printf("%s \n", str);
 			str_filter(str);
-			strcpy(TestSignal[cnt],str);
+			if (strstr(str,"set")!=NULL){
+			    strcpy(WRTestSignal[cnt],str);
+			  } else strcpy(TestSignal[cnt],str);
 			cnt++;
 		}
 	}

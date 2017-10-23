@@ -229,7 +229,7 @@ int Get_State(){
 	int state=0;
 	int x = 0;
 	struct Signal *s;
-	int mode1, mode2, control1,control2,alarm_stop1,alarm_stop2,alarm_stop3;
+	int mode1 = 0, mode2 = 0, control1 = 0,control2 = 0,alarm_stop1 = 0,alarm_stop2 = 0,alarm_stop3 = 0;
 
 
 	s = hash_find(Signal_Name_Hash, Signal_Array, "485.kb.kei1.mode1");
@@ -241,19 +241,19 @@ int Get_State(){
 	if(s) alarm_stop1 = s->Value[1];
 	s = hash_find(Signal_Name_Hash, Signal_Array, "485.rpdu485.kei.crit_stop"); //gribok stop
 	if(s) alarm_stop2 = s->Value[1];
-	s = hash_find(Signal_Name_Hash, Signal_Array, "485.pukonv485c.kei.stop_alarm"); //gribok stop
+	s = hash_find(Signal_Name_Hash, Signal_Array, "485.kb.pukonv485c.stop_alarm"); //gribok stop
 	if(s) alarm_stop3 = s->Value[1];
 
 	control1 = GetVal("485.kb.kei1.control1");
 	control2 = GetVal("485.kb.kei1.control2");
 
-	//printf (">>>>>>>>>>>>>>>>>>>>>> MODE STATE %i | mode1 %i, mode2 %i, control1 %i,control2 %i,alarm_stop1 %i,alarm_stop2 %i,alarm_stop3 %i   \n\r",state, mode1, mode2, control1,control2,alarm_stop1,alarm_stop2,alarm_stop3);
-//	if ( ( alarm_stop1 + alarm_stop2 + alarm_stop3) > 0) {
-//		printf(" *GRIBOK STOP!!!| ");
-//		return 128;
-//	}
-
 	state = control1 | (control2 << 1) | (mode1 << 2) | (mode2 << 3);
+
+	//printf (">>>>>>>>>>>>>>>>>>>>>> MODE STATE %i | mode1 %i, mode2 %i, control1 %i,control2 %i,alarm_stop1 %i,alarm_stop2 %i,alarm_stop3 %i   \n\r",state, mode1, mode2, control1,control2,alarm_stop1,alarm_stop2,alarm_stop3);
+	if ((alarm_stop1 | alarm_stop2 | alarm_stop3)) {
+		printf(" *GRIBOK STOP!!!|\n");
+		return state | 128;
+	}
 
 	//if ((control1== 0) && ( control2==1)) state =31; //Mestno
 	//if ((control1== 1) && ( control2==1)) state =32; //Provod	        
@@ -402,13 +402,14 @@ int main(int argc , char *argv[])
 
 		STATE = Get_State();
 
-		if(STATE == MODE_STOP) {
+		if(STATE & 128) {
 			Process_RED_BUTTON();
+			STATE = 0;
 		}
 		//printf("\n\rAnalyzing state %x", STATE);
 		//printf("\n\r          mode  %x (%x)\n\r", STATE & MODE_MASK, MODE_PUMP);
 		
-		if(oldMode != STATE & MODE_MASK) {
+		if(oldMode != (STATE & MODE_MASK)) {
 			Process_Mode_Change();
 			oldMode = STATE & MODE_MASK;
 		}
@@ -438,6 +439,23 @@ int main(int argc , char *argv[])
 				break;
 			case MODE_DIAG:
 				Process_Diag();
+				switch(STATE & CONTROL_MASK){
+					case CONTROL_MANU:  //INIT
+						Process_Local_Kb();
+						break;         
+
+					case CONTROL_CABLE:  //INIT
+						Process_Cable_Kb();
+						break;
+
+					case CONTROL_RADIO:  //RESET 
+						Process_Radio_Kb();
+						break;	               
+
+					default:  //DEFAULT
+						if ( DEBUG == 1 )    printf("default state \n\r");  
+				}
+				break;
 				break;
 		}
 

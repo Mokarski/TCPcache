@@ -14,6 +14,7 @@
 #include "virtmb.h"
 #include "speedtest.h"
 #include <errno.h>
+#include <unistd.h>
 
 int Send_Signal[MAX_Signals] = {0};
 modbus_t *ctx;
@@ -35,29 +36,13 @@ int virt_mb_ReadtoCache (int dIndex, int reg_count)
 		ret=-1;
 		return 4;
 	}
-	struct timeval old_response_timeout;
-	struct timeval response_timeout;
-	struct timeval byte_timeout;
-
-	/* Save original timeout */
-	modbus_get_response_timeout (ctx, &old_response_timeout);
-
-	/* Define a new and too short timeout! */
-	response_timeout.tv_sec = 0;
-	response_timeout.tv_usec = 50000;
-	//	 byte_timeout.tv_sec = 1;
-	//	 byte_timeout.tv_usec = 300;
-	modbus_set_byte_timeout (ctx, &byte_timeout);
-
-
-	//modbus_set_byte_timeout(ctx, struct timeval *timeout);
-	//modbus_rtu_set_rts_delay(ctx,40);
 
 	int ID;
 	ID = Device_Array[dIndex].MB_Id;
 	printf ("ID from virtdev list %i \n\r", ID);
 	modbus_set_slave (ctx, ID);
 	connected = modbus_connect (ctx);
+	//usleep(10*1000);
 
 	if (connected == -1)
 	{
@@ -65,7 +50,7 @@ int virt_mb_ReadtoCache (int dIndex, int reg_count)
 		ret=4;
 		modbus_flush(ctx);
 		modbus_close(ctx);
-		return ret;
+	  return ret;
 
 	}
 
@@ -98,13 +83,11 @@ int virt_mb_ReadtoCache (int dIndex, int reg_count)
 
 
 
-	usleep (5 * 1000);		//delay for Mod bus restore functional     
+	//usleep (25 * 1000);		//delay for Mod bus restore functional     
 
 	modbus_flush (ctx);
 
 	modbus_close (ctx);
-
-
 
 	return ret;
 }
@@ -130,24 +113,7 @@ virt_mb_CachetoDev (int dIndex, int reg_count)
 		ret =4;
 	}
 	struct timeval old_response_timeout;
-	struct timeval response_timeout;
 	struct timeval byte_timeout;
-
-	/* Save original timeout */
-	modbus_get_response_timeout (ctx, &old_response_timeout);
-
-	/* Define a new and too short timeout! */
-	response_timeout.tv_sec = 0;
-	response_timeout.tv_usec = 50000;
-	//     byte_timeout.tv_sec = 1;
-	//     byte_timeout.tv_usec = 300;
-	//     modbus_set_byte_timeout (ctx, &byte_timeout);
-
-	modbus_set_response_timeout(ctx, &response_timeout);
-
-
-	//modbus_set_byte_timeout(ctx, struct timeval *timeout);
-	//modbus_rtu_set_rts_delay(ctx,40);
 
 	int ID;
 	ID = Device_Array[dIndex].MB_Id;
@@ -182,44 +148,30 @@ virt_mb_CachetoDev (int dIndex, int reg_count)
 		}
 	}
 
-	/*
-		 for (n=0; n < reg_count; n++ ){ //copy virt dev registers to tab_reg
-//tab_reg[n] = Device_Array[dIndex].WR_MB_Registers[n] | Device_Array[dIndex].MB_Registers[n];
-tab_reg[n] = Device_Array[dIndex].WR_MB_Registers[n];
-printf (">>>>>>>>>>>>>>>>>>>>>>>   WR----REG[%i] = %i \n\r",n,Device_Array[dIndex].WR_MB_Registers[n]);
-//printf("=========================>>>> WRite REGS[%i] = %i Read REG=%i Or REG= %i \n\r ",n,Device_Array[dIndex].WR_MB_Registers[n],Device_Array[dIndex].MB_Registers[n], Device_Array[dIndex].WR_MB_Registers[n]|Device_Array[dIndex].MB_Registers[n]);
-} 
-rc = modbus_write_registers (ctx, 0, reg_count, tab_reg);
+	if (rc == -1)
+	{
+		printf ("WR [MB_ID #%i]  Connection failed !\n", ID);
+		fprintf (stderr, "WR MB_READ: %s\n", modbus_strerror (errno));
+		ret=4;
+	} else ret=3; //3 - executed OK!
+
+
+	//strcpy(Device_Array[dIndex].Name,Name);
+	//Device_Array[dIndex].MB_Id=ID;                                 //Modbus device ID
+	/*  int cx = 0;
+			for (cx = 0; cx < reg_count; cx++)
+			{
+			Device_Array[dIndex].MB_Registers[cx] = tab_reg[cx];	//Mb register number
+			}
 	 */
-//  rc = modbus_write_registers (ctx, 0, reg_count, Device_Array[dIndex].WR_MB_Registers);
-
-if (rc == -1)
-{
-	printf ("WR [MB_ID #%i]  Connection failed !\n", ID);
-	fprintf (stderr, "WR MB_READ: %s\n", modbus_strerror (errno));
-	ret=4;
-} else ret=3; //3 - executed OK!
 
 
-//strcpy(Device_Array[dIndex].Name,Name);
-//Device_Array[dIndex].MB_Id=ID;                                 //Modbus device ID
-/*  int cx = 0;
-		for (cx = 0; cx < reg_count; cx++)
-		{
-		Device_Array[dIndex].MB_Registers[cx] = tab_reg[cx];	//Mb register number
-		}
- */
+	//usleep (10 * 1000);		//delay for Mod bus restore functional     
 
+	modbus_flush (ctx);
+	modbus_close (ctx);
 
-usleep (5 * 1000);		//delay for Mod bus restore functional     
-
-modbus_flush (ctx);
-
-modbus_close (ctx);
-
-
-
-return ret;
+	return ret;
 }
 
 
@@ -393,19 +345,19 @@ int Read_Op(){
 			printf ("VirtDev MbId [%i] Rd[%i] Wr[%i]  \n\r",Device_Array[c].MB_Id, Device_Array[c].Rd, Device_Array[c].Wr);
 			total_dev_regs = virt_mb_registers (c);	// get total registers count for virtual devices list
 
-			if (Device_Array[c].Rd == 1){ // separate write and read registers!!! 
-				Device_Array[c].Rd =0;
-				Device_Array[c].ExState = virt_mb_ReadtoCache (c, total_dev_regs );	// read from real devices to virtual and Write ExState to virtual device/ if ExState = 4 or -1 ->  error connection	      
-				if ( DEBUG == 1 ) printf ("READ FROM DEVICE ID[%i] Total_REGS[%i] \n\r",Device_Array[c].MB_Id,total_dev_regs); // if signals empty 
-				printf ("<<<< READ FROM DEVICE ID[%i] Total_REGS[%i] \n\r",Device_Array[c].MB_Id,total_dev_regs); // if signals empty 
-			}
-
 			if (Device_Array[c].Wr > 0){ // separate write and read registers!!!
 				if ( DEBUG == 1 ) printf(" ====================================================------>>> Have signal to write! \n\r");
 				if ( DEBUG == 1 ) printf (">>>> WRITE TO DEVICE ID[%i] Total_REGS[%i] \n\r",Device_Array[c].MB_Id,total_dev_regs); // if signals empty 
 				printf (">>>> WRITE TO DEVICE ID[%i] Total_REGS[%i] \n\r",Device_Array[c].MB_Id,total_dev_regs); 
 				Device_Array[c].ExState = virt_mb_CachetoDev (c, total_dev_regs);	// Write to Modbus real devices
 				Device_Array[c].Wr = 0;
+			}
+
+			if (Device_Array[c].Rd == 1){ // separate write and read registers!!! 
+				Device_Array[c].Rd =0;
+				Device_Array[c].ExState = virt_mb_ReadtoCache (c, total_dev_regs );	// read from real devices to virtual and Write ExState to virtual device/ if ExState = 4 or -1 ->  error connection	      
+				if ( DEBUG == 1 ) printf ("READ FROM DEVICE ID[%i] Total_REGS[%i] \n\r",Device_Array[c].MB_Id,total_dev_regs); // if signals empty 
+				printf ("<<<< READ FROM DEVICE ID[%i] Total_REGS[%i] \n\r",Device_Array[c].MB_Id,total_dev_regs); // if signals empty 
 			}
 		} //else printf("No MB_ID device founded \n\r");
 	} //end for
@@ -492,6 +444,8 @@ int main (int argc, char *argv[])
 {
 	int TCP_Ready_SEND;
 	int TCP_State;
+	struct timeval byte_timeout;
+	struct timeval response_timeout;
 
 	if (argc == 1) {
 		printf("No server ip! ip:{%s} \n\r USAGE example: client.exe 192.168.1.1\n\r",argv[1]);
@@ -500,7 +454,16 @@ int main (int argc, char *argv[])
 
 	printf("> Server ip:{%s} \n\r",argv[1]);
         //Mordor BUS
-        	ctx = modbus_new_rtu ("/dev/ttySP0", 115200, 'N', 8, 1);
+	ctx = modbus_new_rtu ("/dev/ttySP0", 115200, 'N', 8, 1);
+	modbus_set_error_recovery(ctx, 1);
+	modbus_set_debug(ctx, 1);
+
+	response_timeout.tv_sec = 0;
+	response_timeout.tv_usec = 30000;
+	modbus_set_response_timeout(ctx, &response_timeout);
+	byte_timeout.tv_sec = 0;
+	byte_timeout.tv_usec = 30000;
+	modbus_set_byte_timeout(ctx, &byte_timeout);
 
 	//INIT SIGNALS     
 	if (DEBUG == 1)   printf ("MAX_Signals [%i] \n", MAX_Signals);

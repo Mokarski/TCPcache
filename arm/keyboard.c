@@ -27,6 +27,9 @@
 #define B_CHECK_START	12
 #define B_CHECK_STOP	13
 #define B_SOUND_ALARM	14
+#define B_START_ALL		15
+#define B_STOP_ALL		16
+#define B_STARS_REVERSE	17
 
 #define	J_CONVEYOR		0
 #define	J_ORGAN				1
@@ -55,7 +58,7 @@
 pthread_mutex_t g_waitMutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t g_waitCond = PTHREAD_COND_INITIALIZER;
 pthread_t g_worker;
-static volatile int g_mode = 0, g_workStarted = 0;
+static volatile int g_mode = 0, g_workStarted = 0, g_diag = 0;
 volatile int buttons[32] = {0};
 volatile int joystick[32] = {0};
 
@@ -119,6 +122,29 @@ void Worker_Set_Mode(int mode) {
 	}
 }
 
+void Check_Stop_Buttons() {
+	buttons[B_CHECK_STOP]			|= Get_Signal("485.kb.key.stop_check");
+	buttons[B_STARS_STOP]			|= Get_Signal("485.kb.key.stop_stars");
+	buttons[B_HYDRA_STOP]			|= Get_Signal("485.kb.key.stop_hydratation");
+	buttons[B_OIL_STOP] 			|= Get_Signal("485.kb.key.stop_oil_station");
+	buttons[B_OVERLOAD_STOP]  |= Get_Signal("485.kb.key.stop_reloader");
+	buttons[B_CONV_STOP] 			|= Get_Signal("485.kb.key.stop_conveyor");
+	buttons[B_ORGAN_STOP] 		|= Get_Signal("485.kb.key.stop_exec_dev");
+
+	buttons[B_OVERLOAD_STOP]  |= Get_Signal("485.rpdu485.kei.reloader_down");
+	buttons[B_CONV_STOP] 			|= Get_Signal("485.rpdu485.kei.conveyor_down");
+	buttons[B_HYDRA_STOP]			|= Get_Signal("485.rpdu485.kei.exec_dev_down");
+	buttons[B_OIL_STOP] 			|= Get_Signal("485.rpdu485.kei.oil_station_down");
+
+	buttons[B_OVERLOAD_STOP]  |= Get_Signal("485.kb.pukonv485c.stop_loader");
+	buttons[B_CONV_STOP] 			|= Get_Signal("485.kb.pukonv485c.stop_loader");
+	buttons[B_STARS_STOP]			|= Get_Signal("485.kb.pukonv485c.stop_loader");
+
+	buttons[B_OVERLOAD_STOP]  |= Get_Signal("485.rpdu485.kei.stop_loader");
+	buttons[B_CONV_STOP] 			|= Get_Signal("485.rpdu485.kei.stop_loader");
+	buttons[B_STARS_STOP]			|= Get_Signal("485.rpdu485.kei.stop_loader");
+}
+
 void Process_RED_BUTTON() {
 	Worker_Set_Mode(MODE_IDLE);
 }
@@ -127,25 +153,36 @@ void Process_Mode_Change() {
 	Worker_Set_Mode(MODE_IDLE);
 }
 
+int Process_Pu_Conv() {
+	if(Get_Signal("485.kb.kei1.post_conveyor")) {
+		buttons[B_SOUND_ALARM]			= Get_Signal("485.kb.pukonv485c.beep");
+		joystick[J_CONVEYOR] = (Get_Signal("485.kb.pukonv485c.joy_left_conv") << J_BIT_LEFT) | (Get_Signal("485.kb.pukonv485c.joy_down_conv") << J_BIT_DOWN) |
+													(Get_Signal("485.kb.pukonv485c.joy_up_conv") << J_BIT_UP) | (Get_Signal("485.kb.pukonv485c.joy_right_conv") << J_BIT_RIGHT);
+		return 1;
+	}
+
+	return 0;
+}
+
 void Process_Local_Kb() {
 	buttons[B_OVERLOAD_START] |= Get_Signal("485.kb.key.start_reloader");
-	buttons[B_CONV_START] 	  |= Get_Signal("485.kb.key.start_conveyor");
-	buttons[B_OVERLOAD_STOP]  |= Get_Signal("485.kb.key.stop_reloader");
-	buttons[B_CONV_STOP] 			|= Get_Signal("485.kb.key.stop_conveyor");
 	buttons[B_ORGAN_START]		|= Get_Signal("485.kb.key.start_exec_dev");
-	buttons[B_ORGAN_STOP] 		|= Get_Signal("485.kb.key.stop_exec_dev");
 	buttons[B_OIL_START] 			|= Get_Signal("485.kb.key.start_oil_station");
-	buttons[B_OIL_STOP] 			|= Get_Signal("485.kb.key.stop_oil_station");
 	buttons[B_HYDRA_START]		|= Get_Signal("485.kb.key.start_hydratation");
-	buttons[B_HYDRA_STOP]			|= Get_Signal("485.kb.key.stop_hydratation");
-	buttons[B_STARS_START]		|= Get_Signal("485.kb.key.start_stars");
-	buttons[B_STARS_STOP]			|= Get_Signal("485.kb.key.stop_stars");
 	buttons[B_CHECK_START]		|= Get_Signal("485.kb.key.start_check");
-	buttons[B_CHECK_STOP]			|= Get_Signal("485.kb.key.stop_check");
 	buttons[B_SOUND_ALARM]			= Get_Signal("485.kb.kei1.sound_alarm");
+	buttons[B_CONV_START] 	  |= Get_Signal("485.kb.key.start_conveyor");
+	buttons[B_STARS_START]		|= Get_Signal("485.kb.key.start_stars");
+	buttons[B_START_ALL]			|= Get_Signal("485.kb.kei1.start_all");
+	buttons[B_STOP_ALL]				|= Get_Signal("485.kb.kei1.stop_all");
 
-	joystick[J_CONVEYOR] = (Get_Signal("485.kb.kei1.conveyor_left") << J_BIT_LEFT) | (Get_Signal("485.kb.kei1.conveyor_right") << J_BIT_RIGHT) |
-												 (Get_Signal("485.kb.kei1.conveyor_up") << J_BIT_UP) | (Get_Signal("485.kb.kei1.conveyor_down") << J_BIT_DOWN);
+	Check_Stop_Buttons();
+
+	if(!Process_Pu_Conv()) {
+		joystick[J_CONVEYOR] = (Get_Signal("485.kb.kei1.conveyor_left") << J_BIT_LEFT) | (Get_Signal("485.kb.kei1.conveyor_right") << J_BIT_RIGHT) |
+													 (Get_Signal("485.kb.kei1.conveyor_up") << J_BIT_UP) | (Get_Signal("485.kb.kei1.conveyor_down") << J_BIT_DOWN);
+	}
+
 	joystick[J_ORGAN] = (Get_Signal("485.kb.kei1.exec_dev_left") << J_BIT_LEFT) | (Get_Signal("485.kb.kei1.exec_dev_down") << J_BIT_DOWN) | 
 											(Get_Signal("485.kb.kei1.exec_dev_right") << J_BIT_RIGHT) | (Get_Signal("485.kb.kei1.exec_dev_up") << J_BIT_UP);
 	joystick[J_LEFT_T] = (Get_Signal("485.kb.kei1.left_truck_back") << J_BIT_DOWN) | (Get_Signal("485.kb.kei1.left_truck_forward") << J_BIT_UP);
@@ -158,28 +195,70 @@ void Process_Local_Kb() {
 }
 
 void Process_Cable_Kb() {
+	Check_Stop_Buttons();
 }
 
 void Process_Radio_Kb() {
+	char lt = '0', rt = '0';
+	static int stars_started = 0;
 	joystick[J_SUPPORT] = (Get_Signal("485.rpdu485.kei.support_down") << J_BIT_DOWN) | (Get_Signal("485.rpdu485.kei.support_up") << J_BIT_UP);
 	joystick[J_SOURCER] = (Get_Signal("485.kb.kei1.sourcer_down") << J_BIT_DOWN) | (Get_Signal("485.rpdu485.kei.sourcer_up") << J_BIT_UP);
 	joystick[J_ACCEL] = (Get_Signal("485.rpdu485.kei.acceleration_up") << J_BIT_UP);
 	joystick[J_TELESCOPE] = (Get_Signal("485.rpdu485.kei.telescope_up") << J_BIT_UP) | (Get_Signal("485.rpdu485.kei.telescope_down") << J_BIT_DOWN);
 	joystick[J_ORGAN] = (Get_Signal("485.rpdu485.kei.joy_exec_dev_left") << J_BIT_LEFT) | (Get_Signal("485.rpdu485.kei.joy_exec_dev_down") << J_BIT_DOWN) | 
 											(Get_Signal("485.rpdu485.kei.joy_exec_dev_right") << J_BIT_RIGHT) | (Get_Signal("485.rpdu485.kei.joy_exec_dev_up") << J_BIT_UP);
+	if(!Process_Pu_Conv()) {
+		joystick[J_CONVEYOR] = (Get_Signal("485.rpdu485.kei.joy_conv_up") << J_BIT_UP) | (Get_Signal("485.rpdu485.kei.joy_conv_down") << J_BIT_DOWN) |
+													 (Get_Signal("485.rpdu485.kei.joy_conv_left") << J_BIT_LEFT) | (Get_Signal("485.rpdu485.kei.joy_conv_right") << J_BIT_RIGHT);
+	}
 	int jleft, jright, jup, jdown;
-	joystick[J_LEFT_T] = 0;
-	joystick[J_RIGHT_T] = 0;
+	jleft = Get_Signal("485.rpdu485.kei.joy_forward");
+	jright = Get_Signal("485.rpdu485.kei.joy_back");
+	jup = Get_Signal("485.rpdu485.kei.joy_left");
+	jdown = Get_Signal("485.rpdu485.kei.joy_right");
+
+	if(jup) {
+		joystick[J_LEFT_T] = (jright << J_BIT_UP) | (!jleft << J_BIT_UP);
+		joystick[J_RIGHT_T] = (jleft << J_BIT_UP) | (!jright << J_BIT_UP);
+	} else if(jdown) {
+		joystick[J_LEFT_T] = (jright << J_BIT_DOWN) | (!jleft << J_BIT_DOWN);
+		joystick[J_RIGHT_T] = (jleft << J_BIT_DOWN) | (!jright << J_BIT_DOWN);
+	} else {
+		joystick[J_LEFT_T] = jright << J_BIT_UP | jleft << J_BIT_DOWN;
+		joystick[J_RIGHT_T] = jright << J_BIT_DOWN | jleft << J_BIT_UP;
+	}
 
 	buttons[B_OVERLOAD_START] |= Get_Signal("485.rpdu485.kei.reloader_up");
-	buttons[B_OVERLOAD_STOP]  |= Get_Signal("485.rpdu485.kei.reloader_down");
 	buttons[B_CONV_START] 	  |= Get_Signal("485.rpdu485.kei.conveyor_up");
-	buttons[B_CONV_STOP] 			|= Get_Signal("485.rpdu485.kei.conveyor_down");
 	buttons[B_HYDRA_START]		 = buttons[B_ORGAN_START]		|= Get_Signal("485.rpdu485.kei.exec_dev_up");
-	buttons[B_HYDRA_STOP]			 = buttons[B_ORGAN_STOP] 		|= Get_Signal("485.rpdu485.kei.exec_dev_down");
 	buttons[B_OIL_START] 			|= Get_Signal("485.rpdu485.kei.oil_station_up");
-	buttons[B_OIL_STOP] 			|= Get_Signal("485.rpdu485.kei.oil_station_down");
+	buttons[B_START_ALL]			|= Get_Signal("485.rpdu485.kei.start_all");
+	buttons[B_STOP_ALL]				|= Get_Signal("485.rpdu485.kei.stop_all");
 	
+	if(Get_Signal("485.rpdu485.kei.loader_up")) {
+		if(stars_started == B_STARS_REVERSE) {
+			buttons[B_STARS_REVERSE] = 0;
+		}
+		if(stars_started == 0) {
+			buttons[B_STARS_START]	|= 1;
+			stars_started = B_STARS_START;
+		}
+	} else if(Get_Signal("485.rpdu485.kei.loader_down")) {
+		if(stars_started == B_STARS_START) {
+			buttons[B_STARS_START] = 0;
+		}
+		if(stars_started == 0) {
+			buttons[B_STARS_REVERSE]	|= 1;
+			stars_started = B_STARS_REVERSE;
+		}
+	} else {
+		if(stars_started != 0) {
+			buttons[B_STARS_STOP] = 1;
+			stars_started = 0;
+		}
+	}
+	
+	Check_Stop_Buttons();
 	buttons[B_SOUND_ALARM]			= Get_Signal("485.rpdu485.sound_beepl");
 	//buttons[B_STARS_START]		|= Get_Signal("");
 	//buttons[B_STARS_STOP]			|= Get_Signal("");
@@ -188,6 +267,10 @@ void Process_Radio_Kb() {
 }
 
 void Process_Normal() {
+	if(g_diag != 0) {
+		set_Diagnostic(0);
+		g_diag = 0;
+	}
 	Worker_Set_Mode(MODE_NORM);
 }
 
@@ -222,6 +305,11 @@ void Process_Pumping() {
 }
 
 void Process_Diag() {
+	if(g_diag != 1) {
+		set_Diagnostic(1);
+		g_diag = 1;
+	}
+	Worker_Set_Mode(MODE_NORM);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -336,6 +424,45 @@ void Work_Norm(){
 			ring_buffer_push(Signal_Mod_Buffer, Get_Signal_Idx("485.rsrs2.state_sound2_led"), 0, WR);
 			alarm_enabled = 0;
 		}
+		if(buttons[B_START_ALL]) {
+			int stop = 0;
+			int step = 0;
+			for(step = 0; (step < 6) && !stop; step ++) {
+				switch(step) {
+				case 0:
+					start_Hydratation();
+					break;
+				case 1:
+					start_Oil();
+					break;
+				case 2:
+					start_Overloading();
+					break;
+				case 3:
+					start_Conveyor();
+					break;
+				case 4:
+					start_Stars();
+					break;
+				case 5:
+					start_Organ();
+					break;
+				default:
+					break;
+				}
+				stop = buttons[B_STOP_ALL];
+			}
+			buttons[B_START_ALL] = 0;
+			if(stop) {
+				printf("Stopping all\n");
+				stop_all();
+				buttons[B_STOP_ALL] = 0;
+			}
+		}
+		if(buttons[B_STOP_ALL]) {
+			stop_all();
+			buttons[B_STOP_ALL] = 0;
+		}
 		if(buttons[B_OVERLOAD_STOP]) {
 			stop_Overloading();
 			buttons[B_OVERLOAD_START] = buttons[B_OVERLOAD_STOP] = 0;
@@ -344,6 +471,7 @@ void Work_Norm(){
 			buttons[B_OVERLOAD_START] = 0;
 		}
 		if(buttons[B_CONV_STOP]) {
+			printf("Stop conveyor\n");
 			stop_Conveyor();
 			buttons[B_CONV_START] = buttons[B_CONV_STOP] = 0;
 		} else if(buttons[B_CONV_START]) {
@@ -378,9 +506,15 @@ void Work_Norm(){
 			stop_Stars();
 			buttons[B_STARS_STOP] = 0;
 			buttons[B_STARS_START] = 0;
+			buttons[B_STARS_REVERSE] = 0;
 		} else if(buttons[B_STARS_START]) {
-			start_Stars();
+			start_Stars(0);
 			buttons[B_STARS_START] = 0;
+			buttons[B_STARS_REVERSE] = 0;
+		} else if(buttons[B_STARS_REVERSE]) {
+			start_Stars(1);
+			buttons[B_STARS_START] = 0;
+			buttons[B_STARS_REVERSE] = 0;
 		}
 		Process_Joysticks();
 		control_all();
@@ -389,6 +523,25 @@ void Work_Norm(){
 
 	printf("Exiting normal mode\n");
 	stop_all();
+	WRITE_SIGNAL("485.rsrs.rm_u2_on10", 0);
+	WRITE_SIGNAL("485.rsrs.rm_u2_on11", 0);
+	WRITE_SIGNAL("485.rsrs.rm_u2_on0", 0);
+	WRITE_SIGNAL("485.rsrs.rm_u2_on1", 0);
+	WRITE_SIGNAL("485.rsrs.rm_u1_on6", 0);
+	WRITE_SIGNAL("485.rsrs.rm_u1_on7", 0);
+	WRITE_SIGNAL("485.rsrs.rm_u1_on3", 0);
+	WRITE_SIGNAL("485.rsrs.rm_u1_on2", 0);
+	WRITE_SIGNAL("485.rsrs.rm_u1_on0", 0);
+	WRITE_SIGNAL("485.rsrs.rm_u1_on4", 0);
+	WRITE_SIGNAL("485.rsrs.rm_u1_on5", 0);
+	WRITE_SIGNAL("485.rsrs.rm_u2_on8", 0);
+	WRITE_SIGNAL("485.rsrs.rm_u2_on9", 0);
+	WRITE_SIGNAL("485.rsrs.rm_u1_on8", 0);
+	WRITE_SIGNAL("485.rsrs.rm_u1_on9", 0);
+	WRITE_SIGNAL("485.rsrs.rm_u2_on2", 0);
+	WRITE_SIGNAL("485.rsrs.rm_u2_on3", 0);
+	WRITE_SIGNAL("485.rsrs.rm_u2_on5", 0);
+	WRITE_SIGNAL("485.rsrs.rm_u2_on4", 0);
 }
 
 void Work_Pumping() {
