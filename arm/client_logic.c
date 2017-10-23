@@ -248,10 +248,10 @@ int Get_State(){
 	control2 = GetVal("485.kb.kei1.control2");
 
 	//printf (">>>>>>>>>>>>>>>>>>>>>> MODE STATE %i | mode1 %i, mode2 %i, control1 %i,control2 %i,alarm_stop1 %i,alarm_stop2 %i,alarm_stop3 %i   \n\r",state, mode1, mode2, control1,control2,alarm_stop1,alarm_stop2,alarm_stop3);
-	if ( ( alarm_stop1 + alarm_stop2 + alarm_stop3) > 0) {
-		printf(" *GRIBOK STOP!!!| ");
-		return 128;
-	}
+//	if ( ( alarm_stop1 + alarm_stop2 + alarm_stop3) > 0) {
+//		printf(" *GRIBOK STOP!!!| ");
+//		return 128;
+//	}
 
 	state = control1 | (control2 << 1) | (mode1 << 2) | (mode2 << 3);
 
@@ -465,7 +465,7 @@ UpdateSignals:
 			if(st == RD) {
 				Set_Signal_Ex(idx, st);
 			} else {
-				printf("Writing signal %s: %d\n", Signal_Array[idx].Name, value);
+				printf("Writing signal %s: %d (%d)\n", Signal_Array[idx].Name, value, st);
 				Set_Signal_Ex_Val(idx, st, value);
 			}
 			ring_buffer_pop(Signal_Mod_Buffer);
@@ -488,7 +488,8 @@ UpdateSignals:
 				break;
 			}
 
-			if(Send_ID[x]){                
+			if(Send_ID[x]){
+				if(x > 356) printf("Writing signal %s [%d]\n", Signal_Array[x].Name, x);
 				pack_signal(x, tmpz);
 				strcat(message, tmpz);                 
 				Send_Ready=1;

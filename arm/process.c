@@ -47,6 +47,9 @@ void start_Overloading() {
 	printf("Starting overloading\n");
 	inProgress[OVERLOADING] = STARTING;
 
+	WRITE_SIGNAL("485.kb.kbl.start_reloader", 50);
+	WRITE_SIGNAL("panel10.system_state_code",1);
+
 	Process_Timeout();
 	CHECK(OVERLOADING);
 
@@ -72,7 +75,7 @@ void start_Conveyor() {
 	if(inProgress[CONVEYOR]) return;
 	printf("Starting conveyor\n");
 	inProgress[CONVEYOR] = STARTING;
-
+  WRITE_SIGNAL("panel10.system_state_code",2);
 	Process_Timeout();
 	CHECK(CONVEYOR);
 
@@ -99,6 +102,8 @@ void start_Stars() {
 	printf("Starting stars\n");
 	control_Stars();
 	CHECK(STARS);
+	
+  WRITE_SIGNAL("panel10.system_state_code",3);
 	Process_Timeout();
 	CHECK(STARS);
 	WRITE_SIGNAL("485.rsrs.rm_u2_on7", 1);
@@ -111,6 +116,7 @@ void start_Oil() {
 	printf("Starting oil station\n");
 	inProgress[OIL] = STARTING;
 
+  WRITE_SIGNAL("panel10.system_state_code",4);
 	Process_Timeout();
 	CHECK(OIL);
 
@@ -138,6 +144,7 @@ void start_Hydratation() {
 	printf("Starting hydratation\n");
 	inProgress[HYDRATATION] = STARTING;
 
+  WRITE_SIGNAL("panel10.system_state_code",5);
 	Process_Timeout();
 	CHECK(HYDRATATION);
 
@@ -157,7 +164,7 @@ void start_Hydratation() {
 		return;
 	}
 
-	inProgress[HYDRATATION] = 1;
+	inProgress[HYDRATATION] = RUNNING;
 	control_Hydratation();
 }
 
@@ -167,6 +174,7 @@ void start_Organ() {
 	printf("Starting organ\n");
 	inProgress[ORGAN] = STARTING;
 
+  WRITE_SIGNAL("panel10.system_state_code",6);
 	Process_Timeout();
 	CHECK(ORGAN);
 

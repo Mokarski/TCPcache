@@ -16,17 +16,18 @@
 #include <errno.h>
 
 int Send_Signal[MAX_Signals] = {0};
+modbus_t *ctx;
 
 int virt_mb_ReadtoCache (int dIndex, int reg_count)
 {				//read from real devices to cache by virtual devices Index and regcount
 	int connected;
-	modbus_t *ctx;
+
 	uint16_t tab_reg[VirtDevRegs];
 	int rc;
 	int i;
 	int fl;
 	int ret=0;
-	ctx = modbus_new_rtu ("/dev/ttySP0", 115200, 'N', 8, 1);
+
 	if ( DEBUG > 0 ) printf ("\n \r >>>> READ real device [%i] from position [0] Number register to read [%i] Rd[%i] Wr[%i]\n\r",Device_Array[dIndex].MB_Id,reg_count, Device_Array[dIndex].Rd, Device_Array[dIndex].Wr);
 	if (ctx == NULL)
 	{
@@ -43,7 +44,7 @@ int virt_mb_ReadtoCache (int dIndex, int reg_count)
 
 	/* Define a new and too short timeout! */
 	response_timeout.tv_sec = 0;
-	response_timeout.tv_usec = 200000;
+	response_timeout.tv_usec = 50000;
 	//	 byte_timeout.tv_sec = 1;
 	//	 byte_timeout.tv_usec = 300;
 	modbus_set_byte_timeout (ctx, &byte_timeout);
@@ -61,7 +62,9 @@ int virt_mb_ReadtoCache (int dIndex, int reg_count)
 	if (connected == -1)
 	{
 		printf ("Connection failed %i\n", ID);
-		ret=4; 
+		ret=4;
+		modbus_flush(ctx);
+		modbus_close(ctx);
 		return ret;
 
 	}
@@ -79,6 +82,8 @@ int virt_mb_ReadtoCache (int dIndex, int reg_count)
 		printf ("[MB_ID #%i]  Connection failed !\n", ID);
 		fprintf (stderr, "MB_READ: %s\n", modbus_strerror (errno));
 		ret=4;
+		modbus_flush(ctx);
+		modbus_close(ctx);
 		return ret;
 	} else ret = 3;
 
@@ -98,7 +103,7 @@ int virt_mb_ReadtoCache (int dIndex, int reg_count)
 	modbus_flush (ctx);
 
 	modbus_close (ctx);
-	modbus_free (ctx);		//close COM ?
+
 
 
 	return ret;
@@ -109,14 +114,14 @@ int virt_mb_ReadtoCache (int dIndex, int reg_count)
 virt_mb_CachetoDev (int dIndex, int reg_count)
 {				//read from VIRTUAL devices to REAL devices 
 	int connected;
-	modbus_t *ctx;
+
 	uint16_t tab_reg[VirtDevRegs];
 	int rc;
 	int i;
 	int fl;
 	int ret;
 
-	ctx = modbus_new_rtu ("/dev/ttySP0", 115200, 'N', 8, 1);
+
 
 	if (ctx == NULL)
 	{
@@ -133,7 +138,7 @@ virt_mb_CachetoDev (int dIndex, int reg_count)
 
 	/* Define a new and too short timeout! */
 	response_timeout.tv_sec = 0;
-	response_timeout.tv_usec = 200000;
+	response_timeout.tv_usec = 50000;
 	//     byte_timeout.tv_sec = 1;
 	//     byte_timeout.tv_usec = 300;
 	//     modbus_set_byte_timeout (ctx, &byte_timeout);
@@ -153,11 +158,14 @@ virt_mb_CachetoDev (int dIndex, int reg_count)
 	if (connected == -1){
 		printf ("WR - Connection failed %i\n", ID);
 		ret=4;
+		modbus_flush(ctx);
+		modbus_close(ctx);
+		return ret;
 	}
 
 	if (connected == 0){
 		printf ("WR - connected %i\n", ID);
-		ret=4;
+		ret=3;
 	}
 
 	int cn = 0;
@@ -190,7 +198,6 @@ if (rc == -1)
 	printf ("WR [MB_ID #%i]  Connection failed !\n", ID);
 	fprintf (stderr, "WR MB_READ: %s\n", modbus_strerror (errno));
 	ret=4;
-	return ret;
 } else ret=3; //3 - executed OK!
 
 
@@ -209,7 +216,7 @@ usleep (5 * 1000);		//delay for Mod bus restore functional
 modbus_flush (ctx);
 
 modbus_close (ctx);
-modbus_free (ctx);		//close COM ?
+
 
 
 return ret;
@@ -492,7 +499,8 @@ int main (int argc, char *argv[])
 	}
 
 	printf("> Server ip:{%s} \n\r",argv[1]);
-
+        //Mordor BUS
+        	ctx = modbus_new_rtu ("/dev/ttySP0", 115200, 'N', 8, 1);
 
 	//INIT SIGNALS     
 	if (DEBUG == 1)   printf ("MAX_Signals [%i] \n", MAX_Signals);

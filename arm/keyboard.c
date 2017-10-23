@@ -26,6 +26,7 @@
 #define B_STARS_STOP	11
 #define B_CHECK_START	12
 #define B_CHECK_STOP	13
+#define B_SOUND_ALARM	14
 
 #define	J_CONVEYOR		0
 #define	J_ORGAN				1
@@ -141,6 +142,7 @@ void Process_Local_Kb() {
 	buttons[B_STARS_STOP]			|= Get_Signal("485.kb.key.stop_stars");
 	buttons[B_CHECK_START]		|= Get_Signal("485.kb.key.start_check");
 	buttons[B_CHECK_STOP]			|= Get_Signal("485.kb.key.stop_check");
+	buttons[B_SOUND_ALARM]			= Get_Signal("485.kb.kei1.sound_alarm");
 
 	joystick[J_CONVEYOR] = (Get_Signal("485.kb.kei1.conveyor_left") << J_BIT_LEFT) | (Get_Signal("485.kb.kei1.conveyor_right") << J_BIT_RIGHT) |
 												 (Get_Signal("485.kb.kei1.conveyor_up") << J_BIT_UP) | (Get_Signal("485.kb.kei1.conveyor_down") << J_BIT_DOWN);
@@ -177,6 +179,8 @@ void Process_Radio_Kb() {
 	buttons[B_HYDRA_STOP]			 = buttons[B_ORGAN_STOP] 		|= Get_Signal("485.rpdu485.kei.exec_dev_down");
 	buttons[B_OIL_START] 			|= Get_Signal("485.rpdu485.kei.oil_station_up");
 	buttons[B_OIL_STOP] 			|= Get_Signal("485.rpdu485.kei.oil_station_down");
+	
+	buttons[B_SOUND_ALARM]			= Get_Signal("485.rpdu485.sound_beepl");
 	//buttons[B_STARS_START]		|= Get_Signal("");
 	//buttons[B_STARS_STOP]			|= Get_Signal("");
 	//buttons[B_CHECK_START]		|= Get_Signal("");
@@ -203,6 +207,7 @@ void Process_Pumping() {
 			printf("Starting\n");
 			printf("Lighting the button contrast\n");
 			Set_Signal_Ex_Val(Get_Signal_Idx("485.kb.kbl.led_contrast"), WR, 50);
+			Set_Signal_Ex_Val(Get_Signal_Idx("panel10.system_state_code"),WR,1);
 			printf("Lighting the start oil pump button\n");
 			Set_Signal_Ex_Val(Get_Signal_Idx("485.kb.kbl.start_oil_pump"), WR, 1);
 			Set_Signal_Ex(Get_Signal_Idx("wago.oc_bki.M7"), RD);
@@ -315,8 +320,22 @@ void Process_Joysticks() {
 }
 
 void Work_Norm(){
+	int alarm_enabled = 0;
 	printf("Working in normal mode\n");
 	while(g_mode == MODE_NORM) {
+		if(buttons[B_SOUND_ALARM] && !alarm_enabled) {
+			ring_buffer_push(Signal_Mod_Buffer, Get_Signal_Idx("485.rsrs2.state_sound1_on"), 1, WR);
+			ring_buffer_push(Signal_Mod_Buffer, Get_Signal_Idx("485.rsrs2.state_sound1_led"), 1, WR);
+			ring_buffer_push(Signal_Mod_Buffer, Get_Signal_Idx("485.rsrs2.state_sound2_on"), 1, WR);
+			ring_buffer_push(Signal_Mod_Buffer, Get_Signal_Idx("485.rsrs2.state_sound2_led"), 1, WR);
+			alarm_enabled = 1;
+		} else if(!buttons[B_SOUND_ALARM] && alarm_enabled) {
+			ring_buffer_push(Signal_Mod_Buffer, Get_Signal_Idx("485.rsrs2.state_sound1_on"), 0, WR);
+			ring_buffer_push(Signal_Mod_Buffer, Get_Signal_Idx("485.rsrs2.state_sound1_led"), 0, WR);
+			ring_buffer_push(Signal_Mod_Buffer, Get_Signal_Idx("485.rsrs2.state_sound2_on"), 0, WR);
+			ring_buffer_push(Signal_Mod_Buffer, Get_Signal_Idx("485.rsrs2.state_sound2_led"), 0, WR);
+			alarm_enabled = 0;
+		}
 		if(buttons[B_OVERLOAD_STOP]) {
 			stop_Overloading();
 			buttons[B_OVERLOAD_START] = buttons[B_OVERLOAD_STOP] = 0;

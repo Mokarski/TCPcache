@@ -477,8 +477,8 @@ int frame_pack (char *type, char *message_in, char *message_out) { //construct f
 	ItoA(len,c_len); //convert int to char
 	strcat(message_out,c_len);    
 	strcat (message_out, "#");
-	strcat (message_out,message_in);
-	strcat (message_out,";\0"); //*
+	strcat (message_out,message_in);	
+	strcat (message_out,";\0");
 	//    strcat (message_out,";\0");
 	//if (DEBUG == 1) printf("Constructed Frame^[%s]\n\n\r",message_out);
 	//if ( strlen(message_out ) < 30) printf("Constructed Frame^[%s]\n\n\r",message_out);
