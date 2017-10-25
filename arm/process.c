@@ -109,8 +109,10 @@ void System_Mode(int n) {
 WRITE_SIGNAL("panel10.system_mode",n);
 }
 
-void Pultk_Mode(int n){
-WRITE_SIGNAL("panel10.system_pultk",n);
+void Pultk_Mode(){
+READ_SIGNAL("485.kb.kei1.post_conveyor");
+int puk = Get_Signal("485.kb.kei1.post_conveyor");
+WRITE_SIGNAL("panel10.system_pultk",puk);
 }
 void Voltage_Show() {
 int Volt = Get_Signal("wago.oc_mui1.Uin_PhaseA");

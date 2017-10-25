@@ -182,7 +182,7 @@ int Process_Pu_Conv() {
 		joystick[J_CONVEYOR] = (Get_Signal("485.kb.pukonv485c.joy_left_conv") << J_BIT_LEFT) | (Get_Signal("485.kb.pukonv485c.joy_down_conv") << J_BIT_DOWN) |
 													(Get_Signal("485.kb.pukonv485c.joy_up_conv") << J_BIT_UP) | (Get_Signal("485.kb.pukonv485c.joy_right_conv") << J_BIT_RIGHT);
 
-  Pukonv_Conv_Joy_Animation ();
+//  Pukonv_Conv_Joy_Animation ();
 		return 1;
 	}
 
