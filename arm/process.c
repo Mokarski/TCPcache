@@ -45,6 +45,26 @@ int waitForFeedback(char *name, int timeout, volatile int *what) {
 void set_Diagnostic(int val) {
 	debugging = val;
 }
+void Pressure_Show() {
+int H1= Get_Signal("485.ad1.adc4_raw_value");
+int H2= Get_Signal("485.ad2.adc1_raw_value");
+int H3= Get_Signal("485.ad2.adc2_raw_value");
+int H4= Get_Signal("485.ad2.adc3_raw_value");
+int H5= Get_Signal("485.ad2.adc4_raw_value");
+WRITE_SIGNAL("panel10.system_pressure1",H1);
+WRITE_SIGNAL("panel10.system_pressure2",H2);
+WRITE_SIGNAL("panel10.system_pressure3",H3);
+WRITE_SIGNAL("panel10.system_pressure4",H4);
+WRITE_SIGNAL("panel10.system_pressure5",H5);
+}
+
+void Oil_Show() {
+int Oil_level =Get_Signal ("485.ad1.adc1_raw_value");
+int Oil_temp  =Get_Signal ("485.ad1.adc2_raw_value");
+int Oil_pressure=Get_Signal("485.ad3.adc1_raw_value");
+WRITE_SIGNAL("panel10.system_oil_level",Oil_level);
+WRITE_SIGNAL("panel10.system_oil_temp",Oil_temp);
+}
 
 void start_Overloading() {
 	if(inProgress[OVERLOADING]) return;
@@ -55,6 +75,7 @@ void start_Overloading() {
 	WRITE_SIGNAL("485.kb.kbl.start_reloader", 1);
 	WRITE_SIGNAL("485.rpdu485.kbl.reloader_green", 1);
 	WRITE_SIGNAL("panel10.system_state_code",1);
+	WRITE_SIGNAL("panel10.kb.key.reloader",1);
 
 	Process_Timeout();
 	CHECK(OVERLOADING);
@@ -85,6 +106,7 @@ void start_Conveyor() {
 	WRITE_SIGNAL("485.rpdu485.kbl.conveyor_green", 1);
 	WRITE_SIGNAL("485.kb.kbl.start_conveyor", 1);
   WRITE_SIGNAL("panel10.system_state_code",2);
+	WRITE_SIGNAL("panel10.kb.key.conveyor",1);
 	Process_Timeout();
 	CHECK(CONVEYOR);
 
@@ -116,6 +138,7 @@ void start_Stars(int reverse) {
 	control_Stars();
 	CHECK(STARS);
 	
+  WRITE_SIGNAL("panel10.kb.key.stars",1);
   WRITE_SIGNAL("panel10.system_state_code",3);
 	CHECK(STARS);
 	if(!reverse) {
@@ -139,6 +162,7 @@ void start_Oil() {
 	inProgress[OIL] = STARTING;
 
   WRITE_SIGNAL("panel10.system_state_code",4);
+	WRITE_SIGNAL ("panel10.kb.key.oil_station",1);
 	Process_Timeout();
 	CHECK(OIL);
 
@@ -169,6 +193,7 @@ void start_Hydratation() {
 	WRITE_SIGNAL("485.kb.kbl.led_contrast", 50);
 	WRITE_SIGNAL("485.kb.kbl.start_hydratation", 1);
   WRITE_SIGNAL("panel10.system_state_code",5);
+	WRITE_SIGNAL("panel10.kb.key.hydratation",1);
 	Process_Timeout();
 	CHECK(HYDRATATION);
 
@@ -202,6 +227,7 @@ void start_Organ() {
 	WRITE_SIGNAL("485.kb.kbl.start_exec_dev", 1);
 	WRITE_SIGNAL("485.rpdu485.kbl.exec_dev_green", 1);
   WRITE_SIGNAL("panel10.system_state_code",6);
+  WRITE_SIGNAL("panel10.kb.key.exec_dev",1);
 	Process_Timeout();
 	CHECK(ORGAN);
 
@@ -284,7 +310,7 @@ void control_Hydratation() {
 	}
 
 	int water = Get_Signal("485.ad1.adc3.flow");
-
+      WRITE_SIGNAL("panel10.system_pressure1",water);
 	if(tempRelay) {
 		printf("Organ temp relay error!\n");
 		stop_Hydratation();
