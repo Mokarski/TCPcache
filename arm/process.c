@@ -46,11 +46,16 @@ void set_Diagnostic(int val) {
 	debugging = val;
 }
 void Pressure_Show() {
-int H1= Get_Signal("485.ad1.adc4_raw_value");
-int H2= Get_Signal("485.ad2.adc1_raw_value");
-int H3= Get_Signal("485.ad2.adc2_raw_value");
-int H4= Get_Signal("485.ad2.adc3_raw_value");
-int H5= Get_Signal("485.ad2.adc4_raw_value");
+int H1= Get_Signal("485.ad2.adc1_phys_value");
+int H2= Get_Signal("485.ad2.adc2_phys_value");
+int H3= Get_Signal("485.ad2.adc3_phys_value");
+int H4= Get_Signal("485.ad2.adc4_phys_value");
+int H5= Get_Signal("485.ad3.adc1_phys_value");
+if (H1 >0) H1 = (H1/4);
+if (H2 >0) H2 = (H2/4);
+if (H3 >0) H3 = (H3/25)*10;
+if (H4 >0) H4 = (H4/4);
+if (H5 >0) H5 = (H5/4);
 WRITE_SIGNAL("panel10.system_pressure1",H1);
 WRITE_SIGNAL("panel10.system_pressure2",H2);
 WRITE_SIGNAL("panel10.system_pressure3",H3);
@@ -59,17 +64,41 @@ WRITE_SIGNAL("panel10.system_pressure5",H5);
 }
 
 void Oil_Show() {
-int Oil_level =Get_Signal ("485.ad1.adc1_raw_value");
-int Oil_temp  =Get_Signal ("485.ad1.adc2_raw_value");
-int Oil_pressure=Get_Signal("485.ad3.adc1_raw_value");
+int Oil_level =Get_Signal ("485.ad1.adc1_phys_value");
+int Oil_temp  =Get_Signal ("485.ad1.adc2_phys_value");
+if (Oil_level >0) Oil_level=Oil_level/10;
+if (Oil_temp >0) Oil_temp=Oil_temp/10;
 WRITE_SIGNAL("panel10.system_oil_level",Oil_level);
 WRITE_SIGNAL("panel10.system_oil_temp",Oil_temp);
 }
 
+void Water_Show() {
+ int water_flow = Get_Signal("485.ad1.adc3_phys_value");
+ int water_pressure = Get_Signal("485.ad1.adc4_phys_value");
+ if (water_pressure > 0) water_pressure=(water_pressure/25);
+ if (water_flow > 0) water_flow= (water_flow/4);
+ WRITE_SIGNAL("panel10.system_water_flow",water_flow);
+ WRITE_SIGNAL("panel10.system_water_pressure",water_pressure);
+}
+
 void Metan_Show() {
-int Metan = Get_Signal("485.ad3.adc3_raw_value");
+int Metan = Get_Signal("485.ad3.adc3_phys_value");
 WRITE_SIGNAL ("panel10.system_metan",Metan);
 }
+
+void Radio_Mode (int n) {
+WRITE_SIGNAL("panel10.system_radio",n);
+}
+
+void Mestno_Mode (int n) {
+WRITE_SIGNAL("panel10.system_mestno",n);
+}
+
+void Voltage_Show() {
+int Volt = Get_Signal("wago.oc_mui1.Uin_PhaseA");
+WRITE_SIGNAL("panel10.system_voltage",Volt);
+}
+
 void start_Overloading() {
 	if(inProgress[OVERLOADING]) return;
 	printf("Starting overloading\n");

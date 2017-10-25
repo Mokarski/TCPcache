@@ -299,6 +299,7 @@ int Init (){
   Pressure_Show();
 	Oil_Show();
 	Metan_Show();
+	Voltage_Show();
 	if(Get_Signal_Ex(Get_Signal_Idx("wago.oc_mdi.err_phase")) == RD)
 		return 0;
 	if(Get_Signal("wago.oc_mdi.err_phase")) {
@@ -422,6 +423,12 @@ int main(int argc , char *argv[])
 				switch(STATE & CONTROL_MASK){
 					case CONTROL_MANU:  //INIT
 						Process_Local_Kb();
+
+            Pressure_Show();
+          	Oil_Show();
+            Metan_Show();
+           	Voltage_Show();
+						Water_Show();
 						break;         
 
 					case CONTROL_CABLE:  //INIT
@@ -430,6 +437,11 @@ int main(int argc , char *argv[])
 
 					case CONTROL_RADIO:  //RESET 
 						Process_Radio_Kb();
+						Water_Show();
+            Pressure_Show();
+	          Oil_Show();
+          	Metan_Show();
+	          Voltage_Show();
 						break;	               
 
 					default:  //DEFAULT
@@ -437,8 +449,16 @@ int main(int argc , char *argv[])
 				}
 				break;
 			case MODE_PUMP:
-				Process_Pumping();
+			
+
+           Pressure_Show();
+	         Oil_Show();
+	         Metan_Show();
+	         Voltage_Show();
+           Water_Show();
+				   Process_Pumping();
 				break;
+
 			case MODE_DIAG:
 				Process_Diag();
 				switch(STATE & CONTROL_MASK){

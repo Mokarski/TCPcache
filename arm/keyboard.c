@@ -153,11 +153,36 @@ void Process_Mode_Change() {
 	Worker_Set_Mode(MODE_IDLE);
 }
 
+ int Pukonv_Conv_Joy_Animation () {
+ int left = Get_Signal("485.kb.pukonv485c.joy_left_conv");
+ int right = Get_Signal("485.kb.pukonv485c.joy_right_conv");
+ int up = Get_Signal("485.kb.pukonv485c.joy_up_conv");
+ int down = Get_Signal("485.kb.pukonv485c.joy_down_conv");
+ WRITE_SIGNAL("panel10.kb.kei1.conveyor_left",left);
+ WRITE_SIGNAL("panel10.kb.kei2.conveyor_right",right);
+ WRITE_SIGNAL("panel10.kb.kei2.conveyor_up",up);
+ WRITE_SIGNAL("panel10.kb.kei2.conveyor_down",down);
+}
+
+int Radio_Conv_Joy_Anim() {
+
+ int left = Get_Signal("485.rpdu485с.kei.joy_conv_left");
+ int right = Get_Signal("485.rpdu485с.kei.joy_conv_right");
+ int up = Get_Signal("485.rpdu485с.kei.joy_conv_up");
+ int down = Get_Signal("485.rpdu485с.kei.joy_conv_down");
+ WRITE_SIGNAL("panel10.kb.kei1.conveyor_left",left);
+ WRITE_SIGNAL("panel10.kb.kei2.conveyor_right",right);
+ WRITE_SIGNAL("panel10.kb.kei2.conveyor_up",up);
+ WRITE_SIGNAL("panel10.kb.kei2.conveyor_down",down);
+}
+
 int Process_Pu_Conv() {
 	if(Get_Signal("485.kb.kei1.post_conveyor")) {
 		buttons[B_SOUND_ALARM]			= Get_Signal("485.kb.pukonv485c.beep");
 		joystick[J_CONVEYOR] = (Get_Signal("485.kb.pukonv485c.joy_left_conv") << J_BIT_LEFT) | (Get_Signal("485.kb.pukonv485c.joy_down_conv") << J_BIT_DOWN) |
 													(Get_Signal("485.kb.pukonv485c.joy_up_conv") << J_BIT_UP) | (Get_Signal("485.kb.pukonv485c.joy_right_conv") << J_BIT_RIGHT);
+
+  Pukonv_Conv_Joy_Animation ();
 		return 1;
 	}
 
@@ -201,6 +226,8 @@ void Process_Cable_Kb() {
 void Process_Radio_Kb() {
 	char lt = '0', rt = '0';
 	static int stars_started = 0;
+
+  //Radio_Conv_Joy_Anim();
 	joystick[J_SUPPORT] = (Get_Signal("485.rpdu485.kei.support_down") << J_BIT_DOWN) | (Get_Signal("485.rpdu485.kei.support_up") << J_BIT_UP);
 	joystick[J_SOURCER] = (Get_Signal("485.kb.kei1.sourcer_down") << J_BIT_DOWN) | (Get_Signal("485.rpdu485.kei.sourcer_up") << J_BIT_UP);
 	joystick[J_ACCEL] = (Get_Signal("485.rpdu485.kei.acceleration_up") << J_BIT_UP);
@@ -216,7 +243,17 @@ void Process_Radio_Kb() {
 	jright = Get_Signal("485.rpdu485.kei.joy_back");
 	jup = Get_Signal("485.rpdu485.kei.joy_left");
 	jdown = Get_Signal("485.rpdu485.kei.joy_right");
+  /*
+	int support_down = Get_Signal("485.rpdu485.kei.support_down");
+	int support_up =  Get_Signal("485.rpdu485.kei.support_up");
+	WRITE_SIGNAL("panel10.kb.kei1.combain_support_down",support_down);
+	WRITE_SIGNAL("panel10.kb.kei1.combain_support_up",support_up);
 
+	int sourcer_dwon = Get_Signal("485.rpdu485с.kei.sourcer_down");
+	int sourcer_up = Get_Signal("485.rpdu485с.kei.sourcer_up");
+	WRITE_SIGNAL("panel10.kb.kei1.sourcer_down",sourcer_dwon);
+	WRITE_SIGNAL("panel10.kb.kei1.sourcer_up",sourcer_up);
+  */
 	if(jup) {
 		joystick[J_LEFT_T] = (jright << J_BIT_UP) | (!jleft << J_BIT_UP);
 		joystick[J_RIGHT_T] = (jleft << J_BIT_UP) | (!jright << J_BIT_UP);
@@ -586,6 +623,9 @@ void Work_Pumping() {
 		printf("Feedback register: %d\n", Get_Signal("wago.oc_mdi1.oc"));
 		Worker_Set_Mode(MODE_IDLE);
 	}
+
+ Pressure_Show(); //new 
+ Water_Show(); //new
 
 	printf("Pumping started\n");
 	while(g_mode == MODE_PUMPING) {
