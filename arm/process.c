@@ -66,6 +66,10 @@ WRITE_SIGNAL("panel10.system_oil_level",Oil_level);
 WRITE_SIGNAL("panel10.system_oil_temp",Oil_temp);
 }
 
+void Metan_Show() {
+int Metan = Get_Signal("485.ad3.adc3_raw_value");
+WRITE_SIGNAL ("panel10.system_metan",Metan);
+}
 void start_Overloading() {
 	if(inProgress[OVERLOADING]) return;
 	printf("Starting overloading\n");

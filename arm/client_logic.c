@@ -298,6 +298,7 @@ int Init (){
 	s = hash_find(Signal_Name_Hash, Signal_Array, "485.kb.kei1.power");
   Pressure_Show();
 	Oil_Show();
+	Metan_Show();
 	if(Get_Signal_Ex(Get_Signal_Idx("wago.oc_mdi.err_phase")) == RD)
 		return 0;
 	if(Get_Signal("wago.oc_mdi.err_phase")) {
