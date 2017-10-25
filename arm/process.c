@@ -46,16 +46,22 @@ void set_Diagnostic(int val) {
 	debugging = val;
 }
 void Pressure_Show() {
+READ_SIGNAL("485.ad2.adc1_phys_value");
+READ_SIGNAL("485.ad2.adc2_phys_value");
+READ_SIGNAL("485.ad2.adc3_phys_value");
+READ_SIGNAL("485.ad2.adc4_phys_value");
+READ_SIGNAL("485.ad3.adc1_phys_value");
+
 int H1= Get_Signal("485.ad2.adc1_phys_value");
 int H2= Get_Signal("485.ad2.adc2_phys_value");
 int H3= Get_Signal("485.ad2.adc3_phys_value");
 int H4= Get_Signal("485.ad2.adc4_phys_value");
 int H5= Get_Signal("485.ad3.adc1_phys_value");
-if (H1 >0) H1 = (H1/4);
-if (H2 >0) H2 = (H2/4);
-if (H3 >0) H3 = (H3/25)*10;
-if (H4 >0) H4 = (H4/4);
-if (H5 >0) H5 = (H5/4);
+if (H1 >0) H1 = (H1/40);
+if (H2 >0) H2 = (H2/40);
+if (H3 >0) H3 = (H3/25);
+if (H4 >0) H4 = (H4/40);
+if (H5 >0) H5 = (H5/40);
 WRITE_SIGNAL("panel10.system_pressure1",H1);
 WRITE_SIGNAL("panel10.system_pressure2",H2);
 WRITE_SIGNAL("panel10.system_pressure3",H3);
@@ -63,7 +69,9 @@ WRITE_SIGNAL("panel10.system_pressure4",H4);
 WRITE_SIGNAL("panel10.system_pressure5",H5);
 }
 
-void Oil_Show() {
+void Oil_Show(){
+READ_SIGNAL ("485.ad1.adc1_phys_value");
+READ_SIGNAL ("485.ad1.adc2_phys_value");
 int Oil_level =Get_Signal ("485.ad1.adc1_phys_value");
 int Oil_temp  =Get_Signal ("485.ad1.adc2_phys_value");
 if (Oil_level >0) Oil_level=Oil_level/10;
@@ -73,6 +81,8 @@ WRITE_SIGNAL("panel10.system_oil_temp",Oil_temp);
 }
 
 void Water_Show() {
+ READ_SIGNAL("485.ad1.adc3_phys_value");
+ READ_SIGNAL("485.ad1.adc4_phys_value");
  int water_flow = Get_Signal("485.ad1.adc3_phys_value");
  int water_pressure = Get_Signal("485.ad1.adc4_phys_value");
  if (water_pressure > 0) water_pressure=(water_pressure/25);
@@ -82,6 +92,8 @@ void Water_Show() {
 }
 
 void Metan_Show() {
+  
+READ_SIGNAL("485.ad3.adc3_phys_value");
 int Metan = Get_Signal("485.ad3.adc3_phys_value");
 WRITE_SIGNAL ("panel10.system_metan",Metan);
 }
@@ -93,7 +105,13 @@ WRITE_SIGNAL("panel10.system_radio",n);
 void Mestno_Mode (int n) {
 WRITE_SIGNAL("panel10.system_mestno",n);
 }
+void System_Mode(int n) {
+WRITE_SIGNAL("panel10.system_mode",n);
+}
 
+void Pultk_Mode(int n){
+WRITE_SIGNAL("panel10.system_pultk",n);
+}
 void Voltage_Show() {
 int Volt = Get_Signal("wago.oc_mui1.Uin_PhaseA");
 WRITE_SIGNAL("panel10.system_voltage",Volt);

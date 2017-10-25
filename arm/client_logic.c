@@ -423,7 +423,7 @@ int main(int argc , char *argv[])
 				switch(STATE & CONTROL_MASK){
 					case CONTROL_MANU:  //INIT
 						Process_Local_Kb();
-
+            System_Mode(1);
             Pressure_Show();
           	Oil_Show();
             Metan_Show();
@@ -432,10 +432,12 @@ int main(int argc , char *argv[])
 						break;         
 
 					case CONTROL_CABLE:  //INIT
+					  System_Mode(2);
 						Process_Cable_Kb();
 						break;
 
 					case CONTROL_RADIO:  //RESET 
+					  System_Mode(3);
 						Process_Radio_Kb();
 						Water_Show();
             Pressure_Show();
@@ -449,9 +451,7 @@ int main(int argc , char *argv[])
 				}
 				break;
 			case MODE_PUMP:
-			
-
-           Pressure_Show();
+			     Pressure_Show();
 	         Oil_Show();
 	         Metan_Show();
 	         Voltage_Show();
