@@ -340,7 +340,8 @@ void stop_Overloading() {
 	printf("Stopping overloading\n");
 	WRITE_SIGNAL("485.rpdu485.kbl.reloader_green", 0);
 	WRITE_SIGNAL("485.kb.kbl.start_reloader", 0);
-	WRITE_SIGNAL("wago.oc_mdo1.ka5_1", 0);
+	WRITE_SIGNAL("wago.oc_mdo1.ka5_1", 0);	
+	WRITE_SIGNAL("panel10.kb.key.reloader",0);
 	inProgress[OVERLOADING] = 0;
 }
 
@@ -350,6 +351,7 @@ void stop_Conveyor() {
 	WRITE_SIGNAL("485.rpdu485.kbl.conveyor_green", 0);
 	WRITE_SIGNAL("485.kb.kbl.start_conveyor", 0);
 	WRITE_SIGNAL("wago.oc_mdo1.ka3_1", 0);
+	WRITE_SIGNAL("panel10.kb.key.conveyor",0);
 	inProgress[CONVEYOR] = 0;
 }
 
@@ -360,6 +362,8 @@ void stop_Stars() {
 	WRITE_SIGNAL("485.kb.kbl.start_stars", 0);
 	WRITE_SIGNAL("485.rsrs.rm_u2_on6", 0);
 	WRITE_SIGNAL("485.rsrs.rm_u2_on7", 0);
+
+	WRITE_SIGNAL("panel10.kb.key.stars",0);
 	inProgress[STARS] = 0;
 }
 
@@ -372,6 +376,8 @@ void stop_Oil() {
 	WRITE_SIGNAL("485.rpdu485.kbl.oil_station_green", 0);
 	WRITE_SIGNAL("485.kb.kbl.start_oil_station", 0);
 	WRITE_SIGNAL("wago.oc_mdo1.ka2_1", 0);
+	
+	WRITE_SIGNAL("panel10.kb.key.oil_station",0);
 	inProgress[OIL] = 0;
 }
 
@@ -384,6 +390,8 @@ void stop_Hydratation() {
 	WRITE_SIGNAL("485.kb.kbl.start_hydratation", 0);
 	WRITE_SIGNAL("wago.oc_mdo1.ka4_1", 0);
 	WRITE_SIGNAL("wago.oc_mdo1.water1", 0);
+
+	WRITE_SIGNAL("panel10.kb.key.hydratation",0);
 	inProgress[HYDRATATION] = 0;
 }
 
@@ -392,6 +400,8 @@ void stop_Organ() {
 	WRITE_SIGNAL("485.rpdu485.kbl.exec_dev_green", 0);
 	WRITE_SIGNAL("485.kb.kbl.start_exec_dev", 0);
 	WRITE_SIGNAL("wago.oc_mdo1.ka1_1", 0);
+
+	WRITE_SIGNAL("panel10.kb.key.exec_dev",0);
 	inProgress[ORGAN] = 0;
 }
 
