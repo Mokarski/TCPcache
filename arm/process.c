@@ -51,7 +51,7 @@ void Pressure_Show() {
 	READ_SIGNAL("485.ad2.adc3_phys_value");
 	READ_SIGNAL("485.ad2.adc4_phys_value");
 	READ_SIGNAL("485.ad3.adc1_phys_value");
-
+  
 	int H1= Get_Signal("485.ad2.adc1_phys_value");
 	int H2= Get_Signal("485.ad2.adc2_phys_value");
 	int H3= Get_Signal("485.ad2.adc3_phys_value");
@@ -363,8 +363,8 @@ void control_Hydratation() {
 		waterFlowState = lastWaterFlowState;
 	}
 
-	int water = Get_Signal("485.ad1.adc3.flow");
-	WRITE_SIGNAL("panel10.system_pressure1",water);
+	//int water = Get_Signal("485.ad1.adc3.flow");
+	//WRITE_SIGNAL("panel10.system_water_flow",water);
 	if(tempRelay) {
 		printf("Organ temp relay error!\n");
 		stop_Hydratation();

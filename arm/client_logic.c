@@ -16,6 +16,7 @@
 #include "signalhash.h"
 #include "ringbuffer.h"
 #include "process.h"
+#include "keyboard.h"
 
 #define Devices 40
 #define SignalsPerDev 100
@@ -304,6 +305,11 @@ int Init (){
 	Oil_Show();
 	Metan_Show();
 	Voltage_Show();
+
+  //if(!Get_Signal("wago.oc_ready")) {
+		//return 0;
+	//}
+
 	if(Get_Signal_Ex(Get_Signal_Idx("wago.oc_mdi.err_phase")) == RD)
 		return 0;
 	if(Get_Signal("wago.oc_mdi.err_phase")) {
@@ -331,14 +337,13 @@ int Init (){
 		return 0;
 	}
 
-	if(Get_Signal("wago.oc_mdi1.oc_w_qf1")) {
-		printf("Initialization completed!\n");
-		return 1;
+	if(!Get_Signal("wago.oc_mdi1.oc_w_qf1")) {
+		Set_Signal_Ex_Val(Get_Signal_Idx("wago.oc_mdo1.ka7_1"), WR, 1);
+		return 0;
 	}
 
-	Set_Signal_Ex_Val(Get_Signal_Idx("wago.oc_mdo1.ka7_1"), WR, 1);
-
-	return 0;
+	printf("Initialization completed!\n");
+	return 1;
 }
 
 int main(int argc , char *argv[])
