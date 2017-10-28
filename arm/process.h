@@ -24,3 +24,5 @@ void stop_Organ();
 void control_all();
 void stop_all();
 void set_Diagnostic(int val);
+
+int enabled_Oil();

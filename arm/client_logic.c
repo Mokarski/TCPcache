@@ -15,6 +15,7 @@
 #include <unistd.h>
 #include "signalhash.h"
 #include "ringbuffer.h"
+#include "process.h"
 
 #define Devices 40
 #define SignalsPerDev 100
@@ -290,7 +291,10 @@ int GetSignals() {
 		Signal_Array[z].Srv_id_num = z;
 	}
 
-	INIT_HASH_MAPS();
+	if(!Hashes_Initialized) {
+		INIT_HASH_MAPS();
+		stop_all();
+	}
 }
 
 int Init (){
@@ -508,7 +512,7 @@ UpdateSignals:
 			if(st == RD) {
 				Set_Signal_Ex(idx, st);
 			} else {
-				printf("Writing signal %s: %d (%d)\n", Signal_Array[idx].Name, value, st);
+				//printf("Writing signal %s: %d (%d)\n", Signal_Array[idx].Name, value, st);
 				Set_Signal_Ex_Val(idx, st, value);
 			}
 			ring_buffer_pop(Signal_Mod_Buffer);
@@ -532,7 +536,7 @@ UpdateSignals:
 			}
 
 			if(Send_ID[x]){
-				if(x > 356) printf("Writing signal %s [%d]\n", Signal_Array[x].Name, x);
+				//if(x > 356) printf("Writing signal %s [%d]\n", Signal_Array[x].Name, x);
 				pack_signal(x, tmpz);
 				strcat(message, tmpz);                 
 				Send_Ready=1;

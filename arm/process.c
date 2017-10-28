@@ -46,89 +46,86 @@ void set_Diagnostic(int val) {
 	debugging = val;
 }
 void Pressure_Show() {
-READ_SIGNAL("485.ad2.adc1_phys_value");
-READ_SIGNAL("485.ad2.adc2_phys_value");
-READ_SIGNAL("485.ad2.adc3_phys_value");
-READ_SIGNAL("485.ad2.adc4_phys_value");
-READ_SIGNAL("485.ad3.adc1_phys_value");
+	READ_SIGNAL("485.ad2.adc1_phys_value");
+	READ_SIGNAL("485.ad2.adc2_phys_value");
+	READ_SIGNAL("485.ad2.adc3_phys_value");
+	READ_SIGNAL("485.ad2.adc4_phys_value");
+	READ_SIGNAL("485.ad3.adc1_phys_value");
 
-int H1= Get_Signal("485.ad2.adc1_phys_value");
-int H2= Get_Signal("485.ad2.adc2_phys_value");
-int H3= Get_Signal("485.ad2.adc3_phys_value");
-int H4= Get_Signal("485.ad2.adc4_phys_value");
-int H5= Get_Signal("485.ad3.adc1_phys_value");
-if (H1 >0) H1 = (H1/40);
-if (H2 >0) H2 = (H2/40);
-if (H3 >0) H3 = (H3/25);
-if (H4 >0) H4 = (H4/40);
-if (H5 >0) H5 = (H5/40);
-WRITE_SIGNAL("panel10.system_pressure1",H1);
-WRITE_SIGNAL("panel10.system_pressure2",H2);
-WRITE_SIGNAL("panel10.system_pressure3",H3);
-WRITE_SIGNAL("panel10.system_pressure4",H4);
-WRITE_SIGNAL("panel10.system_pressure5",H5);
+	int H1= Get_Signal("485.ad2.adc1_phys_value");
+	int H2= Get_Signal("485.ad2.adc2_phys_value");
+	int H3= Get_Signal("485.ad2.adc3_phys_value");
+	int H4= Get_Signal("485.ad2.adc4_phys_value");
+	int H5= Get_Signal("485.ad3.adc1_phys_value");
+	if (H1 >0) H1 = (H1/40);
+	if (H2 >0) H2 = (H2/40);
+	if (H3 >0) H3 = (H3/25);
+	if (H4 >0) H4 = (H4/40);
+	if (H5 >0) H5 = (H5/40);
+	WRITE_SIGNAL("panel10.system_pressure1",H1);
+	WRITE_SIGNAL("panel10.system_pressure2",H2);
+	WRITE_SIGNAL("panel10.system_pressure3",H3);
+	WRITE_SIGNAL("panel10.system_pressure4",H4);
+	WRITE_SIGNAL("panel10.system_pressure5",H5);
 }
 
 void Oil_Show(){
-READ_SIGNAL ("485.ad1.adc1_phys_value");
-READ_SIGNAL ("485.ad1.adc2_phys_value");
-int Oil_level =Get_Signal ("485.ad1.adc1_phys_value");
-int Oil_temp  =Get_Signal ("485.ad1.adc2_phys_value");
-if (Oil_level >0) Oil_level=Oil_level/10;
-if (Oil_temp >0) Oil_temp=Oil_temp/10;
-WRITE_SIGNAL("panel10.system_oil_level",Oil_level);
-WRITE_SIGNAL("panel10.system_oil_temp",Oil_temp);
+	READ_SIGNAL ("485.ad1.adc1_phys_value");
+	READ_SIGNAL ("485.ad1.adc2_phys_value");
+	int Oil_level =Get_Signal ("485.ad1.adc1_phys_value");
+	int Oil_temp  =Get_Signal ("485.ad1.adc2_phys_value");
+	if (Oil_level >0) Oil_level=Oil_level/10;
+	if (Oil_temp >0) Oil_temp=Oil_temp/10;
+	WRITE_SIGNAL("panel10.system_oil_level",Oil_level);
+	WRITE_SIGNAL("panel10.system_oil_temp",Oil_temp);
 }
 
 void Water_Show() {
- READ_SIGNAL("485.ad1.adc3_phys_value");
- READ_SIGNAL("485.ad1.adc4_phys_value");
- int water_flow = Get_Signal("485.ad1.adc3_phys_value");
- int water_pressure = Get_Signal("485.ad1.adc4_phys_value");
- if (water_pressure > 0) water_pressure=(water_pressure/25);
- if (water_flow > 0) water_flow= (water_flow/4);
- WRITE_SIGNAL("panel10.system_water_flow",water_flow);
- WRITE_SIGNAL("panel10.system_water_pressure",water_pressure);
+	READ_SIGNAL("485.ad1.adc3_phys_value");
+	READ_SIGNAL("485.ad1.adc4_phys_value");
+	int water_flow = Get_Signal("485.ad1.adc3_phys_value");
+	int water_pressure = Get_Signal("485.ad1.adc4_phys_value");
+	if (water_pressure > 0) water_pressure=(water_pressure/25);
+	if (water_flow > 0) water_flow= (water_flow/4);
+	WRITE_SIGNAL("panel10.system_water_flow",water_flow);
+	WRITE_SIGNAL("panel10.system_water_pressure",water_pressure);
 }
 
 void Metan_Show() {
-  
-READ_SIGNAL("485.ad3.adc3_phys_value");
-int Metan = Get_Signal("485.ad3.adc3_phys_value");
-WRITE_SIGNAL ("panel10.system_metan",Metan);
+
+	READ_SIGNAL("485.ad3.adc3_phys_value");
+	int Metan = Get_Signal("485.ad3.adc3_phys_value");
+	WRITE_SIGNAL ("panel10.system_metan",Metan);
 }
 
 void Radio_Mode (int n) {
-WRITE_SIGNAL("panel10.system_radio",n);
+	WRITE_SIGNAL("panel10.system_radio",n);
 }
 
 void Mestno_Mode (int n) {
-WRITE_SIGNAL("panel10.system_mestno",n);
+	WRITE_SIGNAL("panel10.system_mestno",n);
 }
 void System_Mode(int n) {
-WRITE_SIGNAL("panel10.system_mode",n);
+	WRITE_SIGNAL("panel10.system_mode",n);
 }
 
 void Pultk_Mode(){
-READ_SIGNAL("485.kb.kei1.post_conveyor");
-int puk = Get_Signal("485.kb.kei1.post_conveyor");
-WRITE_SIGNAL("panel10.system_pultk",puk);
+	READ_SIGNAL("485.kb.kei1.post_conveyor");
+	int puk = Get_Signal("485.kb.kei1.post_conveyor");
+	WRITE_SIGNAL("panel10.system_pultk",puk);
 }
 void Voltage_Show() {
-int Volt = Get_Signal("wago.oc_mui1.Uin_PhaseA");
-WRITE_SIGNAL("panel10.system_voltage",Volt);
+	int Volt = Get_Signal("wago.oc_mui1.Uin_PhaseA");
+	WRITE_SIGNAL("panel10.system_voltage",Volt);
 }
 
 void start_Overloading() {
 	if(inProgress[OVERLOADING]) return;
-	printf("Starting overloading\n");
 	inProgress[OVERLOADING] = STARTING;
-
+	printf("Starting overloading\n");
 	WRITE_SIGNAL("485.kb.kbl.led_contrast", 50);
 	WRITE_SIGNAL("485.kb.kbl.start_reloader", 1);
 	WRITE_SIGNAL("485.rpdu485.kbl.reloader_green", 1);
-	WRITE_SIGNAL("panel10.system_state_code",1);
-	WRITE_SIGNAL("panel10.kb.key.reloader",1);
 
 	Process_Timeout();
 	CHECK(OVERLOADING);
@@ -142,6 +139,8 @@ void start_Overloading() {
 	CHECK(OVERLOADING);
 
 	WRITE_SIGNAL("wago.oc_mdo1.ka5_1", 1);
+	WRITE_SIGNAL("panel10.system_state_code",1);
+	WRITE_SIGNAL("panel10.kb.key.reloader",1);
 	if(!waitForFeedback("wago.oc_mdi1.oc_w_k5", 3, &inProgress[OVERLOADING])) {
 		stop_Overloading();
 		return;
@@ -158,8 +157,6 @@ void start_Conveyor() {
 	WRITE_SIGNAL("485.kb.kbl.led_contrast", 50);
 	WRITE_SIGNAL("485.rpdu485.kbl.conveyor_green", 1);
 	WRITE_SIGNAL("485.kb.kbl.start_conveyor", 1);
-  WRITE_SIGNAL("panel10.system_state_code",2);
-	WRITE_SIGNAL("panel10.kb.key.conveyor",1);
 	Process_Timeout();
 	CHECK(CONVEYOR);
 
@@ -171,6 +168,8 @@ void start_Conveyor() {
 	CHECK(CONVEYOR);
 
 	WRITE_SIGNAL("wago.oc_mdo1.ka3_1", 1);
+	WRITE_SIGNAL("panel10.system_state_code",2);
+	WRITE_SIGNAL("panel10.kb.key.conveyor",1);
 	if(!waitForFeedback("wago.oc_mdi1.oc_w_k3", 3, &inProgress[CONVEYOR])) {
 		stop_Conveyor();
 		return;
@@ -183,16 +182,14 @@ void start_Conveyor() {
 void start_Stars(int reverse) {
 	if(inProgress[STARS]) return;
 	inProgress[STARS] = STARTING;
+	control_Stars();
+	CHECK(STARS);
 	printf("Starting stars%s\n", reverse ? " reverse" : "");
 	WRITE_SIGNAL("485.kb.kbl.led_contrast", 50);
 	WRITE_SIGNAL("485.rpdu485.kbl.loader_green", 1);
 	WRITE_SIGNAL("485.kb.kbl.start_stars", 1);
 	Process_Timeout();
-	control_Stars();
-	CHECK(STARS);
-	
-  WRITE_SIGNAL("panel10.kb.key.stars",1);
-  WRITE_SIGNAL("panel10.system_state_code",3);
+
 	CHECK(STARS);
 	if(!reverse) {
 		WRITE_SIGNAL("485.rsrs.rm_u2_on7", 0);
@@ -201,21 +198,24 @@ void start_Stars(int reverse) {
 		WRITE_SIGNAL("485.rsrs.rm_u2_on6", 0);
 		WRITE_SIGNAL("485.rsrs.rm_u2_on7", 1);
 	}
+	WRITE_SIGNAL("panel10.kb.key.stars",1);
+	WRITE_SIGNAL("panel10.system_state_code",3);
 	inProgress[STARS] = RUNNING;
 	control_Stars();
 }
 
+int enabled_Oil(){
+	return inProgress[OIL] == RUNNING;
+}
+
 void start_Oil() {
 	if(inProgress[OIL]) return;
-	if(inProgress[HYDRATATION] != RUNNING && !debugging) return;
 	printf("Starting oil station\n");
 	WRITE_SIGNAL("485.kb.kbl.led_contrast", 50);
 	WRITE_SIGNAL("485.rpdu485.kbl.oil_station_green", 1);
 	WRITE_SIGNAL("485.kb.kbl.start_oil_station", 1);
 	inProgress[OIL] = STARTING;
 
-  WRITE_SIGNAL("panel10.system_state_code",4);
-	WRITE_SIGNAL ("panel10.kb.key.oil_station",1);
 	Process_Timeout();
 	CHECK(OIL);
 
@@ -228,6 +228,8 @@ void start_Oil() {
 	CHECK(OIL);
 
 	WRITE_SIGNAL("wago.oc_mdo1.ka2_1", 1);
+	WRITE_SIGNAL("panel10.system_state_code",4);
+	WRITE_SIGNAL ("panel10.kb.key.oil_station",1);
 	if(!waitForFeedback("wago.oc_mdi1.oc_w_k2", 3, &inProgress[OIL])) {
 		printf("Feedback error, stopping oil station\n");
 		stop_Oil();
@@ -245,8 +247,6 @@ void start_Hydratation() {
 
 	WRITE_SIGNAL("485.kb.kbl.led_contrast", 50);
 	WRITE_SIGNAL("485.kb.kbl.start_hydratation", 1);
-  WRITE_SIGNAL("panel10.system_state_code",5);
-	WRITE_SIGNAL("panel10.kb.key.hydratation",1);
 	Process_Timeout();
 	CHECK(HYDRATATION);
 
@@ -260,6 +260,8 @@ void start_Hydratation() {
 
 	WRITE_SIGNAL("wago.oc_mdo1.ka4_1", 1);
 	WRITE_SIGNAL("wago.oc_mdo1.water1", 1);
+	WRITE_SIGNAL("panel10.system_state_code",5);
+	WRITE_SIGNAL("panel10.kb.key.hydratation",1);
 	if(!waitForFeedback("wago.oc_mdi1.oc_w_k4", 3, &inProgress[HYDRATATION])) {
 		printf("Feedback error, stopping hydratation\n");
 		stop_Hydratation();
@@ -279,8 +281,6 @@ void start_Organ() {
 	WRITE_SIGNAL("485.kb.kbl.led_contrast", 50);
 	WRITE_SIGNAL("485.kb.kbl.start_exec_dev", 1);
 	WRITE_SIGNAL("485.rpdu485.kbl.exec_dev_green", 1);
-  WRITE_SIGNAL("panel10.system_state_code",6);
-  WRITE_SIGNAL("panel10.kb.key.exec_dev",1);
 	Process_Timeout();
 	CHECK(ORGAN);
 
@@ -293,6 +293,8 @@ void start_Organ() {
 	CHECK(ORGAN);
 
 	WRITE_SIGNAL("wago.oc_mdo1.ka1_1", 1);
+	WRITE_SIGNAL("panel10.system_state_code",6);
+	WRITE_SIGNAL("panel10.kb.key.exec_dev",1);
 	if(!waitForFeedback("wago.oc_mdi1.oc_w_k1", 3, &inProgress[ORGAN])) {
 		printf("Feedback error, stopping organ\n");
 		stop_Organ();
@@ -338,7 +340,6 @@ void control_Stars() {
 
 void control_Oil() {
 	if(!inProgress[OIL]) return;
-	if(inProgress[HYDRATATION] != RUNNING && !debugging) stop_Oil();
 	int temp = Get_Signal("wago.oc_temp.pt100_m2");
 	int tempRelay = Get_Signal("wago.ts_m1.rele_T_m2");
 
@@ -363,7 +364,7 @@ void control_Hydratation() {
 	}
 
 	int water = Get_Signal("485.ad1.adc3.flow");
-      WRITE_SIGNAL("panel10.system_pressure1",water);
+	WRITE_SIGNAL("panel10.system_pressure1",water);
 	if(tempRelay) {
 		printf("Organ temp relay error!\n");
 		stop_Hydratation();
@@ -389,7 +390,7 @@ void control_Organ() {
 
 
 void stop_Overloading() {
-	if(!inProgress[OVERLOADING]) return;
+	//if(!inProgress[OVERLOADING]) return;
 	printf("Stopping overloading\n");
 	WRITE_SIGNAL("485.rpdu485.kbl.reloader_green", 0);
 	WRITE_SIGNAL("485.kb.kbl.start_reloader", 0);
@@ -399,7 +400,7 @@ void stop_Overloading() {
 }
 
 void stop_Conveyor() {
-	if(!inProgress[CONVEYOR]) return;
+	//if(!inProgress[CONVEYOR]) return;
 	printf("Stopping conveyor\n");
 	WRITE_SIGNAL("485.rpdu485.kbl.conveyor_green", 0);
 	WRITE_SIGNAL("485.kb.kbl.start_conveyor", 0);
@@ -409,7 +410,7 @@ void stop_Conveyor() {
 }
 
 void stop_Stars() {
-	if(!inProgress[STARS]) return;
+	//if(!inProgress[STARS]) return;
 	printf("Stopping stars\n");
 	WRITE_SIGNAL("485.rpdu485.kbl.loader_green", 0);
 	WRITE_SIGNAL("485.kb.kbl.start_stars", 0);
@@ -424,12 +425,12 @@ void stop_Oil() {
 	if(!debugging) {
 		stop_Stars();
 	}
-	if(!inProgress[OIL]) return;
+	//if(!inProgress[OIL]) return;
 	printf("Stopping oil station\n");
 	WRITE_SIGNAL("485.rpdu485.kbl.oil_station_green", 0);
 	WRITE_SIGNAL("485.kb.kbl.start_oil_station", 0);
 	WRITE_SIGNAL("wago.oc_mdo1.ka2_1", 0);
-	
+
 	WRITE_SIGNAL("panel10.kb.key.oil_station",0);
 	inProgress[OIL] = 0;
 }
@@ -437,9 +438,9 @@ void stop_Oil() {
 void stop_Hydratation() {
 	if(!debugging) {
 		stop_Organ();
-		stop_Oil();
+//		stop_Oil();
 	}
-	if(!inProgress[HYDRATATION]) return;
+	//if(!inProgress[HYDRATATION]) return;
 	WRITE_SIGNAL("485.kb.kbl.start_hydratation", 0);
 	WRITE_SIGNAL("wago.oc_mdo1.ka4_1", 0);
 	WRITE_SIGNAL("wago.oc_mdo1.water1", 0);
@@ -449,7 +450,6 @@ void stop_Hydratation() {
 }
 
 void stop_Organ() {
-	if(!inProgress[ORGAN]) return;
 	WRITE_SIGNAL("485.rpdu485.kbl.exec_dev_green", 0);
 	WRITE_SIGNAL("485.kb.kbl.start_exec_dev", 0);
 	WRITE_SIGNAL("wago.oc_mdo1.ka1_1", 0);
