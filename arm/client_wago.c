@@ -493,7 +493,10 @@ int main (int argc, char *argv[])
 	ctx = modbus_new_tcp("192.168.1.150", 502);
 	modbus_get_response_timeout(ctx, &old_response_timeout);
 	modbus_set_slave(ctx, 1);
-	int connected = modbus_connect (ctx);
+	int connected;
+	do {
+		connected = modbus_connect(ctx);
+	} while(connected);
 
 	while (1)
 	{

@@ -143,6 +143,11 @@ void Check_Stop_Buttons() {
 	buttons[B_OVERLOAD_STOP]  |= Get_Signal("485.rpdu485.kei.stop_loader");
 	buttons[B_CONV_STOP] 			|= Get_Signal("485.rpdu485.kei.stop_loader");
 	buttons[B_STARS_STOP]			|= Get_Signal("485.rpdu485.kei.stop_loader");
+
+	buttons[B_SOUND_ALARM]		 = 0;
+	buttons[B_SOUND_ALARM]		|= Get_Signal("485.kb.kei1.sound_alarm");
+	buttons[B_SOUND_ALARM]    |= Get_Signal("485.kb.pukonv485c.beep");
+	buttons[B_SOUND_ALARM]    |= Get_Signal("485.rpdu485.sound_beepl");
 }
 
 void Process_RED_BUTTON() {
@@ -225,7 +230,6 @@ void Process_Local_Kb() {
 	buttons[B_OIL_START] 			|= Get_Signal("485.kb.key.start_oil_station");
 	buttons[B_HYDRA_START]		|= Get_Signal("485.kb.key.start_hydratation");
 	buttons[B_CHECK_START]		|= Get_Signal("485.kb.key.start_check");
-	buttons[B_SOUND_ALARM]		 = Get_Signal("485.kb.kei1.sound_alarm");
 	buttons[B_CONV_START] 	  |= Get_Signal("485.kb.key.start_conveyor");
 	buttons[B_STARS_START]		|= Get_Signal("485.kb.key.start_stars");
 	buttons[B_START_ALL]			|= Get_Signal("485.kb.kei1.start_all");
@@ -326,7 +330,6 @@ void Process_Radio_Kb() {
 	}
 	
 	Check_Stop_Buttons();
-	buttons[B_SOUND_ALARM]			= Get_Signal("485.rpdu485.sound_beepl");
 	//buttons[B_STARS_START]		|= Get_Signal("");
 	//buttons[B_STARS_STOP]			|= Get_Signal("");
 	//buttons[B_CHECK_START]		|= Get_Signal("");
@@ -357,7 +360,7 @@ void Process_Pumping() {
 			printf("Starting\n");
 			printf("Lighting the button contrast\n");
 			Set_Signal_Ex_Val(Get_Signal_Idx("485.kb.kbl.led_contrast"), WR, 50);
-			Set_Signal_Ex_Val(Get_Signal_Idx("panel10.system_state_code"),WR,1);
+			Set_Signal_Ex_Val(Get_Signal_Idx("panel10.system_state_code"),WR,22);
 			printf("Lighting the start oil pump button\n");
 			Set_Signal_Ex_Val(Get_Signal_Idx("485.kb.kbl.start_oil_pump"), WR, 1);
 			Set_Signal_Ex(Get_Signal_Idx("wago.oc_bki.M7"), RD);
@@ -417,22 +420,25 @@ void Process_Timeout() {
 #define LEFT_TRACK_BW	1
 #define RIGHT_TRACK_FW	2
 #define RIGHT_TRACK_BW	3
-#define	ASSOCIATE_CONTROL(what, value, signal)	\
+#define	ASSOCIATE_CONTROL(what, value, signal, panel_signal)	\
 if(joystick[what] & value) { \
 		if(!(controls[what] & value)) { \
 			controls[what] |= value; \
 			WRITE_SIGNAL(signal, 1); \
+			if(panel_signal) WRITE_SIGNAL(panel_signal, 1); \
 		} \
 } else { \
 		if(controls[what] & value) { \
 			controls[what] &= ~value; \
 			WRITE_SIGNAL(signal, 0); \
+			if(panel_signal) WRITE_SIGNAL(panel_signal, 0); \
 		} \
 }
-#define	DISABLE(what, value, signal)	\
+#define	DISABLE(what, value, signal, panel_signal)	\
 		if(controls[what] & value) { \
 			controls[what] &= ~value; \
 			WRITE_SIGNAL(signal, 0); \
+			if(panel_signal) WRITE_SIGNAL(panel_signal, 0); \
 		}
 struct timespec last_moving;
 
@@ -449,61 +455,61 @@ void Process_Joysticks() {
 			}
 		}
 
-		ASSOCIATE_CONTROL(J_LEFT_T, JOYVAL_UP, "485.rsrs.rm_u2_on10");
-		ASSOCIATE_CONTROL(J_LEFT_T, JOYVAL_DOWN, "485.rsrs.rm_u2_on11");
-		ASSOCIATE_CONTROL(J_RIGHT_T, JOYVAL_UP, "485.rsrs.rm_u2_on0");
-		ASSOCIATE_CONTROL(J_RIGHT_T, JOYVAL_DOWN, "485.rsrs.rm_u2_on1");
+		ASSOCIATE_CONTROL(J_LEFT_T, JOYVAL_UP, "485.rsrs.rm_u2_on10", "panel10.kb.kei2.left_truck_forward");
+		ASSOCIATE_CONTROL(J_LEFT_T, JOYVAL_DOWN, "485.rsrs.rm_u2_on11", "panel10.kb.kei2.left_truck_back");
+		ASSOCIATE_CONTROL(J_RIGHT_T, JOYVAL_UP, "485.rsrs.rm_u2_on0", "panel10.kb.kei2.right_truck_forward");
+		ASSOCIATE_CONTROL(J_RIGHT_T, JOYVAL_DOWN, "485.rsrs.rm_u2_on1", "panel10.kb.kei2.right_truck_back");
 
-		ASSOCIATE_CONTROL(J_ORGAN, JOYVAL_UP, "485.rsrs.rm_u1_on6");
-		ASSOCIATE_CONTROL(J_ORGAN, JOYVAL_DOWN, "485.rsrs.rm_u1_on7");
-		ASSOCIATE_CONTROL(J_ORGAN, JOYVAL_LEFT, "485.rsrs.rm_u1_on3");
-		ASSOCIATE_CONTROL(J_ORGAN, JOYVAL_RIGHT, "485.rsrs.rm_u1_on2");
+		ASSOCIATE_CONTROL(J_ORGAN, JOYVAL_UP, "485.rsrs.rm_u1_on6", "panel10.kb.kei3.exec_dev_up");
+		ASSOCIATE_CONTROL(J_ORGAN, JOYVAL_DOWN, "485.rsrs.rm_u1_on7", "panel10.kb.kei2.exec_dev_down");
+		ASSOCIATE_CONTROL(J_ORGAN, JOYVAL_LEFT, "485.rsrs.rm_u1_on3", "panel10.kb.kei2.exec_dev_left");
+		ASSOCIATE_CONTROL(J_ORGAN, JOYVAL_RIGHT, "485.rsrs.rm_u1_on2", "panel10.kb.kei2.exec_dev_right");
 
-		ASSOCIATE_CONTROL(J_ACCEL, JOYVAL_UP, "485.rsrs.rm_u1_on0");
+		ASSOCIATE_CONTROL(J_ACCEL, JOYVAL_UP, "485.rsrs.rm_u1_on0", NULL);
 
-		ASSOCIATE_CONTROL(J_TELESCOPE, JOYVAL_UP, "485.rsrs.rm_u1_on4");
-		ASSOCIATE_CONTROL(J_TELESCOPE, JOYVAL_DOWN, "485.rsrs.rm_u1_on5");
+		ASSOCIATE_CONTROL(J_TELESCOPE, JOYVAL_UP, "485.rsrs.rm_u1_on4", "panel10.kb.kei2.telescope_up");
+		ASSOCIATE_CONTROL(J_TELESCOPE, JOYVAL_DOWN, "485.rsrs.rm_u1_on5", "panel10.kb.kei3.telescope_down");
 
-		ASSOCIATE_CONTROL(J_SUPPORT, JOYVAL_UP, "485.rsrs.rm_u2_on8");
-		ASSOCIATE_CONTROL(J_SUPPORT, JOYVAL_DOWN, "485.rsrs.rm_u2_on9");
+		ASSOCIATE_CONTROL(J_SUPPORT, JOYVAL_UP, "485.rsrs.rm_u2_on8", "panel10.kb.kei2.combain_support_up");
+		ASSOCIATE_CONTROL(J_SUPPORT, JOYVAL_DOWN, "485.rsrs.rm_u2_on9", "panel10.kb.kei1.combain_support_down");
 
-		ASSOCIATE_CONTROL(J_SOURCER, JOYVAL_UP, "485.rsrs.rm_u1_on8");
-		ASSOCIATE_CONTROL(J_SOURCER, JOYVAL_DOWN, "485.rsrs.rm_u1_on9");
+		ASSOCIATE_CONTROL(J_SOURCER, JOYVAL_UP, "485.rsrs.rm_u1_on8", "panel10.kb.kei1.sourcer_up");
+		ASSOCIATE_CONTROL(J_SOURCER, JOYVAL_DOWN, "485.rsrs.rm_u1_on9", "panel10.kb.kei1.sourcer_down");
 
-		ASSOCIATE_CONTROL(J_CONVEYOR, JOYVAL_UP, "485.rsrs.rm_u2_on2");
-		ASSOCIATE_CONTROL(J_CONVEYOR, JOYVAL_DOWN, "485.rsrs.rm_u2_on3");
-		ASSOCIATE_CONTROL(J_CONVEYOR, JOYVAL_LEFT, "485.rsrs.rm_u2_on5");
-		ASSOCIATE_CONTROL(J_CONVEYOR, JOYVAL_RIGHT, "485.rsrs.rm_u2_on4");
+		ASSOCIATE_CONTROL(J_CONVEYOR, JOYVAL_UP, "485.rsrs.rm_u2_on2", "panel10.kb.kei1.conveyor_up");
+		ASSOCIATE_CONTROL(J_CONVEYOR, JOYVAL_DOWN, "485.rsrs.rm_u2_on3", "panel10.kb.kei1.conveyor_down");
+		ASSOCIATE_CONTROL(J_CONVEYOR, JOYVAL_LEFT, "485.rsrs.rm_u2_on5", "panel10.kb.kei1.conveyor_left");
+		ASSOCIATE_CONTROL(J_CONVEYOR, JOYVAL_RIGHT, "485.rsrs.rm_u2_on4", "panel10.kb.kei1.conveyor_right");
 
 		if(controls[J_LEFT_T] || controls[J_RIGHT_T]) {
 			clock_gettime(CLOCK_REALTIME, &last_moving);
 		}
 	} else {
-		DISABLE(J_LEFT_T, JOYVAL_UP, "485.rsrs.rm_u2_on10");
-		DISABLE(J_LEFT_T, JOYVAL_DOWN, "485.rsrs.rm_u2_on11");
-		DISABLE(J_RIGHT_T, JOYVAL_UP, "485.rsrs.rm_u2_on0");
-		DISABLE(J_RIGHT_T, JOYVAL_DOWN, "485.rsrs.rm_u2_on1");
+		DISABLE(J_LEFT_T, JOYVAL_UP, "485.rsrs.rm_u2_on10", NULL);
+		DISABLE(J_LEFT_T, JOYVAL_DOWN, "485.rsrs.rm_u2_on11", NULL);
+		DISABLE(J_RIGHT_T, JOYVAL_UP, "485.rsrs.rm_u2_on0", NULL);
+		DISABLE(J_RIGHT_T, JOYVAL_DOWN, "485.rsrs.rm_u2_on1", NULL);
 
-		DISABLE(J_ORGAN, JOYVAL_UP, "485.rsrs.rm_u1_on6");
-		DISABLE(J_ORGAN, JOYVAL_DOWN, "485.rsrs.rm_u1_on7");
-		DISABLE(J_ORGAN, JOYVAL_LEFT, "485.rsrs.rm_u1_on3");
-		DISABLE(J_ORGAN, JOYVAL_RIGHT, "485.rsrs.rm_u1_on2");
+		DISABLE(J_ORGAN, JOYVAL_UP, "485.rsrs.rm_u1_on6", NULL);
+		DISABLE(J_ORGAN, JOYVAL_DOWN, "485.rsrs.rm_u1_on7", NULL);
+		DISABLE(J_ORGAN, JOYVAL_LEFT, "485.rsrs.rm_u1_on3", NULL);
+		DISABLE(J_ORGAN, JOYVAL_RIGHT, "485.rsrs.rm_u1_on2", NULL);
 
-		DISABLE(J_ACCEL, JOYVAL_UP, "485.rsrs.rm_u1_on0");
+		DISABLE(J_ACCEL, JOYVAL_UP, "485.rsrs.rm_u1_on0", NULL);
 
-		DISABLE(J_TELESCOPE, JOYVAL_UP, "485.rsrs.rm_u1_on4");
-		DISABLE(J_TELESCOPE, JOYVAL_DOWN, "485.rsrs.rm_u1_on5");
+		DISABLE(J_TELESCOPE, JOYVAL_UP, "485.rsrs.rm_u1_on4", NULL);
+		DISABLE(J_TELESCOPE, JOYVAL_DOWN, "485.rsrs.rm_u1_on5", NULL);
 
-		DISABLE(J_SUPPORT, JOYVAL_UP, "485.rsrs.rm_u2_on8");
-		DISABLE(J_SUPPORT, JOYVAL_DOWN, "485.rsrs.rm_u2_on9");
+		DISABLE(J_SUPPORT, JOYVAL_UP, "485.rsrs.rm_u2_on8", NULL);
+		DISABLE(J_SUPPORT, JOYVAL_DOWN, "485.rsrs.rm_u2_on9", NULL);
 
-		DISABLE(J_SOURCER, JOYVAL_UP, "485.rsrs.rm_u1_on8");
-		DISABLE(J_SOURCER, JOYVAL_DOWN, "485.rsrs.rm_u1_on9");
+		DISABLE(J_SOURCER, JOYVAL_UP, "485.rsrs.rm_u1_on8", NULL);
+		DISABLE(J_SOURCER, JOYVAL_DOWN, "485.rsrs.rm_u1_on9", NULL);
 
-		DISABLE(J_CONVEYOR, JOYVAL_UP, "485.rsrs.rm_u2_on2");
-		DISABLE(J_CONVEYOR, JOYVAL_DOWN, "485.rsrs.rm_u2_on3");
-		DISABLE(J_CONVEYOR, JOYVAL_LEFT, "485.rsrs.rm_u2_on5");
-		DISABLE(J_CONVEYOR, JOYVAL_RIGHT, "485.rsrs.rm_u2_on4");
+		DISABLE(J_CONVEYOR, JOYVAL_UP, "485.rsrs.rm_u2_on2", NULL);
+		DISABLE(J_CONVEYOR, JOYVAL_DOWN, "485.rsrs.rm_u2_on3", NULL);
+		DISABLE(J_CONVEYOR, JOYVAL_LEFT, "485.rsrs.rm_u2_on5", NULL);
+		DISABLE(J_CONVEYOR, JOYVAL_RIGHT, "485.rsrs.rm_u2_on4", NULL);
 	}
 }
 

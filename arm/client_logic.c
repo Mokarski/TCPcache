@@ -305,10 +305,11 @@ int Init (){
 	Oil_Show();
 	Metan_Show();
 	Voltage_Show();
-
-  //if(!Get_Signal("wago.oc_ready")) {
-		//return 0;
-	//}
+  printf("Wago ready state: %d \n", Get_Signal("wago.oc_ready.state"));
+  if(!Get_Signal("wago.oc_ready.state")) {
+	  printf("Wago Ready error!\n");
+		return 0;
+	}
 
 	if(Get_Signal_Ex(Get_Signal_Idx("wago.oc_mdi.err_phase")) == RD)
 		return 0;
@@ -433,6 +434,8 @@ int main(int argc , char *argv[])
 					case CONTROL_MANU:  //INIT
 						Process_Local_Kb();
             System_Mode(1);
+						System_Radio();
+						Exec_Dev_Show();
 						Pultk_Mode();
             Pressure_Show();
           	Oil_Show();
@@ -443,12 +446,20 @@ int main(int argc , char *argv[])
 
 					case CONTROL_CABLE:  //INIT
 					  System_Mode(2);
+						System_Radio();
+
+						Exec_Dev_Show();
+
 						Pultk_Mode();
 						Process_Cable_Kb();
 						break;
 
 					case CONTROL_RADIO:  //RESET 
 					  System_Mode(3);
+						System_Radio();
+
+						Exec_Dev_Show();
+
 						Pultk_Mode();
 						Process_Radio_Kb();
 						Water_Show();
@@ -464,6 +475,8 @@ int main(int argc , char *argv[])
 				break;
 			case MODE_PUMP:
 			     Pressure_Show();
+					 System_Mode(4);
+						System_Radio();
 	         Oil_Show();
 	         Metan_Show();
 	         Voltage_Show();
@@ -476,6 +489,11 @@ int main(int argc , char *argv[])
 				switch(STATE & CONTROL_MASK){
 					case CONTROL_MANU:  //INIT
 						Process_Local_Kb();
+
+
+						Exec_Dev_Show();
+
+						System_Mode(5);
 						break;         
 
 					case CONTROL_CABLE:  //INIT

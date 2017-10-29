@@ -91,10 +91,33 @@ void Water_Show() {
 	WRITE_SIGNAL("panel10.system_water_pressure",water_pressure);
 }
 
+
+void Exec_Dev_Show() {
+	READ_SIGNAL("wago.oc_mui2.current_m1a");
+	READ_SIGNAL("wago.oc_mui2.current_m1b");
+	READ_SIGNAL("wago.oc_mui2.current_m1c");
+
+	int m1_Ia = Get_Signal("wago.oc_mui2.current_m1a");
+	int m1_Ib = Get_Signal("wago.oc_mui2.current_m1b");
+	int m1_Ic = Get_Signal("wago.oc_mui2.current_m1c");
+	int I_all=0;
+
+//	int Volt = Get_Signal("wago.oc_mui1.Uin_PhaseA");
+
+  if ((m1_Ia+m1_Ib+m1_Ic) > 0){
+      I_all=(m1_Ia+m1_Ib+m1_Ic)/3;
+	   }
+	int P_m1=(I_all*100)/150;	
+	int rot=35;
+	WRITE_SIGNAL("panel10.system_execdev_load", P_m1);
+	WRITE_SIGNAL("panel10.system_execdev_rotation",rot);
+}
+
 void Metan_Show() {
 
 	READ_SIGNAL("485.ad3.adc3_phys_value");
 	int Metan = Get_Signal("485.ad3.adc3_phys_value");
+	if (Metan > 0) Metan =1;
 	WRITE_SIGNAL ("panel10.system_metan",Metan);
 }
 
@@ -108,6 +131,11 @@ void Mestno_Mode (int n) {
 void System_Mode(int n) {
 	WRITE_SIGNAL("panel10.system_mode",n);
 }
+void System_Radio() {
+  READ_SIGNAL("485.rpdu485.connect");
+	int radio_connect = Get_Signal("485.rpdu485.connect");
+	WRITE_SIGNAL("panel10.system_radio",radio_connect);
+ }
 
 void Pultk_Mode(){
 	READ_SIGNAL("485.kb.kei1.post_conveyor");
@@ -127,6 +155,7 @@ void start_Overloading() {
 	WRITE_SIGNAL("485.kb.kbl.start_reloader", 1);
 	WRITE_SIGNAL("485.rpdu485.kbl.reloader_green", 1);
 
+	WRITE_SIGNAL("panel10.system_state_code",20);
 	Process_Timeout();
 	CHECK(OVERLOADING);
 
@@ -139,7 +168,7 @@ void start_Overloading() {
 	CHECK(OVERLOADING);
 
 	WRITE_SIGNAL("wago.oc_mdo1.ka5_1", 1);
-	WRITE_SIGNAL("panel10.system_state_code",1);
+//	WRITE_SIGNAL("panel10.system_state_code",20);
 	WRITE_SIGNAL("panel10.kb.key.reloader",1);
 	if(!waitForFeedback("wago.oc_mdi1.oc_w_k5", 3, &inProgress[OVERLOADING])) {
 		stop_Overloading();
@@ -157,6 +186,8 @@ void start_Conveyor() {
 	WRITE_SIGNAL("485.kb.kbl.led_contrast", 50);
 	WRITE_SIGNAL("485.rpdu485.kbl.conveyor_green", 1);
 	WRITE_SIGNAL("485.kb.kbl.start_conveyor", 1);
+
+	WRITE_SIGNAL("panel10.system_state_code",16);
 	Process_Timeout();
 	CHECK(CONVEYOR);
 
@@ -188,6 +219,8 @@ void start_Stars(int reverse) {
 	WRITE_SIGNAL("485.kb.kbl.led_contrast", 50);
 	WRITE_SIGNAL("485.rpdu485.kbl.loader_green", 1);
 	WRITE_SIGNAL("485.kb.kbl.start_stars", 1);
+
+	WRITE_SIGNAL("panel10.system_state_code",40);
 	Process_Timeout();
 
 	CHECK(STARS);
@@ -216,6 +249,7 @@ void start_Oil() {
 	WRITE_SIGNAL("485.kb.kbl.start_oil_station", 1);
 	inProgress[OIL] = STARTING;
 
+	WRITE_SIGNAL("panel10.system_state_code",14);
 	Process_Timeout();
 	CHECK(OIL);
 
@@ -247,6 +281,8 @@ void start_Hydratation() {
 
 	WRITE_SIGNAL("485.kb.kbl.led_contrast", 50);
 	WRITE_SIGNAL("485.kb.kbl.start_hydratation", 1);
+
+	WRITE_SIGNAL("panel10.system_state_code",18);
 	Process_Timeout();
 	CHECK(HYDRATATION);
 
@@ -281,6 +317,9 @@ void start_Organ() {
 	WRITE_SIGNAL("485.kb.kbl.led_contrast", 50);
 	WRITE_SIGNAL("485.kb.kbl.start_exec_dev", 1);
 	WRITE_SIGNAL("485.rpdu485.kbl.exec_dev_green", 1);
+
+
+	WRITE_SIGNAL("panel10.system_state_code",12);
 	Process_Timeout();
 	CHECK(ORGAN);
 
